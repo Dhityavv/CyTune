@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
+@theme {
+  /* Restrained Deep Obsidian & Slate Foundation */
+  --color-canvas: #0B0A08;
+  --color-sidebar: #100F0C;
+  --color-surface: #1A1814;
+  --color-surface-hover: #23201A;
+  --color-surface-active: #2E2A22;
+  --color-surface-elevated: #252219;
+
+  /* Editorial High-Contrast Typography */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #8A8F98;
+
+  /* Sophisticated Cobalt Brand Accent */
+  --color-accent: #D4AF37;
+  --color-accent-hover: #E8C872;
+  --color-accent-subtle: rgba(212, 175, 55, 0.12);
+  --color-accent-glow: rgba(212, 175, 55, 0.35);
+
+  /* Hairline Borders */
+  --color-border-subtle: rgba(255, 255, 255, 0.07);
+  --color-border-hover: rgba(255, 255, 255, 0.14);
+  --color-border-active: rgba(212, 175, 55, 0.45);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --canvas: #0B0A08;
+  --sidebar: #100F0C;
+  --surface: #1A1814;
+  --surface-hover: #23201A;
+  --surface-active: #2E2A22;
+  --surface-elevated: #252219;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-muted: #8A8F98;
+  --accent: #D4AF37;
+  --accent-hover: #E8C872;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.14);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--accent);
+  color: #FFFFFF;
+}
+
+/* Hide all scrollbars (scroll tetap berfungsi, tanpa bilah putih) */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Smooth Focus Rings */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle floating motion for hero artwork */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Soft glow pulse for primary accent elements */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.0); }
+  50% { box-shadow: 0 0 18px 2px rgba(212, 175, 55, 0.25); }
+}
+
+.animate-float { animation: floatY 4s ease-in-out infinite; }
+.animate-glow { animation: glowPulse 3s ease-in-out infinite; }
+
+/* Soft light mode (gentle on the eyes) */
+html.light {
+  --color-canvas: #F4F1EA;
+  --color-sidebar: #EDE9DF;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F0ECE2;
+  --color-surface-active: #E6E1D6;
+  --color-surface-elevated: #FAF7F0;
+  --color-text-primary: #1A1814;
+  --color-text-secondary: #5C5648;
+  --color-text-muted: #8A8373;
+  --color-accent: #9A7318;
+  --color-accent-hover: #D4AF37;
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-border-hover: rgba(0, 0, 0, 0.16);
+}
+
+html.light body {
+  background-color: #F4F1EA;
+  color: #1A1814;
+}
+
+html.light ::selection {
+  background-color: var(--color-accent);
+  color: #FFFFFF;
 }

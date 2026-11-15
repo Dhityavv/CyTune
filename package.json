@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^5.2.1",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
+    "framer-motion": "^14.14.0",
+    "lucide-react": "^1.73.0",
     "next": "16.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "youtubei.js": "^18.3.0",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
