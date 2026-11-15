@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, Suspense, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, ListMusic, History, Play, Shuffle, Plus, Trash2, Music, Download, Upload } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
+import CoverImage from '@/components/CoverImage';
 import { Track } from '@/types/music';
 
 function formatRelativeTime(timestamp: number): string {
@@ -23,16 +24,26 @@ function formatRelativeTime(timestamp: number): string {
 
 function LibraryContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tabParam = searchParams.get('tab');
   const validTab = (tabParam === 'favorites' || tabParam === 'playlists' || tabParam === 'history') ? tabParam : null;
 
   const [selectedTab, setSelectedTab] = useState<'favorites' | 'playlists' | 'history'>('favorites');
   const activeTab = validTab || selectedTab;
-  const setActiveTab = setSelectedTab;
+  const setActiveTab = (tab: 'favorites' | 'playlists' | 'history') => {
+    setSelectedTab(tab);
+    router.replace(`/library?tab=${tab}`, { scroll: false });
+  };
 
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [viewingPlaylistId, setViewingPlaylistId] = useState<string | null>(null);
+
+  // Deep-link: /library?tab=playlists&pl=<id> opens that playlist (sidebar links)
+  const playlistParam = searchParams.get('pl');
+  useEffect(() => {
+    if (playlistParam) setViewingPlaylistId(playlistParam);
+  }, [playlistParam]);
 
   const playTrack = usePlayerStore((s) => s.playTrack);
 
@@ -208,13 +219,13 @@ function LibraryContent() {
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-1.5 bg-surface p-1.5 rounded-2xl border border-border-subtle self-start sm:self-auto shadow-sm">
+        <div className="flex items-center gap-1 bg-surface p-1 rounded-2xl border border-border-subtle self-start sm:self-auto shadow-sm">
           <button
             onClick={() => setActiveTab('favorites')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'favorites'
-                ? 'bg-text-primary text-canvas shadow-md'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-accent text-[#101114] shadow-md shadow-[#C9A94D]/25'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
             }`}
           >
             <Heart className="w-3.5 h-3.5" />
@@ -225,8 +236,8 @@ function LibraryContent() {
             onClick={() => setActiveTab('playlists')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'playlists'
-                ? 'bg-text-primary text-canvas shadow-md'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-accent text-[#101114] shadow-md shadow-[#C9A94D]/25'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
             }`}
           >
             <ListMusic className="w-3.5 h-3.5" />
@@ -237,8 +248,8 @@ function LibraryContent() {
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'history'
-                ? 'bg-text-primary text-canvas shadow-md'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'bg-accent text-[#101114] shadow-md shadow-[#C9A94D]/25'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
             }`}
           >
             <History className="w-3.5 h-3.5" />
@@ -259,12 +270,12 @@ function LibraryContent() {
                   style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
                 />
 
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#A3925C] to-[#C9A94D] flex items-center justify-center text-text-primary shadow-xl shadow-[#6E5A20]/40 flex-shrink-0 z-10">
-                  <Heart className="w-12 h-12 fill-white" />
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-[#B08B3E] to-[#C9A94D] flex items-center justify-center text-[#101114] shadow-xl shadow-[#6E5A20]/40 ring-1 ring-white/10 flex-shrink-0 z-10">
+                  <Heart className="w-12 h-12 fill-current" />
                 </div>
 
                 <div className="space-y-3 min-w-0 z-10">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-accent">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
                     Auto Playlist
                   </span>
                   <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
@@ -277,14 +288,14 @@ function LibraryContent() {
                   <div className="flex items-center gap-3 pt-1">
                     <button
                       onClick={() => handlePlayAll(favorites, false)}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-canvas hover:opacity-90 font-semibold text-xs shadow-md active:scale-95 transition-all"
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-lg shadow-[#C9A94D]/25 active:scale-95 transition-all"
                     >
-                      <Play className="w-4 h-4 fill-black" />
+                      <Play className="w-4 h-4 fill-current" />
                       <span>Play All</span>
                     </button>
                     <button
                       onClick={() => handlePlayAll(favorites, true)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-hover hover:bg-surface-active text-text-primary border border-border-subtle font-medium text-xs active:scale-95 transition-all"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle hover:border-border-hover font-medium text-xs active:scale-95 transition-all"
                     >
                       <Shuffle className="w-3.5 h-3.5 text-accent" />
                       <span>Shuffle</span>
@@ -318,7 +329,7 @@ function LibraryContent() {
               </p>
               <Link
                 href="/search"
-                className="inline-block px-5 py-2.5 rounded-full bg-text-primary text-canvas text-xs font-semibold hover:opacity-90 transition-colors shadow-md"
+                className="inline-block px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors shadow-md shadow-[#C9A94D]/20"
               >
                 Find Songs
               </Link>
@@ -347,7 +358,7 @@ function LibraryContent() {
               </label>
               <button
                 onClick={() => setIsCreatingPlaylist(!isCreatingPlaylist)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-text-primary text-xs font-semibold transition-all shadow-md shadow-[#D4AF37]/20"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold transition-all shadow-md shadow-[#C9A94D]/20 active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create Playlist</span>
@@ -388,8 +399,24 @@ function LibraryContent() {
                   onClick={() => setViewingPlaylistId(pl.id)}
                   className="group relative p-3.5 rounded-2xl bg-surface/60 hover:bg-surface-hover border border-border-subtle hover:border-border-hover transition-all cursor-pointer flex flex-col shadow-md hover:shadow-xl hover:shadow-black/50"
                 >
-                  <div className="aspect-square rounded-xl bg-sidebar flex items-center justify-center mb-3 shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <Music className="w-8 h-8 text-text-muted group-hover:text-accent transition-colors" />
+                  <div className="relative aspect-square rounded-xl bg-sidebar overflow-hidden flex items-center justify-center mb-3 shadow-sm ring-1 ring-border-subtle">
+                    {pl.tracks[0]?.thumbnail ? (
+                      <CoverImage
+                        src={pl.tracks[0].thumbnail}
+                        alt={pl.name}
+                        size="lg"
+                        className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300"
+                      />
+                    ) : (
+                      <Music className="w-8 h-8 text-text-muted group-hover:text-accent transition-colors" />
+                    )}
+                    {pl.tracks.length > 0 && (
+                      <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="w-10 h-10 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg shadow-[#C9A94D]/30">
+                          <Play className="w-4 h-4 fill-current translate-x-0.5" />
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="font-semibold text-text-primary text-[13px] truncate">{pl.name}</h3>
@@ -400,8 +427,9 @@ function LibraryContent() {
                       e.stopPropagation();
                       handleDeletePlaylist(pl.id, pl.name);
                     }}
-                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/70 text-text-primary opacity-0 group-hover:opacity-100 hover:bg-red-600/80 transition-all"
+                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-canvas/70 backdrop-blur-md border border-border-subtle text-text-primary opacity-0 group-hover:opacity-100 hover:bg-red-600/80 transition-all"
                     title="Delete playlist"
+                    aria-label={`Delete playlist ${pl.name}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -410,7 +438,7 @@ function LibraryContent() {
             </div>
           ) : (
             <div className="py-20 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center text-text-muted mx-auto border border-border-subtle">
+              <div className="w-14 h-14 rounded-2xl bg-surface border border-border-subtle flex items-center justify-center text-text-muted mx-auto">
                 <ListMusic className="w-6 h-6" />
               </div>
               <h3 className="text-base font-bold text-text-primary">No custom playlists</h3>
@@ -419,7 +447,7 @@ function LibraryContent() {
               </p>
               <button
                 onClick={() => setIsCreatingPlaylist(true)}
-                className="px-5 py-2.5 rounded-full bg-text-primary text-canvas text-xs font-semibold hover:opacity-90 transition-colors shadow-md"
+                className="px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors shadow-md shadow-[#C9A94D]/20"
               >
                 Create Your First Playlist
               </button>
@@ -437,17 +465,26 @@ function LibraryContent() {
               });
             };
             return (
-              <div className="space-y-4 mt-6 p-5 rounded-2xl bg-surface border border-border-subtle">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-text-primary">{pl.name}</h3>
-                    <p className="text-xs text-text-secondary">{pl.tracks.length} songs</p>
+              <div className="space-y-4 mt-6 p-5 rounded-2xl bg-surface border border-border-subtle animate-fade-up">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-sidebar flex items-center justify-center flex-shrink-0 ring-1 ring-border-subtle">
+                      {pl.tracks[0]?.thumbnail ? (
+                        <CoverImage src={pl.tracks[0].thumbnail} alt={pl.name} size="sm" className="w-full h-full object-cover" />
+                      ) : (
+                        <Music className="w-6 h-6 text-text-muted" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-text-primary truncate">{pl.name}</h3>
+                      <p className="text-xs text-text-secondary">{pl.tracks.length} songs</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {pl.tracks.length > 0 && (
                       <button
                         onClick={() => handlePlayAll(pl.tracks, false)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-text-primary text-canvas text-xs font-semibold hover:opacity-90 transition-all"
+                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-all shadow-md shadow-[#C9A94D]/20 active:scale-95"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         Play All
@@ -474,8 +511,9 @@ function LibraryContent() {
                           </div>
                           <button
                             onClick={() => handleRemove(track.id)}
-                            className="p-1.5 rounded-lg text-text-muted hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-surface transition-colors"
                             title="Remove from playlist"
+                            aria-label={`Remove ${track.title} from playlist`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -494,11 +532,16 @@ function LibraryContent() {
       {activeTab === 'history' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2">
-            <h2 className="text-base font-bold text-text-primary">Playback History</h2>
+            <h2 className="text-base font-bold text-text-primary flex items-baseline gap-2.5">
+              Playback History
+              {history && history.length > 0 && (
+                <span className="text-[11px] font-mono text-text-muted">{history.length}</span>
+              )}
+            </h2>
             {history && history.length > 0 && (
               <button
                 onClick={handleClearHistory}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-text-secondary hover:text-red-400 hover:bg-surface transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-text-secondary hover:text-red-400 hover:bg-surface border border-border-subtle hover:border-red-400/30 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear History</span>
