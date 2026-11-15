@@ -76,7 +76,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
       className={`group grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_100px] items-center px-3 py-2 rounded-xl transition-all cursor-pointer select-none border ${
         isCurrent
           ? 'bg-surface border-accent/40 text-text-primary shadow-sm'
-          : 'bg-transparent border-transparent hover:bg-surface-hover/80 hover:border-white/[0.04] text-text-secondary'
+          : 'bg-transparent border-transparent hover:bg-surface-hover/80 hover:border-border-subtle text-text-secondary'
       }`}
     >
       {/* 1. Index / Equalizer / Play/Pause Hover Button */}
@@ -138,7 +138,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
             e.stopPropagation();
             addToQueue(track);
           }}
-          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 text-text-muted hover:text-text-primary transition-all"
+          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
           title="Add to queue"
         >
           <Plus className="w-3.5 h-3.5" />

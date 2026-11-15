@@ -225,11 +225,11 @@ export default function Home() {
           initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-2xl overflow-hidden bg-surface/70 border border-border-subtle p-5 sm:p-7 shadow-2xl backdrop-blur-sm group"
+          className="relative rounded-2xl overflow-hidden bg-surface/70 border border-border-subtle p-5 sm:p-6 shadow-2xl backdrop-blur-sm group"
         >
           {/* Subtle Ambient Radial from Track Art */}
           <div
-            className="absolute -top-20 -left-20 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none"
+            className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none"
             style={{
               background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
             }}
@@ -242,68 +242,88 @@ export default function Home() {
               initial={{ x: '-120%', opacity: 0 }}
               animate={{ x: '320%', opacity: [0, 0.5, 0] }}
               transition={{ duration: 1.1, ease: 'easeInOut' }}
-              className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-accent/25 to-transparent"
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-accent/20 to-transparent"
             />
           )}
 
-          <div className="relative flex flex-col md:flex-row items-center gap-6">
-            {/* High-Res Featured Artwork - crossfades on track change */}
-            <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 bg-sidebar border border-border-subtle animate-float">
-              <AnimatePresence initial={false}>
-                <motion.div
-                  key={spotlightTrack.id}
-                  className="absolute inset-0"
-                  initial={reduceMotion ? false : { opacity: 0, scale: 1.08, filter: 'blur(10px)' }}
-                  animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, filter: 'blur(6px)' }}
-                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <CoverImage
-                    src={spotlightTrack.thumbnail}
-                    alt={spotlightTrack.title}
-                    size="lg"
-                    priority
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </motion.div>
-              </AnimatePresence>
+          <div className="relative flex flex-col md:flex-row items-center gap-5 sm:gap-7">
+            {/* High-Res Featured Artwork — layered editorial stack, crossfades on track change */}
+            <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
+              <div className="absolute inset-0 translate-x-2.5 translate-y-2.5 rounded-2xl bg-surface border border-border-subtle rotate-3 pointer-events-none" />
+              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-sidebar border border-border-subtle animate-float">
+                <AnimatePresence initial={false}>
+                  <motion.div
+                    key={spotlightTrack.id}
+                    className="absolute inset-0"
+                    initial={reduceMotion ? false : { opacity: 0, scale: 1.08, filter: 'blur(10px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, filter: 'blur(6px)' }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <CoverImage
+                      src={spotlightTrack.thumbnail}
+                      alt={spotlightTrack.title}
+                      size="lg"
+                      priority
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              {/* Chart pick chip */}
+              <div className="absolute -top-2 -left-2 z-10 px-2.5 py-1 rounded-full bg-accent text-[#101114] text-[9px] font-bold uppercase tracking-[0.12em] shadow-lg shadow-[#C9A94D]/30">
+                Chart Pick
+              </div>
             </div>
 
             {/* Spotlight Metadata & Actions */}
-            <div className="flex flex-col justify-center flex-1 min-w-0 text-center md:text-left space-y-3">
+            <div className="flex flex-col justify-center flex-1 min-w-0 text-center md:text-left space-y-3 w-full">
               <motion.div
                 key={`meta-${spotlightTrack.id}`}
                 initial={reduceMotion ? false : { opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="space-y-2"
+                className="space-y-2.5"
               >
-                <span className="flex items-center justify-center md:justify-start gap-2 text-[11px] font-semibold text-accent">
+                <span className="inline-flex items-center justify-center md:justify-start gap-2 text-[10px] font-bold text-accent uppercase tracking-[0.16em]">
                   <span className="relative flex w-1.5 h-1.5">
                     {!reduceMotion && (
                       <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-60" />
                     )}
                     <span className="relative w-1.5 h-1.5 rounded-full bg-accent" />
                   </span>
-                  Trending now: {spotlightLabel}
+                  Trending now · {spotlightLabel}
                 </span>
 
-                <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight truncate drop-shadow-sm">
+                <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight line-clamp-2">
                   {spotlightTrack.title}
                 </h2>
 
-                <p className="text-[13px] text-text-secondary line-clamp-2 max-w-xl">
-                  <span className="text-text-primary font-medium">{spotlightTrack.artist}</span>
-                  {spotlightTrack.album ? `, from ${spotlightTrack.album}` : ''}
+                <p className="text-[13px] text-text-secondary flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-0.5">
+                  <span className="text-text-primary font-semibold">{spotlightTrack.artist}</span>
+                  {spotlightTrack.album && (
+                    <>
+                      <span className="text-text-muted">·</span>
+                      <span className="truncate max-w-[220px]">{spotlightTrack.album}</span>
+                    </>
+                  )}
+                  {spotlightTrack.duration > 0 && (
+                    <>
+                      <span className="text-text-muted">·</span>
+                      <span className="font-mono text-text-muted text-[11px]">
+                        {Math.floor(spotlightTrack.duration / 60)}:{String(spotlightTrack.duration % 60).padStart(2, '0')}
+                      </span>
+                    </>
+                  )}
                 </p>
               </motion.div>
 
               <div className="pt-1 flex items-center justify-center md:justify-start gap-3">
                 <button
                   onClick={() => playTrack(spotlightTrack)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-text-primary text-canvas hover:opacity-90 font-semibold text-xs transition-all shadow-md active:scale-95"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs transition-all shadow-lg shadow-[#C9A94D]/25 active:scale-95"
                 >
-                  <Play className="w-4 h-4 fill-black" />
+                  <Play className="w-4 h-4 fill-current" />
                   <span>Play Now</span>
                 </button>
 
@@ -314,7 +334,7 @@ export default function Home() {
                       playTrack(shuffled[0]);
                     }
                   }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-hover hover:bg-surface-active text-text-primary border border-border-subtle font-medium text-xs transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle hover:border-border-hover font-medium text-xs transition-all active:scale-95"
                 >
                   <Radio className="w-3.5 h-3.5 text-accent" />
                   <span>Shuffle</span>
@@ -368,7 +388,7 @@ export default function Home() {
         className="space-y-3.5"
       >
         <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
-          Browse by Vibe & Mood
+          Browse by Vibe &amp; Mood
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -376,21 +396,22 @@ export default function Home() {
               <button
                 key={genre.name}
                 onClick={() => router.push(`/search?q=${encodeURIComponent(genre.query)}`)}
-                className={`relative overflow-hidden p-4 rounded-2xl border border-border-subtle ${genre.border} border-t-2 hover:border-accent/50 transition-all duration-200 flex flex-col justify-between h-28 group shadow-md hover:shadow-xl hover:shadow-black/40 text-left w-full`}
+                className={`relative overflow-hidden p-4 rounded-2xl border border-border-subtle ${genre.border} border-t-2 hover:border-accent/50 transition-all duration-200 flex flex-col justify-between h-32 group shadow-md hover:shadow-xl text-left w-full hover:-translate-y-0.5`}
             >
               <img
                 src={genre.img}
                 alt=""
                 loading="lazy"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-55 group-hover:scale-105 transition-all duration-500"
+                className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:opacity-60 group-hover:scale-105 transition-all duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-canvas/90 via-canvas/40 to-transparent" />
-              <span className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug">
+              <div className="absolute inset-0 bg-gradient-to-t from-canvas/95 via-canvas/45 to-transparent" />
+              <span className="relative text-[13px] font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug">
                 {genre.name}
               </span>
-              <span className="text-[10px] text-text-secondary uppercase font-mono tracking-wider">
-                Explore &rarr;
+              <span className="relative text-[10px] text-text-secondary uppercase font-mono tracking-wider flex items-center gap-1">
+                Explore
+                <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
               </span>
             </button>
           ))}
@@ -421,7 +442,8 @@ export default function Home() {
             return (
               <section key={sIdx} className="space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+                  <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-baseline gap-2.5">
+                    <span className="text-[11px] font-mono text-accent/80">{String(sIdx + 1).padStart(2, '0')}</span>
                     {section.title}
                   </h3>
                   <span className="text-xs text-text-muted font-semibold uppercase tracking-wider">
@@ -456,7 +478,8 @@ export default function Home() {
               className="space-y-3.5"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+                <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-baseline gap-2.5">
+                  <span className="text-[11px] font-mono text-accent/80">{String(sIdx + 1).padStart(2, '0')}</span>
                   {section.title}
                 </h3>
                 <span className="text-xs text-text-muted font-semibold uppercase tracking-wider">

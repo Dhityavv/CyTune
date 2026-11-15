@@ -107,16 +107,25 @@ function SearchContent() {
   return (
     <div className="space-y-8 pb-24 max-w-7xl mx-auto">
       {/* Search Input Bar */}
-      <form onSubmit={handleSubmit} className="relative max-w-xl">
-        <div className="relative flex items-center bg-surface border border-border-subtle focus-within:border-accent/60 focus-within:ring-1 focus-within:ring-accent/30 rounded-2xl transition-all shadow-md">
-          <SearchIcon className="absolute left-4 w-4 h-4 text-text-muted pointer-events-none" />
+      <form onSubmit={handleSubmit} className="relative max-w-2xl">
+        <label htmlFor="orbit-search" className="block text-[10px] font-bold text-text-muted uppercase tracking-[0.16em] mb-2">
+          Search the catalog
+        </label>
+        <div className={`relative flex items-center bg-surface border focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/25 rounded-2xl transition-all shadow-lg ${loading ? 'border-accent/40' : 'border-border-subtle'}`}>
+          {loading ? (
+            <Loader2 className="absolute left-4 w-[18px] h-[18px] text-accent animate-spin pointer-events-none" />
+          ) : (
+            <SearchIcon className="absolute left-4 w-[18px] h-[18px] text-text-muted pointer-events-none" />
+          )}
           <input
+            id="orbit-search"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search songs, artists, or albums..."
+            placeholder="Songs, artists, or albums…"
             autoFocus
-            className="w-full pl-11 pr-10 py-3.5 bg-transparent text-text-primary placeholder-text-muted text-[14px] focus:outline-none"
+            autoComplete="off"
+            className="w-full pl-11 pr-11 py-4 bg-transparent text-text-primary placeholder-text-muted text-[15px] focus:outline-none"
           />
           {query && (
             <button
@@ -126,7 +135,8 @@ function SearchContent() {
                 setTracks([]);
                 setHasSearched(false);
               }}
-              className="absolute right-3 p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors"
+              aria-label="Clear search"
+              className="absolute right-3 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -150,7 +160,7 @@ function SearchContent() {
                     setQuery(tag);
                     performSearch(tag);
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm"
+                  className="px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm active:scale-95"
                 >
                   {tag}
                 </button>
@@ -172,21 +182,22 @@ function SearchContent() {
                     setQuery(cat.query);
                     performSearch(cat.query);
                   }}
-                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/40 transition-all text-left flex flex-col justify-between h-28 group hover:scale-[1.02] shadow-md hover:shadow-xl hover:shadow-black/40`}
+                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/50 transition-all text-left flex flex-col justify-between h-32 group hover:-translate-y-0.5 shadow-md hover:shadow-xl`}
                 >
                   <img
                     src={cat.img}
                     alt=""
                     loading="lazy"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                    className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500"
+                    className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-55 group-hover:scale-105 transition-all duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-canvas/90 via-canvas/40 to-transparent" />
-                  <span className="relative text-[13px] font-semibold text-text-primary leading-tight group-hover:text-accent transition-colors drop-shadow">
+                  <div className="absolute inset-0 bg-gradient-to-t from-canvas/95 via-canvas/45 to-transparent" />
+                  <span className="relative text-[13px] font-semibold text-text-primary leading-tight group-hover:text-accent transition-colors">
                     {cat.name}
                   </span>
-                  <span className="text-[10px] text-text-secondary font-mono uppercase tracking-wider">
-                    Explore &rarr;
+                  <span className="relative text-[10px] text-text-secondary font-mono uppercase tracking-wider flex items-center gap-1">
+                    Explore
+                    <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
                   </span>
                 </button>
               ))}
@@ -205,20 +216,22 @@ function SearchContent() {
 
       {/* Search Results */}
       {!loading && hasSearched && (
-        <div className="space-y-8">
-          <div className="flex items-center justify-between pb-2 border-b border-border-subtle">
+        <div className="space-y-8 animate-fade-up">
+          <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
             <h2 className="text-lg font-bold text-text-primary tracking-tight">
-              Search Results for &quot;{query}&quot;
+              Results for <span className="text-accent">&quot;{query}&quot;</span>
             </h2>
-            <span className="text-xs text-text-muted font-mono">{tracks.length} tracks found</span>
+            <span className="text-xs text-text-muted font-mono">{tracks.length} tracks</span>
           </div>
 
           {tracks.length === 0 ? (
-            <div className="py-20 text-center space-y-2">
-              <Disc className="w-10 h-10 text-text-muted mx-auto opacity-50" />
-              <p className="text-sm font-medium text-text-primary">No matching songs found</p>
+            <div className="py-20 text-center space-y-3">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-surface border border-border-subtle flex items-center justify-center">
+                <Disc className="w-6 h-6 text-text-muted" />
+              </div>
+              <p className="text-sm font-semibold text-text-primary">No matching songs found</p>
               <p className="text-xs text-text-secondary">
-                Try searching with different keywords or check artist spelling.
+                Try different keywords or check the artist spelling.
               </p>
             </div>
           ) : (
@@ -233,9 +246,9 @@ function SearchContent() {
                     </span>
                     <div
                       onClick={() => playTrack(topResult)}
-                      className="group relative p-5 rounded-2xl bg-surface/70 hover:bg-surface-hover border border-border-subtle hover:border-border-hover transition-all cursor-pointer flex flex-col justify-between h-56 select-none shadow-xl hover:shadow-black/50"
+                      className="group relative p-5 rounded-2xl bg-surface/70 hover:bg-surface-hover border border-border-subtle hover:border-border-hover transition-all cursor-pointer flex flex-col justify-between h-64 select-none shadow-xl hover:shadow-black/50"
                     >
-                      <div className="relative w-24 h-24 rounded-xl overflow-hidden shadow-lg bg-sidebar">
+                      <div className="relative w-28 h-28 rounded-xl overflow-hidden shadow-lg bg-sidebar ring-1 ring-border-subtle">
                         <CoverImage
                           src={topResult.thumbnail}
                           alt={topResult.title}
@@ -244,14 +257,21 @@ function SearchContent() {
                         />
                       </div>
 
-                      <div className="min-w-0 pr-12">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent inline-block mb-1">
+                      <div className="min-w-0 pr-14">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent inline-block mb-1.5">
                           Song
                         </span>
                         <h3 className="text-lg font-bold text-text-primary truncate group-hover:text-accent transition-colors">
                           {topResult.title}
                         </h3>
-                        <p className="text-xs text-text-secondary truncate mt-0.5">{topResult.artist}</p>
+                        <p className="text-xs text-text-secondary truncate mt-0.5">
+                          {topResult.artist}
+                          {topResult.duration > 0 && (
+                            <span className="text-text-muted font-mono">
+                              {' · '}{Math.floor(topResult.duration / 60)}:{String(topResult.duration % 60).padStart(2, '0')}
+                            </span>
+                          )}
+                        </p>
                       </div>
 
                       {/* Play Button */}
@@ -260,9 +280,10 @@ function SearchContent() {
                           e.stopPropagation();
                           playTrack(topResult);
                         }}
-                        className="absolute bottom-5 right-5 w-12 h-12 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-xl shadow-black/80 hover:scale-105 active:scale-95 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                        aria-label={`Play ${topResult.title}`}
+                        className="absolute bottom-5 right-5 w-12 h-12 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-xl shadow-[#C9A94D]/25 hover:bg-accent-hover hover:scale-105 active:scale-95 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                       >
-                        <Play className="w-5 h-5 fill-black translate-x-0.5" />
+                        <Play className="w-5 h-5 fill-current translate-x-0.5" />
                       </button>
                     </div>
                   </div>

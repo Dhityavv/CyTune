@@ -75,7 +75,7 @@ export default function TrackCard({ track }: TrackCardProps) {
         />
 
         {/* Ambient Dark Gradient Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-canvas/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
         {/* Quick Play Button */}
         <div
@@ -87,13 +87,13 @@ export default function TrackCard({ track }: TrackCardProps) {
         >
           <button
             onClick={handlePlay}
-            className="w-10 h-10 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-xl shadow-black/80 hover:scale-105 active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-xl shadow-[#C9A94D]/25 hover:bg-accent-hover hover:scale-105 active:scale-95 transition-all"
             title={isCurrent && isPlaying ? 'Pause' : 'Play'}
           >
             {isCurrent && isPlaying ? (
-              <Pause className="w-4 h-4 fill-black" />
+              <Pause className="w-4 h-4 fill-current" />
             ) : (
-              <Play className="w-4 h-4 fill-black translate-x-0.5" />
+              <Play className="w-4 h-4 fill-current translate-x-0.5" />
             )}
           </button>
         </div>
@@ -106,14 +106,14 @@ export default function TrackCard({ track }: TrackCardProps) {
         >
           <button
             onClick={toggleLike}
-            className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-text-primary hover:bg-black/80 transition-colors"
+            className="w-9 h-9 rounded-full bg-canvas/70 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-canvas/90 hover:border-border-hover transition-colors"
             title={isLiked ? 'Unlike' : 'Like'}
           >
             <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-accent text-accent' : ''}`} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v); }}
-            className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-text-primary hover:bg-black/80 transition-colors"
+            className="w-9 h-9 rounded-full bg-canvas/70 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-canvas/90 hover:border-border-hover transition-colors"
             title="Add to playlist"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -144,7 +144,7 @@ export default function TrackCard({ track }: TrackCardProps) {
 
         {/* Active Playing Equalizer Badge */}
         {isCurrent && isPlaying && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1 border border-white/10 z-10">
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-canvas/80 backdrop-blur-md flex items-center gap-1 border border-border-subtle z-10">
             <span className="w-1 h-2.5 bg-accent rounded-full animate-pulse" />
             <span className="w-1 h-3 bg-accent rounded-full animate-pulse delay-75" />
             <span className="w-1 h-1.5 bg-accent rounded-full animate-pulse delay-150" />
