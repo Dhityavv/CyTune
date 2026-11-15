@@ -41,18 +41,18 @@ export default function InfoPage() {
       <section className="rounded-2xl bg-surface border border-border-subtle p-5 space-y-3">
         <h2 className="text-base font-bold text-text-primary">Your Listening Stats</h2>
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl bg-sidebar border border-border-subtle p-3 text-center">
-            <Heart className="w-4 h-4 text-accent mx-auto mb-1" />
+          <div className="rounded-xl bg-sidebar border border-border-subtle p-4 text-center space-y-1">
+            <Heart className="w-4 h-4 text-accent mx-auto" />
             <p className="text-lg font-bold text-text-primary">{favorites}</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider">Liked</p>
           </div>
-          <div className="rounded-xl bg-sidebar border border-border-subtle p-3 text-center">
-            <ListMusic className="w-4 h-4 text-accent mx-auto mb-1" />
+          <div className="rounded-xl bg-sidebar border border-border-subtle p-4 text-center space-y-1">
+            <ListMusic className="w-4 h-4 text-accent mx-auto" />
             <p className="text-lg font-bold text-text-primary">{playlists}</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider">Playlists</p>
           </div>
-          <div className="rounded-xl bg-sidebar border border-border-subtle p-3 text-center">
-            <History className="w-4 h-4 text-accent-hover mx-auto mb-1" />
+          <div className="rounded-xl bg-sidebar border border-border-subtle p-4 text-center space-y-1">
+            <History className="w-4 h-4 text-accent mx-auto" />
             <p className="text-lg font-bold text-text-primary">{historyCount}</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider">Plays</p>
           </div>
@@ -70,7 +70,7 @@ export default function InfoPage() {
             href="https://saweria.co/dhityavv"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-black text-xs font-semibold transition-all shadow-md shadow-accent/20"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold transition-all shadow-md shadow-[#C9A94D]/20 active:scale-95"
           >
             <Coffee className="w-4 h-4" />
             <span>Traktir via Saweria</span>

@@ -92,7 +92,7 @@ function ArtistContent() {
     <div className="space-y-8 pb-24 max-w-7xl mx-auto">
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface border border-border-subtle transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
@@ -122,17 +122,21 @@ function ArtistContent() {
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-2xl overflow-hidden bg-surface/70 border border-border-subtle p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 shadow-2xl backdrop-blur-sm"
           >
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-sidebar border-2 border-border-subtle shadow-xl flex-shrink-0">
+            <div
+              className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-3xl opacity-15 pointer-events-none"
+              style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
+            />
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-sidebar border-2 border-border-subtle ring-4 ring-surface shadow-xl flex-shrink-0">
               <CoverImage src={header.thumbnail} alt={header.title} size="lg" className="w-full h-full object-cover" />
             </div>
-            <div className="flex-1 min-w-0 text-center sm:text-left space-y-2">
-              <span className="text-[11px] font-bold text-accent uppercase tracking-wider">Artist</span>
+            <div className="flex-1 min-w-0 text-center sm:text-left space-y-2.5">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-[0.16em]">Artist</span>
               <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
                 {header.title}
               </h1>
               {header.subscribers && (
-                <p className="text-sm text-text-secondary flex items-center gap-1.5 justify-center sm:justify-start">
-                  <Users className="w-4 h-4" />
+                <p className="text-sm text-text-secondary inline-flex items-center gap-1.5 justify-center sm:justify-start bg-surface border border-border-subtle rounded-full px-3 py-1 w-fit mx-auto sm:mx-0">
+                  <Users className="w-3.5 h-3.5 text-accent" />
                   {header.subscribers}
                 </p>
               )}
@@ -141,6 +145,21 @@ function ArtistContent() {
                   {header.description}
                 </p>
               )}
+              {sections.find((s) => s.type === 'songs')?.items?.length ? (
+                <div className="pt-1">
+                  <button
+                    onClick={() => {
+                      const songs = sections.find((s) => s.type === 'songs');
+                      const first = songs?.items?.[0];
+                      if (first) playTrack(first);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-lg shadow-[#C9A94D]/25 active:scale-95 transition-all"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    Play
+                  </button>
+                </div>
+              ) : null}
             </div>
           </motion.section>
 
@@ -155,8 +174,9 @@ function ArtistContent() {
                   viewport={{ once: true, amount: 0.1 }}
                   className="space-y-3.5"
                 >
-                  <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
-                    <Music className="w-5 h-5 text-accent" />
+                  <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-baseline gap-2.5">
+                    <span className="text-[11px] font-mono text-accent/80">{String(sIdx + 1).padStart(2, '0')}</span>
+                    <Music className="w-5 h-5 text-accent translate-y-0.5" />
                     {section.title || 'Top songs'}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -178,8 +198,9 @@ function ArtistContent() {
                 viewport={{ once: true, amount: 0.1 }}
                 className="space-y-3.5"
               >
-                <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
-                  {isArtist ? <Users className="w-5 h-5 text-accent" /> : <Disc3 className="w-5 h-5 text-accent" />}
+                <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight flex items-baseline gap-2.5">
+                  <span className="text-[11px] font-mono text-accent/80">{String(sIdx + 1).padStart(2, '0')}</span>
+                  <span className="translate-y-0.5">{isArtist ? <Users className="w-5 h-5 text-accent" /> : <Disc3 className="w-5 h-5 text-accent" />}</span>
                   {sectionLabel(section)}
                 </h3>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
@@ -201,8 +222,10 @@ function ArtistContent() {
                       <div className="relative aspect-square rounded-2xl overflow-hidden bg-sidebar border border-border-subtle shadow-md group-hover:shadow-xl transition-all">
                         <CoverImage src={item.thumbnail} alt={item.title} size="md" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         {item.kind === 'artist' && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                            <Play className="w-8 h-8 text-white fill-white" />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-canvas/40">
+                            <span className="w-11 h-11 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg">
+                              <Play className="w-4 h-4 fill-current translate-x-0.5" />
+                            </span>
                           </div>
                         )}
                       </div>
