@@ -19,12 +19,12 @@ interface Section {
 }
 
 const GENRE_CATEGORIES = [
-  { name: 'Late Night R&B', query: 'late night rb songs', border: 'border-t-[#6366F1]', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=70' },
-  { name: 'Indie & Bedroom Pop', query: 'indie bedroom pop hits', border: 'border-t-[#F59E0B]', img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=70' },
-  { name: 'Lofi Chill Lounge', query: 'lofi hip hop chill beats', border: 'border-t-[#10B981]', img: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70' },
-  { name: 'Hits Indonesia', query: 'top hits indonesia 2026', border: 'border-t-[#EC4899]', img: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=70' },
-  { name: 'Atmospheric Synthwave', query: 'retro synthwave chill', border: 'border-t-[#8B5CF6]', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=70' },
-  { name: 'Acoustic Soul', query: 'acoustic folk songs', border: 'border-t-[#06B6D4]', img: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=70' },
+  { name: 'Late Night R&B', query: 'late night rb songs', border: 'border-t-[#7775A8]', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=70' },
+  { name: 'Indie & Bedroom Pop', query: 'indie bedroom pop hits', border: 'border-t-[#C9A94D]', img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=70' },
+  { name: 'Lofi Chill Lounge', query: 'lofi hip hop chill beats', border: 'border-t-[#315B55]', img: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70' },
+  { name: 'Hits Indonesia', query: 'top hits indonesia 2026', border: 'border-t-[#4E8A82]', img: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=70' },
+  { name: 'Atmospheric Synthwave', query: 'retro synthwave chill', border: 'border-t-[#6E6A9E]', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=70' },
+  { name: 'Acoustic Soul', query: 'acoustic folk songs', border: 'border-t-[#A3925C]', img: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=70' },
 ];
 
 const TRENDING_SOURCES = [
@@ -231,7 +231,7 @@ export default function Home() {
           <div
             className="absolute -top-20 -left-20 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none"
             style={{
-              background: 'radial-gradient(circle, #D4AF37 0%, transparent 70%)',
+              background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
             }}
           />
 
@@ -340,7 +340,7 @@ export default function Home() {
             </h3>
             <a
               href="/library?tab=history"
-              className="text-xs font-semibold text-accent hover:text-[#E8C872] transition-colors"
+              className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
             >
               View all →
             </a>

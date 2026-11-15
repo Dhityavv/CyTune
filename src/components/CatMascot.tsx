@@ -69,9 +69,9 @@ export default function CatMascot() {
           animate={{ rotate: [0, -4, 4, 0] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <path d="M14 26 L10 12 L22 20 Z" fill="#D4AF37" />
-          <path d="M50 26 L54 12 L42 20 Z" fill="#D4AF37" />
-          <ellipse cx="32" cy="34" rx="18" ry="16" fill="#D4AF37" />
+          <path d="M14 26 L10 12 L22 20 Z" fill="#C9A94D" />
+          <path d="M50 26 L54 12 L42 20 Z" fill="#C9A94D" />
+          <ellipse cx="32" cy="34" rx="18" ry="16" fill="#C9A94D" />
           <ellipse cx="32" cy="38" rx="11" ry="9" fill="#F5E6C8" />
           <circle cx="25" cy="32" r="2.2" fill="#0B0A08" />
           <circle cx="39" cy="32" r="2.2" fill="#0B0A08" />

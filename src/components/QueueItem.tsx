@@ -61,7 +61,7 @@ export const QueueItem = React.memo(function QueueItem({
                   <span className="w-0.5 h-2.5 bg-accent rounded-full animate-pulse delay-150" />
                 </div>
               ) : (
-                <Pause className="w-3 h-3 text-accent fill-[#D4AF37]" />
+                <Pause className="w-3 h-3 text-accent fill-accent" />
               )}
             </div>
           ) : (
@@ -102,7 +102,7 @@ export const QueueItem = React.memo(function QueueItem({
               e.stopPropagation();
               onRemove();
             }}
-            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-rose-500/10 text-text-muted hover:text-rose-400 transition-all"
+            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-all"
             title="Remove from queue"
           >
             <Trash2 className="w-3.5 h-3.5" />

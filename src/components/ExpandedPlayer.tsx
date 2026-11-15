@@ -158,7 +158,7 @@ export default function ExpandedPlayer() {
         {/* Soft Ambient Tint */}
         <div
           className="absolute -top-32 left-1/3 w-[600px] h-[500px] rounded-full blur-[160px] opacity-[0.09] pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #D4AF37 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
         />
 
         {/* Top Header Bar */}
@@ -217,7 +217,7 @@ export default function ExpandedPlayer() {
               >
                 <Heart
                   className={`w-6 h-6 transition-colors ${
-                    isLiked ? 'fill-rose-500 text-rose-500' : 'text-text-muted hover:text-text-primary'
+                    isLiked ? 'fill-accent text-accent' : 'text-text-muted hover:text-text-primary'
                   }`}
                 />
               </button>
@@ -271,7 +271,7 @@ export default function ExpandedPlayer() {
 
               <button
                 onClick={togglePlay}
-                className="w-14 h-14 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shadow-[#D4AF37]/20"
+                className="w-14 h-14 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/20"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -304,7 +304,7 @@ export default function ExpandedPlayer() {
             <div className="flex items-center gap-3 mt-3 px-4 max-w-xs mx-auto w-full">
               <button onClick={toggleMute} className="text-text-muted hover:text-text-primary transition-colors">
                 {isMuted || volume === 0 ? (
-                  <VolumeX className="w-4 h-4 text-rose-500" />
+                  <VolumeX className="w-4 h-4 text-accent" />
                 ) : (
                   <Volume2 className="w-4 h-4" />
                 )}
@@ -320,7 +320,7 @@ export default function ExpandedPlayer() {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 />
                 <div
-                  className="absolute top-0 left-0 h-full bg-[#929CAF] group-hover:bg-accent rounded-full transition-all"
+                  className="absolute top-0 left-0 h-full bg-[var(--seek-handle)] group-hover:bg-accent rounded-full transition-all"
                   style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
                 />
                 <div
@@ -511,7 +511,7 @@ export default function ExpandedPlayer() {
                               await db.likedTracks.put({ ...rec, likedAt: Date.now() });
                               recordFeedback('liked', rec);
                             }}
-                            className="p-1 text-text-muted hover:text-rose-400 transition-colors"
+                            className="p-1 text-text-muted hover:text-red-400 transition-colors"
                             title="Add to liked"
                           >
                             <Heart className="w-3.5 h-3.5" />

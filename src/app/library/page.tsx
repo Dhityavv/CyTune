@@ -208,7 +208,7 @@ function LibraryContent() {
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-1.5 bg-[#16161D] p-1.5 rounded-2xl border border-border-subtle self-start sm:self-auto shadow-sm">
+        <div className="flex items-center gap-1.5 bg-surface p-1.5 rounded-2xl border border-border-subtle self-start sm:self-auto shadow-sm">
           <button
             onClick={() => setActiveTab('favorites')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -253,18 +253,18 @@ function LibraryContent() {
           {favorites && favorites.length > 0 ? (
             <>
               {/* Liked Songs Editorial Spotlight Banner */}
-              <div className="relative rounded-2xl overflow-hidden bg-[#16161D]/70 border border-border-subtle p-6 sm:p-8 flex items-center gap-6 shadow-2xl">
+              <div className="relative rounded-2xl overflow-hidden bg-surface/70 border border-border-subtle p-6 sm:p-8 flex items-center gap-6 shadow-2xl">
                 <div
                   className="absolute -top-16 -left-16 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, #E11D48 0%, transparent 70%)' }}
+                  style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
                 />
 
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-rose-600 to-rose-400 flex items-center justify-center text-text-primary shadow-xl shadow-rose-900/40 flex-shrink-0 z-10">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#A3925C] to-[#C9A94D] flex items-center justify-center text-text-primary shadow-xl shadow-[#6E5A20]/40 flex-shrink-0 z-10">
                   <Heart className="w-12 h-12 fill-white" />
                 </div>
 
                 <div className="space-y-3 min-w-0 z-10">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-accent">
                     Auto Playlist
                   </span>
                   <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
@@ -400,7 +400,7 @@ function LibraryContent() {
                       e.stopPropagation();
                       handleDeletePlaylist(pl.id, pl.name);
                     }}
-                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/70 text-text-primary opacity-0 group-hover:opacity-100 hover:bg-rose-600 transition-all"
+                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/70 text-text-primary opacity-0 group-hover:opacity-100 hover:bg-red-600/80 transition-all"
                     title="Delete playlist"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -410,7 +410,7 @@ function LibraryContent() {
             </div>
           ) : (
             <div className="py-20 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#16161D] flex items-center justify-center text-text-muted mx-auto border border-border-subtle">
+              <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center text-text-muted mx-auto border border-border-subtle">
                 <ListMusic className="w-6 h-6" />
               </div>
               <h3 className="text-base font-bold text-text-primary">No custom playlists</h3>
@@ -474,7 +474,7 @@ function LibraryContent() {
                           </div>
                           <button
                             onClick={() => handleRemove(track.id)}
-                            className="p-1.5 rounded-lg text-text-muted hover:text-rose-400 transition-colors"
+                            className="p-1.5 rounded-lg text-text-muted hover:text-red-400 transition-colors"
                             title="Remove from playlist"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ function LibraryContent() {
             {history && history.length > 0 && (
               <button
                 onClick={handleClearHistory}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-text-secondary hover:text-rose-400 hover:bg-[#16161D] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-text-secondary hover:text-red-400 hover:bg-surface transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear History</span>
@@ -507,7 +507,7 @@ function LibraryContent() {
           </div>
 
           {history && history.length > 0 ? (
-            <div className="bg-[#16161D]/40 p-3 rounded-2xl border border-border-subtle shadow-sm">
+            <div className="bg-surface/40 p-3 rounded-2xl border border-border-subtle shadow-sm">
               <TrackTableHeader />
               <div className="space-y-1">
                 {history.map((item, idx) => (
@@ -528,7 +528,7 @@ function LibraryContent() {
             </div>
           ) : (
             <div className="py-20 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#16161D] flex items-center justify-center text-text-muted mx-auto border border-border-subtle">
+              <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center text-text-muted mx-auto border border-border-subtle">
                 <History className="w-6 h-6" />
               </div>
               <h3 className="text-base font-bold text-text-primary">No listening history yet</h3>

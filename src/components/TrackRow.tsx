@@ -148,7 +148,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
           onClick={toggleFavorite}
           className={`p-1.5 rounded-lg transition-colors ${
             isLiked
-              ? 'text-rose-500 fill-rose-500 opacity-100'
+              ? 'text-accent fill-accent opacity-100'
               : 'opacity-0 group-hover:opacity-100 text-text-muted hover:text-text-primary'
           }`}
           title={isLiked ? 'Remove from favorites' : 'Add to favorites'}

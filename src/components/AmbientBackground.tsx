@@ -14,7 +14,7 @@ export default function AmbientBackground() {
           isPlaying ? 'opacity-[0.14]' : 'opacity-[0.06]'
         }`}
         style={{
-          background: `radial-gradient(circle, ${ambientColor || '#D4AF37'} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${ambientColor || '#C9A94D'} 0%, transparent 70%)`,
         }}
       />
       <div
@@ -22,7 +22,7 @@ export default function AmbientBackground() {
           isPlaying ? 'opacity-[0.10]' : 'opacity-[0.04]'
         }`}
         style={{
-          background: 'radial-gradient(circle, #23201A 0%, transparent 70%)',
+          background: 'radial-gradient(circle, var(--surface-hover) 0%, transparent 70%)',
         }}
       />
 

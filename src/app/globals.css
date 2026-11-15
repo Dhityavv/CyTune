@@ -1,45 +1,71 @@
 @import "tailwindcss";
 
+/* ============================================================
+   ORBITTUNE — NOCTURNE AUDIO EXPERIENCE
+   Design system v3 (redesign 2026)
+   Palette: Obsidian / Graphite / Slate surfaces,
+   Champagne Gold accent, Deep Teal + Muted Indigo support,
+   Soft Ivory text, Silver Gray secondary text.
+   ============================================================ */
+
 @theme {
-  /* Restrained Deep Obsidian & Slate Foundation */
-  --color-canvas: #0B0A08;
-  --color-sidebar: #100F0C;
-  --color-surface: #1A1814;
-  --color-surface-hover: #23201A;
-  --color-surface-active: #2E2A22;
-  --color-surface-elevated: #252219;
+  /* — Nocturne Surfaces — */
+  --color-canvas: #101114;            /* Obsidian — page background */
+  --color-sidebar: #13151A;           /* sidebar: one step above canvas */
+  --color-surface: #191B20;           /* Graphite — cards, panels */
+  --color-surface-hover: #202329;     /* Dark Surface — hover state */
+  --color-surface-active: #252A31;    /* Slate — active/pressed */
+  --color-surface-elevated: #2A2D33;  /* Muted Surface — elevated panels */
 
-  /* Editorial High-Contrast Typography */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A1A1AA;
-  --color-text-muted: #8A8F98;
+  /* — Editorial Typography — */
+  --color-text-primary: #E8E4D9;      /* Soft Ivory — headings, primary text */
+  --color-text-secondary: #89919C;    /* Silver Gray — secondary text */
+  --color-text-muted: #6B7280;        /* deep silver — metadata */
 
-  /* Sophisticated Cobalt Brand Accent */
-  --color-accent: #D4AF37;
-  --color-accent-hover: #E8C872;
-  --color-accent-subtle: rgba(212, 175, 55, 0.12);
-  --color-accent-glow: rgba(212, 175, 55, 0.35);
+  /* — Champagne Gold Brand Accent (selective use) — */
+  --color-accent: #C9A94D;
+  --color-accent-hover: #DDC473;
+  --color-accent-subtle: rgba(201, 169, 77, 0.12);
+  --color-accent-glow: rgba(201, 169, 77, 0.30);
 
-  /* Hairline Borders */
-  --color-border-subtle: rgba(255, 255, 255, 0.07);
-  --color-border-hover: rgba(255, 255, 255, 0.14);
-  --color-border-active: rgba(212, 175, 55, 0.45);
+  /* — Supporting Accents (teal & indigo, used sparingly) — */
+  --color-teal: #315B55;
+  --color-teal-bright: #4E8A82;       /* lightened for text-on-dark readability */
+  --color-teal-subtle: rgba(49, 91, 85, 0.28);
+  --color-indigo: #7775A8;
+  --color-indigo-subtle: rgba(119, 117, 168, 0.18);
+
+  /* — Hairline Borders — */
+  --color-border-subtle: rgba(232, 228, 217, 0.07);
+  --color-border-hover: rgba(232, 228, 217, 0.14);
+  --color-border-active: rgba(201, 169, 77, 0.45);
 }
 
 :root {
-  --canvas: #0B0A08;
-  --sidebar: #100F0C;
-  --surface: #1A1814;
-  --surface-hover: #23201A;
-  --surface-active: #2E2A22;
-  --surface-elevated: #252219;
-  --text-primary: #FFFFFF;
-  --text-secondary: #A1A1AA;
-  --text-muted: #8A8F98;
-  --accent: #D4AF37;
-  --accent-hover: #E8C872;
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.14);
+  --canvas: #101114;
+  --sidebar: #13151A;
+  --surface: #191B20;
+  --surface-hover: #202329;
+  --surface-active: #252A31;
+  --surface-elevated: #2A2D33;
+  --text-primary: #E8E4D9;
+  --text-secondary: #89919C;
+  --text-muted: #6B7280;
+  --accent: #C9A94D;
+  --accent-hover: #DDC473;
+  --teal-bright: #4E8A82;
+  --indigo: #7775A8;
+  --border-subtle: rgba(232, 228, 217, 0.07);
+  --border-hover: rgba(232, 228, 217, 0.14);
+
+  /* Media placeholders & overlays (theme-aware; fixes light-mode breakage) */
+  --placeholder-grad-1: #1C1E24;
+  --placeholder-grad-2: #14161A;
+  --placeholder-grad-3: #0C0D10;
+  --progress-track: #2A2D33;
+  --seek-handle: #89919C;
+  --tile-ink: #E8E4D9;               /* text over genre tile photos */
+  --tile-veil: rgba(16, 17, 20, 0.55); /* controlled image overlay */
 }
 
 body {
@@ -54,7 +80,7 @@ body {
 
 ::selection {
   background-color: var(--accent);
-  color: #FFFFFF;
+  color: #101114;
 }
 
 /* Hide all scrollbars (scroll tetap berfungsi, tanpa bilah putih) */
@@ -93,33 +119,54 @@ html, body {
 
 /* Soft glow pulse for primary accent elements */
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.0); }
-  50% { box-shadow: 0 0 18px 2px rgba(212, 175, 55, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 169, 77, 0.0); }
+  50% { box-shadow: 0 0 18px 2px rgba(201, 169, 77, 0.22); }
+}
+
+/* Gentle entrance for spotlight / section content */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-float { animation: floatY 4s ease-in-out infinite; }
 .animate-glow { animation: glowPulse 3s ease-in-out infinite; }
+.animate-fade-up { animation: fadeUp 0.45s ease-out both; }
 
-/* Soft light mode (gentle on the eyes) */
+/* ============================================================
+   LIGHT MODE — warm paper, tuned to the Nocturne identity
+   ============================================================ */
 html.light {
-  --color-canvas: #F4F1EA;
-  --color-sidebar: #EDE9DF;
+  --color-canvas: #F2EFE6;
+  --color-sidebar: #EAE6D9;
   --color-surface: #FFFFFF;
-  --color-surface-hover: #F0ECE2;
-  --color-surface-active: #E6E1D6;
-  --color-surface-elevated: #FAF7F0;
-  --color-text-primary: #1A1814;
-  --color-text-secondary: #5C5648;
-  --color-text-muted: #8A8373;
-  --color-accent: #9A7318;
-  --color-accent-hover: #D4AF37;
-  --color-border-subtle: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.16);
+  --color-surface-hover: #F0EDE2;
+  --color-surface-active: #E5E1D4;
+  --color-surface-elevated: #FAF8F1;
+  --color-text-primary: #1A1B1E;
+  --color-text-secondary: #5D626B;
+  --color-text-muted: #838A93;
+  --color-accent: #9A7B1F;
+  --color-accent-hover: #C9A94D;
+  --color-accent-subtle: rgba(154, 123, 31, 0.12);
+  --color-teal-bright: #315B55;
+  --color-teal-subtle: rgba(49, 91, 85, 0.14);
+  --color-indigo-subtle: rgba(119, 117, 168, 0.14);
+  --color-border-subtle: rgba(26, 27, 30, 0.09);
+  --color-border-hover: rgba(26, 27, 30, 0.16);
+
+  --placeholder-grad-1: #E3DFD2;
+  --placeholder-grad-2: #D6D1C0;
+  --placeholder-grad-3: #C9C3AF;
+  --progress-track: #E0DCCE;
+  --seek-handle: #6B7280;
+  --tile-ink: #F2EFE6;
+  --tile-veil: rgba(26, 27, 30, 0.50);
 }
 
 html.light body {
-  background-color: #F4F1EA;
-  color: #1A1814;
+  background-color: #F2EFE6;
+  color: #1A1B1E;
 }
 
 html.light ::selection {

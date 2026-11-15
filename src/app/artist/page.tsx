@@ -111,7 +111,7 @@ function ArtistContent() {
       )}
 
       {error && (
-        <div className="text-rose-400 text-sm">{error}</div>
+        <div className="text-red-400 text-sm">{error}</div>
       )}
 
       {!loading && header && (

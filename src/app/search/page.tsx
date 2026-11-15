@@ -22,18 +22,18 @@ const TRENDING_SEARCHES = [
 ];
 
 const GENRE_TILES = [
-  { name: 'Pop', border: 'border-t-rose-500', query: 'Top Pop Music' , img: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70' },
-  { name: 'Hip-Hop & Rap', border: 'border-t-amber-500', query: 'Top Hip Hop Rap' , img: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70' },
-  { name: 'R&B / Soul', border: 'border-t-indigo-500', query: 'Best R&B Soul Hits' , img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=70' },
-  { name: 'Indie & Alt', border: 'border-t-emerald-500', query: 'Indie Alternative' , img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=70' },
-  { name: 'Chill & Lo-Fi', border: 'border-t-teal-500', query: 'Lofi Chillhop' , img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&q=70' },
-  { name: 'Rock Classics', border: 'border-t-red-500', query: 'Rock Classic Hits' , img: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=400&q=70' },
-  { name: 'Electronic / EDM', border: 'border-t-cyan-500', query: 'Electronic Dance Music' , img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=70' },
-  { name: 'K-Pop', border: 'border-t-fuchsia-500', query: 'Top K-Pop Songs' , img: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=70' },
-  { name: 'Indonesian Hits', border: 'border-t-orange-500', query: 'Hits Indonesia 2026' , img: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=70' },
-  { name: 'Acoustic & Folk', border: 'border-t-stone-400', query: 'Acoustic Guitar Folk' , img: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=70' },
-  { name: 'Sleep & Ambient', border: 'border-t-blue-500', query: 'Ambient Deep Sleep' , img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=70' },
-  { name: 'Jazz & Lounge', border: 'border-t-yellow-500', query: 'Smooth Jazz Lounge' , img: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&q=70' },
+  { name: 'Pop', border: 'border-t-[#C9A94D]', query: 'Top Pop Music' , img: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70' },
+  { name: 'Hip-Hop & Rap', border: 'border-t-[#7775A8]', query: 'Top Hip Hop Rap' , img: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70' },
+  { name: 'R&B / Soul', border: 'border-t-[#315B55]', query: 'Best R&B Soul Hits' , img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=70' },
+  { name: 'Indie & Alt', border: 'border-t-[#4E8A82]', query: 'Indie Alternative' , img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=70' },
+  { name: 'Chill & Lo-Fi', border: 'border-t-[#A3925C]', query: 'Lofi Chillhop' , img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&q=70' },
+  { name: 'Rock Classics', border: 'border-t-[#89919C]', query: 'Rock Classic Hits' , img: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=400&q=70' },
+  { name: 'Electronic / EDM', border: 'border-t-[#6E6A9E]', query: 'Electronic Dance Music' , img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=70' },
+  { name: 'K-Pop', border: 'border-t-[#B08B3E]', query: 'Top K-Pop Songs' , img: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=70' },
+  { name: 'Indonesian Hits', border: 'border-t-[#C9A94D]', query: 'Hits Indonesia 2026' , img: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=70' },
+  { name: 'Acoustic & Folk', border: 'border-t-[#89919C]', query: 'Acoustic Guitar Folk' , img: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=70' },
+  { name: 'Sleep & Ambient', border: 'border-t-[#315B55]', query: 'Ambient Deep Sleep' , img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=70' },
+  { name: 'Jazz & Lounge', border: 'border-t-[#A3925C]', query: 'Smooth Jazz Lounge' , img: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&q=70' },
 ];
 
 function SearchContent() {
@@ -108,7 +108,7 @@ function SearchContent() {
     <div className="space-y-8 pb-24 max-w-7xl mx-auto">
       {/* Search Input Bar */}
       <form onSubmit={handleSubmit} className="relative max-w-xl">
-        <div className="relative flex items-center bg-[#16161D] border border-border-subtle focus-within:border-[#10B981]/60 focus-within:ring-1 focus-within:ring-[#10B981]/30 rounded-2xl transition-all shadow-md">
+        <div className="relative flex items-center bg-surface border border-border-subtle focus-within:border-accent/60 focus-within:ring-1 focus-within:ring-accent/30 rounded-2xl transition-all shadow-md">
           <SearchIcon className="absolute left-4 w-4 h-4 text-text-muted pointer-events-none" />
           <input
             type="text"
@@ -116,7 +116,7 @@ function SearchContent() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search songs, artists, or albums..."
             autoFocus
-            className="w-full pl-11 pr-10 py-3.5 bg-transparent text-text-primary placeholder-[#71717A] text-[14px] focus:outline-none"
+            className="w-full pl-11 pr-10 py-3.5 bg-transparent text-text-primary placeholder-text-muted text-[14px] focus:outline-none"
           />
           {query && (
             <button
@@ -150,7 +150,7 @@ function SearchContent() {
                     setQuery(tag);
                     performSearch(tag);
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#16161D] hover:bg-[#1E1E27] border border-border-subtle text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm"
+                  className="px-3.5 py-1.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm"
                 >
                   {tag}
                 </button>
@@ -172,7 +172,7 @@ function SearchContent() {
                     setQuery(cat.query);
                     performSearch(cat.query);
                   }}
-                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-[#10B981]/40 transition-all text-left flex flex-col justify-between h-28 group hover:scale-[1.02] shadow-md hover:shadow-xl hover:shadow-black/40`}
+                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/40 transition-all text-left flex flex-col justify-between h-28 group hover:scale-[1.02] shadow-md hover:shadow-xl hover:shadow-black/40`}
                 >
                   <img
                     src={cat.img}

@@ -28,26 +28,41 @@ export default function MobileNav() {
 
   return (
     <nav
-      className={`md:hidden fixed left-0 right-0 z-40 bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-4 py-2 flex items-center justify-around transition-all ${
+      aria-label="Primary"
+      className={`md:hidden fixed left-0 right-0 z-40 transition-all duration-300 ${
         currentTrack ? 'bottom-[76px]' : 'bottom-0'
       }`}
     >
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = isActiveItem(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-[10px] font-medium transition-colors min-w-[44px] min-h-[44px] justify-center ${
-              isActive ? 'text-accent font-semibold' : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Icon className="w-5 h-5" />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
+      <div className="mx-3 mb-3 rounded-2xl bg-sidebar/95 backdrop-blur-xl border border-border-subtle shadow-2xl shadow-black/30 px-2 py-1.5 flex items-center justify-around pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = isActiveItem(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              className={`relative flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl text-[10px] font-medium transition-all duration-150 min-w-[52px] min-h-[44px] justify-center active:scale-95 ${
+                isActive ? 'text-text-primary font-semibold' : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-1 h-1 rounded-full bg-accent transition-opacity ${
+                  isActive ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+              <span
+                className={`flex items-center justify-center w-8 h-6 rounded-lg transition-colors ${
+                  isActive ? 'bg-accent-subtle' : ''
+                }`}
+              >
+                <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-accent' : ''}`} />
+              </span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

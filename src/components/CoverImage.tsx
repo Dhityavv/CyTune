@@ -29,7 +29,7 @@ export function VinylPlaceholder({ size = 'md' }: { size?: 'xs' | 'sm' | 'md' | 
     <div
       className="w-full h-full flex items-center justify-center select-none overflow-hidden relative"
       style={{
-        background: 'radial-gradient(circle at 35% 35%, #1E1E27 0%, #16161D 60%, #0B0B0E 100%)',
+        background: 'radial-gradient(circle at 35% 35%, var(--placeholder-grad-1) 0%, var(--placeholder-grad-2) 60%, var(--placeholder-grad-3) 100%)',
       }}
       aria-label="Album cover placeholder"
     >
@@ -44,9 +44,9 @@ export function VinylPlaceholder({ size = 'md' }: { size?: 'xs' | 'sm' | 'md' | 
         <circle cx="50" cy="50" r="39" stroke="rgba(255,255,255,0.05)" strokeWidth="0.75" />
         <circle cx="50" cy="50" r="32" stroke="rgba(255,255,255,0.06)" strokeWidth="0.75" />
         <circle cx="50" cy="50" r="25" stroke="rgba(255,255,255,0.05)" strokeWidth="0.75" />
-        <circle cx="50" cy="50" r="18" stroke="rgba(16,185,129,0.25)" strokeWidth="1" />
-        <circle cx="50" cy="50" r="6" fill="#10B981" fillOpacity="0.85" />
-        <circle cx="50" cy="50" r="2" fill="#0B0B0E" />
+        <circle cx="50" cy="50" r="18" stroke="rgba(201,169,77,0.22)" strokeWidth="1" />
+        <circle cx="50" cy="50" r="6" fill="#C9A94D" fillOpacity="0.85" />
+        <circle cx="50" cy="50" r="2" fill="#0C0D10" />
       </svg>
 
       {/* Center ambient glow badge */}
@@ -119,11 +119,11 @@ export default function CoverImage({
 
   return (
     <div
-      className={`relative overflow-hidden bg-[#101014] ${aspectClass} ${containerClassName}`}
+      className={`relative overflow-hidden bg-surface ${aspectClass} ${containerClassName}`}
     >
       {/* Loading Skeleton */}
       {isLoading && !hasError && (
-        <div className="absolute inset-0 bg-[#16161D] animate-pulse z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-surface-hover animate-pulse z-10 pointer-events-none" />
       )}
 
       {/* SVG Vinyl Placeholder when broken or no source */}

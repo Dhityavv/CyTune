@@ -130,7 +130,7 @@ export default function BottomPlayer() {
           onClick={toggleFavorite}
           className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
             isLiked
-              ? 'text-rose-500 fill-rose-500'
+              ? 'text-accent fill-accent'
               : 'text-text-muted hover:text-text-primary'
           }`}
           title={isLiked ? 'Remove from liked' : 'Add to liked'}
@@ -163,7 +163,7 @@ export default function BottomPlayer() {
 
           <button
             onClick={togglePlay}
-            className="w-9 h-9 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all shadow-[#D4AF37]/15"
+            className="w-9 h-9 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/15"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
@@ -294,7 +294,7 @@ export default function BottomPlayer() {
             title={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted || volume === 0 ? (
-              <VolumeX className="w-4 h-4 text-rose-500" />
+              <VolumeX className="w-4 h-4 text-accent" />
             ) : volume < 0.5 ? (
               <Volume1 className="w-4 h-4" />
             ) : (
@@ -312,7 +312,7 @@ export default function BottomPlayer() {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
             <div
-              className="absolute top-0 left-0 h-full bg-[#929CAF] group-hover:bg-accent rounded-full transition-all"
+              className="absolute top-0 left-0 h-full bg-[var(--seek-handle)] group-hover:bg-accent rounded-full transition-all"
               style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
             />
             <div

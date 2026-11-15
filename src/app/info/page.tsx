@@ -42,7 +42,7 @@ export default function InfoPage() {
         <h2 className="text-base font-bold text-text-primary">Your Listening Stats</h2>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl bg-sidebar border border-border-subtle p-3 text-center">
-            <Heart className="w-4 h-4 text-rose-500 mx-auto mb-1" />
+            <Heart className="w-4 h-4 text-accent mx-auto mb-1" />
             <p className="text-lg font-bold text-text-primary">{favorites}</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider">Liked</p>
           </div>

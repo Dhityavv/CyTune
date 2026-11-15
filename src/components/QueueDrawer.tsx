@@ -70,7 +70,7 @@ export default function QueueDrawer() {
                 {queue.length > 0 && (
                   <button
                     onClick={clearQueue}
-                    className="p-1.5 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     title="Clear queue"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function QueueDrawer() {
                             await db.likedTracks.put({ ...rec, likedAt: Date.now() });
                             recordFeedback('liked', rec);
                           }}
-                          className="p-1 text-text-muted hover:text-rose-400 transition-colors"
+                          className="p-1 text-text-muted hover:text-red-400 transition-colors"
                           title="Add to liked"
                         >
                           <Heart className="w-3.5 h-3.5" />

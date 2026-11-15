@@ -109,7 +109,7 @@ export default function TrackCard({ track }: TrackCardProps) {
             className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-text-primary hover:bg-black/80 transition-colors"
             title={isLiked ? 'Unlike' : 'Like'}
           >
-            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-accent text-accent' : ''}`} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v); }}
