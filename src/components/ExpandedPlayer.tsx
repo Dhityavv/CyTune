@@ -44,6 +44,7 @@ export default function ExpandedPlayer() {
     volume,
     isMuted,
     queue,
+    queueIndex,
     repeatMode,
     isShuffle,
     isExpanded,
@@ -68,6 +69,8 @@ export default function ExpandedPlayer() {
     playRecommendedTrack,
     dismissRecommendation,
     recordFeedback,
+    playQueueIndex,
+    removeFromQueue,
   } = usePlayerStore();
 
   const [tabOverride, setTabOverride] = useState<'lyrics' | 'queue' | null>(null);
@@ -213,7 +216,7 @@ export default function ExpandedPlayer() {
 
               <button
                 onClick={toggleFavorite}
-                className="p-2.5 rounded-lg hover:bg-white/[0.06] transition-colors flex-shrink-0"
+                className="p-2.5 rounded-lg hover:bg-surface transition-colors flex-shrink-0"
               >
                 <Heart
                   className={`w-6 h-6 transition-colors ${
@@ -225,7 +228,7 @@ export default function ExpandedPlayer() {
 
             {/* Seek Bar */}
             <div className="mt-3">
-              <div className="relative h-1.5 bg-text-primary/10 hover:h-2 rounded-full cursor-pointer group transition-all" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 5 : -5; seekTo(Math.max(0, Math.min(duration || 0, currentTime + d))); }}>
+              <div className="relative h-1.5 bg-surface-hover hover:h-2 rounded-full cursor-pointer group transition-all" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 5 : -5; seekTo(Math.max(0, Math.min(duration || 0, currentTime + d))); }}>
                 <input
                   type="range"
                   min={0}
@@ -239,7 +242,7 @@ export default function ExpandedPlayer() {
                   style={{ width: `${progressPercent}%` }}
                 />
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-accent shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
                   style={{ left: `${progressPercent}%` }}
                 />
               </div>
@@ -271,13 +274,13 @@ export default function ExpandedPlayer() {
 
               <button
                 onClick={togglePlay}
-                className="w-14 h-14 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/20"
+                className="w-14 h-14 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/25"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <Pause className="w-6 h-6 fill-black" />
+                  <Pause className="w-6 h-6 fill-current" />
                 ) : (
-                  <Play className="w-6 h-6 fill-black translate-x-0.5" />
+                  <Play className="w-6 h-6 fill-current translate-x-0.5" />
                 )}
               </button>
 
@@ -309,7 +312,7 @@ export default function ExpandedPlayer() {
                   <Volume2 className="w-4 h-4" />
                 )}
               </button>
-              <div className="relative flex-1 h-1 bg-text-primary/10 hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
+              <div className="relative flex-1 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
                 <input
                   type="range"
                   min={0}
@@ -320,11 +323,11 @@ export default function ExpandedPlayer() {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 />
                 <div
-                  className="absolute top-0 left-0 h-full bg-[var(--seek-handle)] group-hover:bg-accent rounded-full transition-all"
+                  className="absolute top-0 left-0 h-full bg-accent rounded-full transition-all"
                   style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
                 />
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-text-primary shadow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
                   style={{ left: `${(isMuted ? 0 : volume) * 100}%` }}
                 />
               </div>
@@ -336,7 +339,7 @@ export default function ExpandedPlayer() {
               onClick={() => setActiveTab('lyrics')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'lyrics'
-                  ? 'bg-accent text-black shadow-sm'
+                  ? 'bg-accent text-[#101114] shadow-sm'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -347,7 +350,7 @@ export default function ExpandedPlayer() {
               onClick={() => setActiveTab('queue')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'queue'
-                  ? 'bg-accent text-black shadow-sm'
+                  ? 'bg-accent text-[#101114] shadow-sm'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -378,7 +381,7 @@ export default function ExpandedPlayer() {
                         onClick={() => seekTo(line.time)}
                         className={`cursor-pointer transition-all duration-300 ${
                           isActive
-                            ? 'text-text-primary text-xl sm:text-2xl font-bold drop-shadow-[0_0_12px_rgba(212,175,55,0.45)]'
+                            ? 'text-text-primary text-xl sm:text-2xl font-bold drop-shadow-[0_0_12px_rgba(201,169,77,0.45)]'
                             : 'text-text-muted hover:text-text-secondary text-base sm:text-lg font-medium'
                         }`}
                       >
@@ -456,6 +459,30 @@ export default function ExpandedPlayer() {
                   </div>
                 )}
 
+                {/* 1b. Upcoming queue entries (real playback queue, in order) */}
+                {queue.length > queueIndex + 1 && (
+                  <div className="space-y-1.5 pt-3 border-t border-border-subtle">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block mb-1">
+                      Up Next · {queue.length - queueIndex - 1}
+                    </span>
+                    {queue.slice(queueIndex + 1).map((track, i) => {
+                      const idx = queueIndex + 1 + i;
+                      return (
+                        <QueueItem
+                          key={`${track.id}-${idx}`}
+                          track={track}
+                          index={idx}
+                          isCurrent={false}
+                          isPlaying={false}
+                          isBuffering={false}
+                          onSelect={() => playQueueIndex(idx)}
+                          onRemove={() => removeFromQueue(idx)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* 2. Next Up via Smart Autoplay */}
                 {smartAutoplayEnabled && recommendationQueue.length > 0 && (
                   <div className="space-y-2.5 pt-3 border-t border-border-subtle">
@@ -471,7 +498,7 @@ export default function ExpandedPlayer() {
                     {recommendationQueue.map((rec) => (
                       <div
                         key={rec.id}
-                        className="group flex items-center justify-between p-2 rounded-xl bg-surface/60 hover:bg-surface-hover border border-white/[0.04] transition-all"
+                        className="group flex items-center justify-between p-2 rounded-xl bg-surface/60 hover:bg-surface-hover border border-border-subtle transition-all"
                       >
                         <div
                           onClick={() => playRecommendedTrack(rec)}
@@ -484,8 +511,8 @@ export default function ExpandedPlayer() {
                               size="xs"
                               className="w-full h-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center z-10">
-                              <Play className="w-3.5 h-3.5 fill-white text-text-primary" />
+                            <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center z-10">
+                              <Play className="w-3.5 h-3.5 fill-current text-accent" />
                             </div>
                           </div>
 
@@ -511,7 +538,7 @@ export default function ExpandedPlayer() {
                               await db.likedTracks.put({ ...rec, likedAt: Date.now() });
                               recordFeedback('liked', rec);
                             }}
-                            className="p-1 text-text-muted hover:text-red-400 transition-colors"
+                            className="p-1 text-text-muted hover:text-accent transition-colors"
                             title="Add to liked"
                           >
                             <Heart className="w-3.5 h-3.5" />

@@ -36,7 +36,7 @@ export const QueueItem = React.memo(function QueueItem({
       className={`group flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer select-none border ${
         isCurrent
           ? 'bg-surface-hover border-accent/40 shadow-md shadow-black/40 text-text-primary'
-          : 'bg-transparent border-transparent hover:bg-surface hover:border-white/[0.04] text-text-secondary'
+          : 'bg-transparent border-transparent hover:bg-surface hover:border-border-subtle text-text-secondary'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -65,8 +65,8 @@ export const QueueItem = React.memo(function QueueItem({
               )}
             </div>
           ) : (
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-20">
-              <Play className="w-3 h-3 text-text-primary fill-white translate-x-0.5" />
+            <div className="absolute inset-0 bg-canvas/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-20">
+              <Play className="w-3 h-3 text-accent fill-current translate-x-0.5" />
             </div>
           )}
         </div>

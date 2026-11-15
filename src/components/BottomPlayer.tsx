@@ -105,7 +105,7 @@ export default function BottomPlayer() {
             size="md"
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
+          <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
             <Maximize2 className="w-3.5 h-3.5 text-text-primary" />
           </div>
         </div>
@@ -163,13 +163,13 @@ export default function BottomPlayer() {
 
           <button
             onClick={togglePlay}
-            className="w-9 h-9 rounded-full bg-text-primary text-canvas flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/15"
+            className="w-9 h-9 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/20"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4 fill-black" />
+              <Pause className="w-4 h-4 fill-current" />
             ) : (
-              <Play className="w-4 h-4 fill-black translate-x-0.5" />
+              <Play className="w-4 h-4 fill-current translate-x-0.5" />
             )}
           </button>
 
@@ -200,7 +200,7 @@ export default function BottomPlayer() {
         <div className="w-full flex items-center gap-2.5 text-[11px] font-mono text-text-muted">
           <span className="w-9 text-right">{formatTime(effectiveProgress)}</span>
 
-          <div className="relative flex-1 h-1 bg-text-primary/10 hover:h-1.5 rounded-full cursor-pointer group transition-all" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 5 : -5; seekTo(Math.max(0, Math.min(duration || 0, effectiveProgress + d))); }}>
+          <div className="relative flex-1 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 5 : -5; seekTo(Math.max(0, Math.min(duration || 0, effectiveProgress + d))); }}>
             <input
               type="range"
               min={0}
@@ -226,7 +226,7 @@ export default function BottomPlayer() {
             />
             {/* Scrubber Thumb Indicator on Hover / Seek */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white shadow-lg shadow-black/80 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-accent shadow-lg shadow-black/80 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
               style={{ left: `${progressPercent}%` }}
             />
           </div>
@@ -256,8 +256,8 @@ export default function BottomPlayer() {
           onClick={toggleLyrics}
           className={`p-2 rounded-lg text-xs font-medium transition-colors ${
             showLyrics
-              ? 'bg-surface text-accent'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.04]'
+              ? 'bg-surface text-accent border border-accent/30'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface'
           }`}
           title="Toggle Lyrics"
         >
@@ -270,7 +270,7 @@ export default function BottomPlayer() {
           className={`p-2 rounded-lg text-xs font-medium transition-colors ${
             isQueueDrawerOpen
               ? 'bg-surface text-accent border border-accent/30'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.04]'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface'
           }`}
           title="Toggle Queue Drawer"
         >
@@ -280,7 +280,7 @@ export default function BottomPlayer() {
         {/* Fullscreen Expand */}
         <button
           onClick={toggleExpanded}
-          className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors"
+          className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
           title="Open Fullscreen Player"
         >
           <Maximize2 className="w-4 h-4" />
@@ -301,7 +301,7 @@ export default function BottomPlayer() {
               <Volume2 className="w-4 h-4" />
             )}
           </button>
-          <div className="relative w-18 h-1 bg-text-primary/10 hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
+          <div className="relative w-18 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
             <input
               type="range"
               min={0}
@@ -312,11 +312,11 @@ export default function BottomPlayer() {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
             <div
-              className="absolute top-0 left-0 h-full bg-[var(--seek-handle)] group-hover:bg-accent rounded-full transition-all"
+              className="absolute top-0 left-0 h-full bg-accent rounded-full transition-all"
               style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
             />
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-text-primary shadow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
               style={{ left: `${(isMuted ? 0 : volume) * 100}%` }}
             />
           </div>
