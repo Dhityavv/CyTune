@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Search, Moon, Sun, Sparkles, User, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Moon, Sun, Sparkles, User, LogOut, Palette, Settings, Gamepad2, ExternalLink, Info } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import AuthModal from '@/components/AuthModal';
 
@@ -15,6 +16,7 @@ export default function TopNav() {
 
   const { user, signOut, initAuth } = useAuthStore();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     initAuth();
@@ -28,6 +30,19 @@ export default function TopNav() {
       document.documentElement.classList.toggle('light', saved === 'light');
     }
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    }
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isProfileMenuOpen]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -45,30 +60,20 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-30 h-14 bg-canvas/80 backdrop-blur-xl border-b border-border-subtle px-4 sm:px-8 flex items-center justify-between gap-3 select-none">
-      {/* 1. History Nav Controls (Desktop) */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          aria-label="Go back"
-          className="w-8 h-8 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => router.forward()}
-          aria-label="Go forward"
-          className="w-8 h-8 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+      {/* Brand link for compact view */}
+      <div className="flex items-center gap-3 shrink-0">
+        <Link href="/" className="flex items-center gap-2 group md:hidden">
+          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-[#101114] font-bold text-xs shadow-md shadow-[#C9A94D]/25">
+            O
+          </div>
+          <span className="font-bold text-sm tracking-tight text-text-primary">OrbitTune</span>
+        </Link>
       </div>
 
-      {/* 2. Global Omnibox Search Bar */}
+      {/* Global Omnibox Search Bar */}
       <form
         onSubmit={handleSearchSubmit}
-        className="flex-1 max-w-md mx-2 sm:mx-4 relative group"
+        className="flex-1 max-w-lg mx-2 sm:mx-4 relative group"
       >
         <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-accent transition-colors" />
         <input
@@ -77,12 +82,12 @@ export default function TopNav() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search songs, albums, artists, or lyrics..."
-          className="w-full pl-10 pr-4 py-1.5 rounded-full bg-surface/90 border border-border-subtle text-text-primary text-xs placeholder:text-text-muted focus:outline-none focus:border-accent/70 focus:bg-surface focus:ring-1 focus:ring-accent/40 transition-all"
+          className="w-full pl-10 pr-4 py-2 rounded-full bg-surface/90 border border-border-subtle text-text-primary text-xs placeholder:text-text-muted focus:outline-none focus:border-accent/70 focus:bg-surface focus:ring-1 focus:ring-accent/40 transition-all"
         />
       </form>
 
-      {/* 3. Right Utilities: Theme, Quick Links, Auth */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right Utilities: Theme, Quick Links, Auth */}
+      <div className="flex items-center gap-2.5 shrink-0">
         <button
           type="button"
           onClick={toggleTheme}
@@ -92,42 +97,102 @@ export default function TopNav() {
           {theme === 'dark' ? <Sun className="w-4 h-4 text-accent" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* User Account / Profile Button */}
+        {/* User Account / Profile Menu */}
         {user ? (
-          <div className="relative">
+          <div className="relative" ref={profileMenuRef}>
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-colors"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-all active:scale-95"
             >
-              <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-[11px] overflow-hidden">
+              <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-[11px] overflow-hidden shrink-0">
                 {user.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={user.avatar_url} alt={user.display_name} className="w-full h-full object-cover" />
                 ) : (
                   user.display_name.charAt(0).toUpperCase()
                 )}
               </div>
-              <span className="max-w-[100px] truncate hidden sm:inline">{user.display_name}</span>
+              <span className="max-w-[110px] truncate hidden sm:inline font-medium">{user.display_name}</span>
             </button>
 
+            {/* Expanded Account Dropdown Menu */}
             {isProfileMenuOpen && (
               <div
-                className="absolute right-0 mt-2 w-48 rounded-2xl bg-sidebar border border-border-subtle shadow-2xl py-2 z-50 text-xs text-text-primary animate-in fade-in zoom-in-95 duration-150"
-                onClick={() => setIsProfileMenuOpen(false)}
+                className="absolute right-0 mt-2 w-56 rounded-2xl bg-sidebar border border-border-subtle shadow-2xl py-2 z-50 text-xs text-text-primary animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl"
               >
-                <div className="px-3.5 py-2 border-b border-border-subtle">
-                  <p className="font-bold truncate">{user.display_name}</p>
-                  <p className="text-[11px] text-text-muted truncate">{user.email || `@${user.username}`}</p>
+                {/* User info banner */}
+                <div className="px-4 py-2.5 border-b border-border-subtle">
+                  <p className="font-bold text-text-primary truncate">{user.display_name}</p>
+                  <p className="text-[11px] text-text-muted truncate mt-0.5">
+                    {user.email || `@${user.username}`}
+                  </p>
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-accent/15 text-accent">
+                    {user.isGuest ? 'Guest Listener' : 'Orbit Member'}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => signOut()}
-                  className="w-full px-3.5 py-2 text-left hover:bg-surface flex items-center gap-2 text-red-400 transition-colors"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign out</span>
-                </button>
+
+                {/* Navigation links */}
+                <div className="py-1">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
+                  >
+                    <User className="w-4 h-4 text-accent" />
+                    <span>View Profile</span>
+                  </Link>
+
+                  <Link
+                    href="/profile/edit"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-text-muted" />
+                    <span>Edit Profile</span>
+                  </Link>
+
+                  <Link
+                    href="/store"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
+                  >
+                    <Palette className="w-4 h-4 text-text-muted" />
+                    <span>Cosmetic Store</span>
+                  </Link>
+
+                  <Link
+                    href="/games"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
+                  >
+                    <Gamepad2 className="w-4 h-4 text-text-muted" />
+                    <span>Mini Games</span>
+                  </Link>
+
+                  <Link
+                    href="/info"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
+                  >
+                    <Info className="w-4 h-4 text-text-muted" />
+                    <span>About & Support</span>
+                  </Link>
+                </div>
+
+                {/* Sign out */}
+                <div className="border-t border-border-subtle pt-1 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      signOut();
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-surface flex items-center gap-2.5 text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -135,7 +200,7 @@ export default function TopNav() {
           <button
             type="button"
             onClick={() => setIsAuthOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95"
           >
             <User className="w-3.5 h-3.5" />
             <span>Sign In</span>

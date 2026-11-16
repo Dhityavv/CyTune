@@ -1,63 +1,75 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Compass,
   Search,
   Library,
-  Heart,
-  History,
-  Disc,
+  Radio,
+  Sparkles,
+  BarChart2,
   Plus,
   Music,
+  Disc,
+  Gamepad2,
+  Palette,
   Info,
-  Radio,
-  HelpCircle,
-  BarChart2,
-  Sparkles,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ListMusic,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 
-function NavRow({
+interface NavItemProps {
+  href: string;
+  active: boolean;
+  icon: any;
+  label: string;
+  isExpanded: boolean;
+  badge?: React.ReactNode;
+  onNavigate?: () => void;
+}
+
+function NavItem({
   href,
   active,
   icon: Icon,
   label,
-  collapsed,
-  trailing,
-}: {
-  href: string;
-  active?: boolean;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  collapsed?: boolean;
-  trailing?: React.ReactNode;
-}) {
+  isExpanded,
+  badge,
+  onNavigate,
+}: NavItemProps) {
   return (
     <Link
       href={href}
-      title={collapsed ? label : undefined}
-      className={`group relative flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2'} rounded-xl text-[13px] font-medium transition-all duration-200 hover:translate-x-0.5 active:scale-[0.98] ${
+      aria-label={label}
+      onClick={onNavigate}
+      className={`group relative flex items-center ${
+        isExpanded ? 'gap-3.5 px-3.5 py-2.5' : 'justify-center p-3'
+      } rounded-xl text-[13px] font-medium transition-colors duration-150 active:scale-[0.98] ${
         active
-          ? 'bg-surface border border-border-subtle text-text-primary font-semibold shadow-sm ring-1 ring-accent/20'
-          : 'text-text-secondary hover:text-text-primary hover:bg-surface/60 border border-transparent hover:border-border-subtle'
+          ? 'bg-surface border border-border-subtle text-text-primary font-semibold shadow-sm ring-1 ring-accent/25'
+          : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 border border-transparent hover:border-border-subtle'
       }`}
     >
       {active && (
         <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-accent" />
       )}
       <Icon
-        className={`w-4 h-4 flex-shrink-0 transition-colors ${
-          active ? 'text-accent' : 'text-text-muted group-hover:text-text-secondary'
+        className={`w-5 h-5 flex-shrink-0 transition-colors ${
+          active ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'
         }`}
       />
-      {!collapsed && <span className="flex-1 truncate">{label}</span>}
-      {!collapsed && trailing}
+      {isExpanded && <span className="flex-1 truncate tracking-tight">{label}</span>}
+      {isExpanded && badge}
+
+      {/* Floating Tooltip when collapsed */}
+      {!isExpanded && (
+        <div className="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-surface-elevated border border-border-subtle text-text-primary text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
+          {label}
+        </div>
+      )}
     </Link>
   );
 }
@@ -68,23 +80,40 @@ export default function Sidebar() {
   const activePlaylistId = pathname === '/playlist' ? searchParams.get('id') : null;
   const activeLibraryTab = searchParams.get('tab') ?? 'playlists';
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
 
-  // Persist sidebar state
-  useEffect(() => {
-    const saved = localStorage.getItem('orbittune-sidebar-collapsed');
-    if (saved === 'true') setIsCollapsed(true);
-  }, []);
+  const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const toggleCollapsed = () => {
-    const next = !isCollapsed;
-    setIsCollapsed(next);
-    localStorage.setItem('orbittune-sidebar-collapsed', String(next));
+  // Expanded strictly when pointer is inside the sidebar or keyboard focus is active
+  const isExpanded = isHovered || isFocused;
+
+  const handlePointerEnter = () => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+    setIsHovered(true);
   };
 
-  const likedCount = useLiveQuery(() => db.likedTracks.count(), [], 0);
+  const handlePointerLeave = () => {
+    // 80ms gentle grace period to avoid micro-flicker at outer boundary
+    leaveTimerRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 80);
+  };
+
+  // When clicking a navigation link, immediately clear keyboard focus pin
+  // so the sidebar collapses naturally when mouse leaves!
+  const handleNavigate = () => {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setIsFocused(false);
+  };
+
   const playlists = useLiveQuery(() => db.playlists.toArray(), [], []);
 
   const primaryNav = [
@@ -94,9 +123,10 @@ export default function Sidebar() {
   ];
 
   const discoveryNav = [
-    { label: 'Find My Song', href: '/find-my-song', icon: Sparkles },
+    { label: 'Mini Games', href: '/games', icon: Gamepad2 },
+    { label: 'Cosmetic Store', href: '/store', icon: Palette },
     { label: 'Listening Room', href: '/room', icon: Radio },
-    { label: 'Music Quiz', href: '/quiz', icon: HelpCircle },
+    { label: 'Find My Song', href: '/find-my-song', icon: Sparkles },
     { label: 'Listening Insights', href: '/insights', icon: BarChart2 },
   ];
 
@@ -116,187 +146,195 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
-      className={`${
-        isCollapsed ? 'w-18' : 'w-60'
-      } flex-shrink-0 h-screen sticky top-0 bg-sidebar border-r border-border-subtle flex flex-col justify-between z-30 hidden md:flex select-none transition-all duration-200`}
-    >
-      <div className="flex flex-col flex-1 overflow-hidden px-3 py-4 space-y-5">
-        {/* Brand Header + Collapse Button */}
-        <div className="flex items-center justify-between px-1">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-[#101114] ring-1 ring-white/10 shadow-md shadow-[#C9A94D]/20 transition-transform duration-200 group-hover:scale-105 shrink-0">
-              <Disc className="w-4 h-4 animate-[spin_12s_linear_infinite]" />
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <span className="text-sm font-bold tracking-tight text-text-primary block leading-none">
-                  OrbitTune
-                </span>
-                <span className="text-[8px] text-text-muted tracking-[0.18em] font-semibold uppercase mt-1 block">
-                  Hi-Fi Stream
-                </span>
+    /* Outer layout column: preserves permanent 80px space so page content NEVER shifts */
+    <div className="relative shrink-0 w-20 h-screen hidden md:block z-40 select-none">
+      {/* Interactive sidebar element: Pointer events are bound directly to aside
+          so the hit-test area dynamically matches the full width (80px or 256px) */}
+      <aside
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onFocus={() => setIsFocused(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            setIsFocused(false);
+          }
+        }}
+        className={`absolute top-0 left-0 h-full bg-sidebar/95 backdrop-blur-2xl border-r border-border-subtle flex flex-col justify-between transition-[width,box-shadow] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] z-40 ${
+          isExpanded
+            ? 'w-64 shadow-[0_20px_50px_rgba(0,0,0,0.85)] ring-1 ring-border-subtle'
+            : 'w-20 shadow-lg'
+        }`}
+      >
+        <div className="flex flex-col flex-1 overflow-hidden px-3 py-4 space-y-5">
+          {/* Brand Header */}
+          <div className="flex items-center px-2 pt-1">
+            <Link
+              href="/"
+              onClick={handleNavigate}
+              className="flex items-center gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-[#101114] ring-1 ring-white/10 shadow-lg shadow-[#C9A94D]/25 transition-transform duration-200 group-hover:scale-105 shrink-0">
+                <Disc className="w-5 h-5 animate-[spin_12s_linear_infinite]" />
               </div>
-            )}
-          </Link>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
-          >
-            {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-          </button>
-        </div>
+              {isExpanded && (
+                <div className="min-w-0 transition-opacity duration-150">
+                  <span className="text-sm font-bold tracking-tight text-text-primary block leading-none">
+                    OrbitTune
+                  </span>
+                  <span className="text-[9px] text-accent tracking-[0.16em] font-bold uppercase mt-1 block">
+                    Hi-Fi Stream
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
 
-        {/* Primary Navigation */}
-        <nav className="space-y-0.5" aria-label="Primary">
-          {primaryNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <NavRow
-                key={item.href}
-                href={item.href}
-                active={isActive}
-                icon={Icon}
-                label={item.label}
-                collapsed={isCollapsed}
-              />
-            );
-          })}
-        </nav>
-
-        {/* Discovery & Social */}
-        <nav className="space-y-0.5 pt-2 border-t border-border-subtle" aria-label="Discovery">
-          {!isCollapsed && (
-            <span className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.14em] px-2.5 mb-1.5 block">
-              Discovery & Social
-            </span>
-          )}
-          {discoveryNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <NavRow
-                key={item.href}
-                href={item.href}
-                active={isActive}
-                icon={Icon}
-                label={item.label}
-                collapsed={isCollapsed}
-              />
-            );
-          })}
-        </nav>
-
-        {/* Collection Section */}
-        <nav className="space-y-0.5 pt-2 border-t border-border-subtle" aria-label="Collection">
-          {!isCollapsed && (
-            <span className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.14em] px-2.5 mb-1.5 block">
-              Collection
-            </span>
-          )}
-          <NavRow
-            href="/library?tab=favorites"
-            active={pathname === '/library' && activeLibraryTab === 'favorites'}
-            icon={Heart}
-            label="Liked Songs"
-            collapsed={isCollapsed}
-            trailing={
-              likedCount > 0 ? (
-                <span className="text-[10px] font-mono text-text-muted bg-surface border border-border-subtle rounded-md px-1.5 py-0.5 group-hover:text-text-secondary">
-                  {likedCount}
-                </span>
-              ) : undefined
-            }
-          />
-          <NavRow
-            href="/library?tab=history"
-            active={pathname === '/library' && activeLibraryTab === 'history'}
-            icon={History}
-            label="History"
-            collapsed={isCollapsed}
-          />
-        </nav>
-
-        {/* User Playlists (only in expanded mode) */}
-        {!isCollapsed && (
-          <div className="flex flex-col flex-1 overflow-hidden pt-2 border-t border-border-subtle">
-            <div className="flex items-center justify-between px-2.5 mb-1.5">
-              <span className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.14em]">
-                Playlists
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsCreating((v) => !v)}
-                aria-label="Create new playlist"
-                className="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface border border-transparent hover:border-border-subtle transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+          {/* Navigation Links Scrollable Area */}
+          <div className="flex-1 overflow-y-auto space-y-5 scrollbar-none pr-0.5">
+            {/* Primary Nav */}
+            <div className="space-y-1">
+              {primaryNav.map((item) => {
+                const active = pathname === item.href && (item.href !== '/library' || !activePlaylistId);
+                return (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    active={active}
+                    icon={item.icon}
+                    label={item.label}
+                    isExpanded={isExpanded}
+                    onNavigate={handleNavigate}
+                  />
+                );
+              })}
             </div>
 
-            {isCreating && (
-              <form onSubmit={handleCreatePlaylist} className="px-1.5 pb-2.5 space-y-1.5">
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Playlist name…"
-                  autoFocus
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-surface border border-border-subtle text-text-primary text-[12px] placeholder:text-text-muted focus:outline-none focus:border-accent/60 transition-colors"
-                />
-                <div className="flex gap-1.5">
-                  <button type="submit" className="px-2.5 py-1 rounded-lg bg-accent text-[#101114] text-[11px] font-semibold hover:bg-accent-hover transition-colors">
-                    Save
-                  </button>
-                  <button type="button" onClick={() => { setIsCreating(false); setNewName(''); }} className="px-2.5 py-1 rounded-lg text-text-secondary text-[11px] hover:text-text-primary hover:bg-surface transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+            {/* Discovery / Entertainment Section */}
+            <div className="space-y-1 pt-2 border-t border-border-subtle">
+              {isExpanded && (
+                <span className="px-3 text-[10px] font-bold text-text-muted uppercase tracking-[0.14em] block pb-1">
+                  Entertainment
+                </span>
+              )}
+              {discoveryNav.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    active={active}
+                    icon={item.icon}
+                    label={item.label}
+                    isExpanded={isExpanded}
+                    onNavigate={handleNavigate}
+                  />
+                );
+              })}
+            </div>
 
-            <div className="flex-1 overflow-y-auto space-y-0.5 pr-0.5">
-              {playlists && playlists.length > 0 ? (
-                playlists.map((pl) => {
-                  const isActive = activePlaylistId === pl.id;
-                  return (
-                    <Link
-                      key={pl.id}
-                      href={`/playlist?id=${pl.id}`}
-                      className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[12px] truncate transition-colors ${
-                        isActive
-                          ? 'bg-surface text-text-primary font-medium'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-surface/60'
-                      }`}
+            {/* Playlists Section (Exclusively for user playlists) */}
+            <div className="space-y-1 pt-2 border-t border-border-subtle">
+              {isExpanded ? (
+                <>
+                  <div className="flex items-center justify-between px-3 pb-1">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.14em]">
+                      Playlists
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreating(!isCreating)}
+                      aria-label="Create playlist"
+                      className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
                     >
-                      <Music className={`w-3 h-3 flex-shrink-0 ${isActive ? 'text-accent' : 'text-text-muted'}`} />
-                      <span className="truncate">{pl.name}</span>
-                    </Link>
-                  );
-                })
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {isCreating && (
+                    <form onSubmit={handleCreatePlaylist} className="px-1 py-1">
+                      <input
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Playlist name..."
+                        autoFocus
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-surface border border-accent/40 text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
+                      />
+                    </form>
+                  )}
+
+                  <div className="space-y-0.5">
+                    {playlists.length > 0 ? (
+                      playlists.map((pl) => (
+                        <Link
+                          key={pl.id}
+                          href={`/playlist?id=${pl.id}`}
+                          onClick={handleNavigate}
+                          className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs transition-colors truncate ${
+                            activePlaylistId === pl.id
+                              ? 'bg-surface text-accent font-semibold'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-surface/50'
+                          }`}
+                        >
+                          <Music className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                          <span className="truncate">{pl.name}</span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="px-3.5 py-2 text-[11px] text-text-muted italic">
+                        No playlists yet
+                      </p>
+                    )}
+                  </div>
+                </>
               ) : (
-                <p className="text-[11px] text-text-muted px-2.5 py-1 italic">No playlists yet</p>
+                /* Collapsed Playlists Indicator */
+                <NavItem
+                  href="/library?tab=playlists"
+                  active={pathname === '/library' && activeLibraryTab === 'playlists'}
+                  icon={ListMusic}
+                  label="Playlists"
+                  isExpanded={false}
+                  onNavigate={handleNavigate}
+                />
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Footer Info */}
-      <Link
-        href="/info"
-        title="Info"
-        className={`mx-2.5 mb-3 ${isCollapsed ? 'px-2 justify-center' : 'px-3 justify-between'} py-2 rounded-xl border border-border-subtle text-[11px] text-text-muted flex items-center hover:text-text-primary hover:bg-surface/60 transition-colors`}
-      >
-        <span className="flex items-center gap-1.5 font-semibold">
-          <Info className="w-3.5 h-3.5 text-accent" />
-          {!isCollapsed && <span>Info</span>}
-        </span>
-        {!isCollapsed && <span className="font-mono text-[10px]">v1.0</span>}
-      </Link>
-    </aside>
+        {/* Restored Info & Support Button (Accessible in both Collapsed and Expanded states) */}
+        <div className="p-2.5 border-t border-border-subtle bg-sidebar/80">
+          <Link
+            href="/info"
+            onClick={handleNavigate}
+            aria-label="About & Support"
+            className={`group relative flex items-center ${
+              isExpanded ? 'gap-3 px-3 py-2' : 'justify-center p-2.5'
+            } rounded-xl text-xs font-medium transition-colors ${
+              pathname === '/info'
+                ? 'bg-surface border border-border-subtle text-accent font-semibold shadow-sm ring-1 ring-accent/25'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 border border-transparent hover:border-border-subtle'
+            }`}
+          >
+            <Info
+              className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                pathname === '/info' ? 'text-accent' : 'text-text-muted group-hover:text-text-primary'
+              }`}
+            />
+            {isExpanded && (
+              <div className="flex-1 min-w-0 flex items-center justify-between">
+                <span className="truncate font-semibold">About & Support</span>
+                <span className="text-[10px] text-text-muted font-mono">v3.0</span>
+              </div>
+            )}
+            {!isExpanded && (
+              <div className="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-surface-elevated border border-border-subtle text-text-primary text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
+                About & Support
+              </div>
+            )}
+          </Link>
+        </div>
+      </aside>
+    </div>
   );
 }

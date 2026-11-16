@@ -34,6 +34,7 @@ import AudioVisualizer from '@/components/AudioVisualizer';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
+import UniversalProgressBar from '@/components/UniversalProgressBar';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -306,37 +307,14 @@ export default function ListeningPage() {
             </div>
           </div>
 
-          {/* Seek Bar */}
+          {/* Seek Bar (60FPS Universal Smooth Bar) */}
           <div>
-            <div
-              className="relative h-1.5 bg-surface-hover hover:h-2.5 rounded-full cursor-pointer group transition-all"
-              onWheel={(e) => {
-                e.preventDefault();
-                const d = e.deltaY < 0 ? 5 : -5;
-                seekTo(Math.max(0, Math.min(duration || 0, currentTime + d)));
-              }}
-            >
-              <input
-                type="range"
-                min={0}
-                max={duration || 100}
-                value={currentTime}
-                onChange={(e) => seekTo(parseFloat(e.target.value))}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-              />
-              <div
-                className="absolute top-0 left-0 h-full bg-accent group-hover:bg-accent-hover rounded-full transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-accent shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
-                style={{ left: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-[11px] font-mono text-text-muted mt-1.5">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
+            <UniversalProgressBar
+              seekable={true}
+              showTimestamps={true}
+              heightClass="h-1.5 group-hover:h-2.5"
+              className="w-full"
+            />
           </div>
 
           {/* Playback Controls Row */}

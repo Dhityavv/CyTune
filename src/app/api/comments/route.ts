@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 // Fallback in-memory store for guest/local demonstration when Supabase is awaiting remote credentials
+// Starts completely empty (0 comments) across all songs until real users submit comments
 const localCommentsStore: Record<string, Array<{
   id: string;
   song_id: string;
@@ -13,31 +14,7 @@ const localCommentsStore: Record<string, Array<{
   likes: number;
   created_at: string;
   liked_by?: string[];
-}>> = {
-  // Sample initial community discussion for popular tracks
-  default: [
-    {
-      id: 'c1',
-      song_id: 'default',
-      user_id: 'demo-1',
-      user_name: 'AcousticSoul',
-      content: 'The production quality on this track is absolutely stunning. That bassline at the drop gives me goosebumps every single time!',
-      parent_comment_id: null,
-      likes: 14,
-      created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    },
-    {
-      id: 'c2',
-      song_id: 'default',
-      user_id: 'demo-2',
-      user_name: 'NocturneListener',
-      content: 'OrbitTune audio fidelity is genuinely next level. Finally a clean Hi-Fi player without bloated ads.',
-      parent_comment_id: null,
-      likes: 8,
-      created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    },
-  ],
-};
+}>> = {};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -92,8 +69,8 @@ export async function GET(request: Request) {
     }
   }
 
-  // Local memory store fallback
-  const list = localCommentsStore[songId] || localCommentsStore['default'] || [];
+  // Local memory store fallback (empty list by default until real users comment)
+  const list = localCommentsStore[songId] || [];
   return NextResponse.json({ comments: list });
 }
 

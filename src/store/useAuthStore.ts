@@ -7,7 +7,14 @@ export interface UserProfile {
   username: string;
   display_name: string;
   avatar_url?: string;
+  bio?: string;
   isGuest?: boolean;
+  isPremium?: boolean;
+  equippedFrame?: string | null;
+  equippedBorder?: string | null;
+  equippedBackground?: string | null;
+  unlockedCosmetics?: string[];
+  joinedDate?: string;
 }
 
 interface AuthState {
@@ -21,9 +28,35 @@ interface AuthState {
   signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+  equipCosmetic: (type: 'frame' | 'border' | 'background', itemId: string | null) => { success: boolean; error?: string };
+  unlockCosmetic: (itemId: string) => void;
+  togglePremium: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const DEFAULT_PROFILE: UserProfile = {
+  id: 'guest_user',
+  username: 'orbit_listener',
+  display_name: 'Orbit Listener',
+  avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+  bio: 'Exploring synthwave horizons, nocturnal soundscapes, and hi-res acoustic frequencies.',
+  isGuest: true,
+  isPremium: false,
+  equippedFrame: 'frame-solar-halo',
+  equippedBorder: 'border-animated-gold',
+  equippedBackground: null,
+  unlockedCosmetics: [
+    'frame-solar-halo',
+    'frame-celestial-orbit',
+    'frame-aurora-ring',
+    'border-animated-gold',
+    'border-subtle-neon',
+    'border-metallic',
+  ],
+  joinedDate: 'Joined Nov 2026',
+};
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isConfigured: false,
@@ -37,7 +70,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        set({ user: parsed, isLoading: false });
+        // Merge with defaults for any missing new fields
+        const fullUser: UserProfile = {
+          ...DEFAULT_PROFILE,
+          ...parsed,
+          unlockedCosmetics: parsed.unlockedCosmetics || DEFAULT_PROFILE.unlockedCosmetics,
+        };
+        set({ user: fullUser, isLoading: false });
         return;
       } catch {
         // ignore
@@ -45,13 +84,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     if (!configured) {
-      set({ user: null, isLoading: false });
+      // Initialize with default guest profile so user immediately enjoys cosmetics & profile
+      set({ user: DEFAULT_PROFILE, isLoading: false });
       return;
     }
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      set({ isLoading: false });
+      set({ user: DEFAULT_PROFILE, isLoading: false });
       return;
     }
 
@@ -59,45 +99,60 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const u = session.user;
-        set({
-          user: {
-            id: u.id,
-            email: u.email,
-            username: u.user_metadata?.username || u.email?.split('@')[0] || 'Listener',
-            display_name: u.user_metadata?.full_name || u.user_metadata?.display_name || 'Listener',
-            avatar_url: u.user_metadata?.avatar_url,
-          },
-          isLoading: false,
-        });
+        const meta = u.user_metadata || {};
+        const profileUser: UserProfile = {
+          id: u.id,
+          email: u.email,
+          username: meta.username || u.email?.split('@')[0] || 'orbit_listener',
+          display_name: meta.full_name || meta.display_name || 'Orbit Listener',
+          avatar_url: meta.avatar_url || DEFAULT_PROFILE.avatar_url,
+          bio: meta.bio || DEFAULT_PROFILE.bio,
+          isGuest: false,
+          isPremium: meta.is_premium || false,
+          equippedFrame: meta.equipped_frame || 'frame-solar-halo',
+          equippedBorder: meta.equipped_border || 'border-animated-gold',
+          equippedBackground: meta.equipped_background || null,
+          unlockedCosmetics: meta.unlocked_cosmetics || DEFAULT_PROFILE.unlockedCosmetics,
+          joinedDate: new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        };
+        set({ user: profileUser, isLoading: false });
       } else {
-        set({ user: null, isLoading: false });
+        set({ user: DEFAULT_PROFILE, isLoading: false });
       }
 
       supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
           const u = session.user;
+          const meta = u.user_metadata || {};
           set({
             user: {
               id: u.id,
               email: u.email,
-              username: u.user_metadata?.username || u.email?.split('@')[0] || 'Listener',
-              display_name: u.user_metadata?.full_name || u.user_metadata?.display_name || 'Listener',
-              avatar_url: u.user_metadata?.avatar_url,
+              username: meta.username || u.email?.split('@')[0] || 'orbit_listener',
+              display_name: meta.full_name || meta.display_name || 'Orbit Listener',
+              avatar_url: meta.avatar_url || DEFAULT_PROFILE.avatar_url,
+              bio: meta.bio || DEFAULT_PROFILE.bio,
+              isGuest: false,
+              isPremium: meta.is_premium || false,
+              equippedFrame: meta.equipped_frame || 'frame-solar-halo',
+              equippedBorder: meta.equipped_border || 'border-animated-gold',
+              equippedBackground: meta.equipped_background || null,
+              unlockedCosmetics: meta.unlocked_cosmetics || DEFAULT_PROFILE.unlockedCosmetics,
+              joinedDate: new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
             },
           });
-        } else {
-          set({ user: null });
         }
       });
     } catch {
-      set({ user: null, isLoading: false });
+      set({ user: DEFAULT_PROFILE, isLoading: false });
     }
   },
 
   signInAsGuest: (name?: string) => {
     const guestUser: UserProfile = {
+      ...DEFAULT_PROFILE,
       id: `local_${Date.now()}`,
-      username: name ? name.toLowerCase().replace(/\s+/g, '_') : 'orbit_guest',
+      username: name ? name.toLowerCase().replace(/\s+/g, '_') : 'orbit_listener',
       display_name: name || 'Orbit Listener',
       isGuest: true,
     };
@@ -138,8 +193,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithEmail: async (email, password) => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      // Automatic seamless local offline fallback if Supabase not configured!
       const localUser: UserProfile = {
+        ...DEFAULT_PROFILE,
         id: `local_${email.replace(/[^a-zA-Z0-9]/g, '_')}`,
         email,
         username: email.split('@')[0],
@@ -159,8 +214,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUpWithEmail: async (email, password, displayName) => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      // Automatic seamless local offline fallback if Supabase not configured!
       const localUser: UserProfile = {
+        ...DEFAULT_PROFILE,
         id: `local_${email.replace(/[^a-zA-Z0-9]/g, '_')}`,
         email,
         username: email.split('@')[0],
@@ -194,6 +249,91 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem('orbittune-guest-user');
     }
-    set({ user: null });
+    set({ user: DEFAULT_PROFILE });
+  },
+
+  updateProfile: (updates: Partial<UserProfile>) => {
+    const current = get().user || DEFAULT_PROFILE;
+    const updated: UserProfile = { ...current, ...updates };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orbittune-guest-user', JSON.stringify(updated));
+    }
+    set({ user: updated });
+
+    // Sync to Supabase if connected
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && !updated.isGuest) {
+      supabase.auth.updateUser({
+        data: {
+          display_name: updated.display_name,
+          username: updated.username,
+          bio: updated.bio,
+          avatar_url: updated.avatar_url,
+          equipped_frame: updated.equippedFrame,
+          equipped_border: updated.equippedBorder,
+          equipped_background: updated.equippedBackground,
+          unlocked_cosmetics: updated.unlockedCosmetics,
+        },
+      }).catch(() => {
+        // ignore background sync errors
+      });
+    }
+  },
+
+  equipCosmetic: (type, itemId) => {
+    const current = get().user || DEFAULT_PROFILE;
+
+    // Strict Premium Check for backgrounds
+    if (type === 'background' && itemId) {
+      if (!current.isPremium) {
+        return {
+          success: false,
+          error: 'Profile Backgrounds are exclusive to Hi-Fi Premium members. Upgrade to unlock this atmosphere.',
+        };
+      }
+    }
+
+    const updated: UserProfile = {
+      ...current,
+      ...(type === 'frame' ? { equippedFrame: itemId } : {}),
+      ...(type === 'border' ? { equippedBorder: itemId } : {}),
+      ...(type === 'background' ? { equippedBackground: itemId } : {}),
+    };
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orbittune-guest-user', JSON.stringify(updated));
+    }
+    set({ user: updated });
+
+    return { success: true };
+  },
+
+  unlockCosmetic: (itemId: string) => {
+    const current = get().user || DEFAULT_PROFILE;
+    const currentUnlocked = current.unlockedCosmetics || [];
+    if (!currentUnlocked.includes(itemId)) {
+      const updatedList = [...currentUnlocked, itemId];
+      const updated: UserProfile = {
+        ...current,
+        unlockedCosmetics: updatedList,
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('orbittune-guest-user', JSON.stringify(updated));
+      }
+      set({ user: updated });
+    }
+  },
+
+  togglePremium: () => {
+    const current = get().user || DEFAULT_PROFILE;
+    const nextPremium = !current.isPremium;
+    const updated: UserProfile = {
+      ...current,
+      isPremium: nextPremium,
+    };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orbittune-guest-user', JSON.stringify(updated));
+    }
+    set({ user: updated });
   },
 }));

@@ -27,8 +27,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'OrbitTune — High Resolution Music Streaming',
-  description: 'An editorial, ad-free music streaming platform with synced lyrics and smart autoplay.',
+  title: 'OrbitTune — High Resolution Music',
+  description: 'OrbitTune is a premium music listening and discovery experience.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/orbittune-icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

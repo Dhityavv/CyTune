@@ -21,6 +21,7 @@ import {
   Maximize2,
   Sparkles,
   ListPlus,
+  Disc,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useVolumeWheel } from '@/hooks/useVolumeWheel';
@@ -28,13 +29,8 @@ import CoverImage from '@/components/CoverImage';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
-
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || seconds < 0) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+import { audioSession } from '@/lib/audioSession';
+import UniversalProgressBar from '@/components/UniversalProgressBar';
 
 export default function BottomPlayer() {
   const {
@@ -94,6 +90,16 @@ export default function BottomPlayer() {
   );
 
   const playBtnRef = useRef<HTMLButtonElement>(null);
+  const [activeSession, setActiveSession] = useState(audioSession.getActiveSession());
+  const [isGamePlaying, setIsGamePlaying] = useState(false);
+
+  useEffect(() => {
+    const unsub = audioSession.subscribeProgress((info) => {
+      setActiveSession(info.session);
+      setIsGamePlaying(info.isPlaying);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (playBtnRef.current) {
@@ -101,8 +107,6 @@ export default function BottomPlayer() {
     }
   }, []);
 
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [tempSeek, setTempSeek] = useState(0);
   const volumeSliderRef = useVolumeWheel<HTMLDivElement>();
 
   const isLiked = useLiveQuery(
@@ -128,81 +132,95 @@ export default function BottomPlayer() {
     }
   };
 
-  if (!currentTrack) {
+  if (!currentTrack && activeSession !== 'GAME_PREVIEW') {
     return null;
   }
 
-  const effectiveProgress = isSeeking ? tempSeek : currentTime;
-  const progressPercent = duration > 0 ? (effectiveProgress / duration) * 100 : 0;
+  const isGameMode = activeSession === 'GAME_PREVIEW';
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-4 md:px-6 h-[76px] flex items-center justify-between gap-4 select-none shadow-2xl">
       {/* 1. Track Info (Left - 28%) */}
       <div className="flex items-center gap-3 min-w-0 w-1/4 max-w-[28%]">
-        <Link
-          href="/listening"
-          className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle shadow-sm cursor-pointer group block"
-          title="Open Listening Page"
-        >
-          <CoverImage
-            src={currentTrack.thumbnail}
-            alt={currentTrack.title}
-            size="md"
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
-            <Maximize2 className="w-3.5 h-3.5 text-text-primary" />
-          </div>
-        </Link>
-
-        <div className="min-w-0 flex-1">
-          <Link
-            href="/listening"
-            className="block w-full text-left text-[13px] font-semibold text-text-primary truncate cursor-pointer hover:text-accent transition-colors leading-tight"
-            title={currentTrack.title}
-          >
-            {currentTrack.title}
-          </Link>
-          {playbackError ? (
-            <p
-              role="status"
-              className="text-[11px] text-red-400 truncate mt-0.5"
-              title={playbackError}
+        {isGameMode ? (
+          <>
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-black/90 border border-border-subtle flex items-center justify-center shadow-sm">
+              <Disc className={`w-6 h-6 text-accent ${isGamePlaying ? 'animate-spin' : ''}`} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-bold text-accent font-mono block">Game Audio</span>
+              <p className="text-[13px] font-semibold text-text-primary truncate leading-tight">Guess the Song</p>
+              <p className="text-[11px] text-text-secondary truncate mt-0.5">15s Audible Preview</p>
+            </div>
+          </>
+        ) : currentTrack ? (
+          <>
+            <Link
+              href="/listening"
+              className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle shadow-sm cursor-pointer group block"
+              title="Open Listening Page"
             >
-              {playbackError}
-            </p>
-          ) : (
-            <p
-              className="text-[11px] text-text-secondary truncate mt-0.5"
-              title={currentTrack.artist}
+              <CoverImage
+                src={currentTrack.thumbnail}
+                alt={currentTrack.title}
+                size="md"
+                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
+                <Maximize2 className="w-3.5 h-3.5 text-text-primary" />
+              </div>
+            </Link>
+
+            <div className="min-w-0 flex-1">
+              <Link
+                href="/listening"
+                className="block w-full text-left text-[13px] font-semibold text-text-primary truncate cursor-pointer hover:text-accent transition-colors leading-tight"
+                title={currentTrack.title}
+              >
+                {currentTrack.title}
+              </Link>
+              {playbackError ? (
+                <p
+                  role="status"
+                  className="text-[11px] text-red-400 truncate mt-0.5"
+                  title={playbackError}
+                >
+                  {playbackError}
+                </p>
+              ) : (
+                <p
+                  className="text-[11px] text-text-secondary truncate mt-0.5"
+                  title={currentTrack.artist}
+                >
+                  {currentTrack.artist}
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={toggleFavorite}
+              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                isLiked
+                  ? 'text-accent fill-accent'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+              title={isLiked ? 'Remove from liked' : 'Add to liked'}
             >
-              {currentTrack.artist}
-            </p>
-          )}
-        </div>
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+            </button>
 
-        <button
-          onClick={toggleFavorite}
-          className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
-            isLiked
-              ? 'text-accent fill-accent'
-              : 'text-text-muted hover:text-text-primary'
-          }`}
-          title={isLiked ? 'Remove from liked' : 'Add to liked'}
-        >
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
-          }}
-          className="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
-          title="Add to playlist"
-        >
-          <ListPlus className="w-4 h-4" />
-        </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
+              }}
+              className="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+              title="Add to playlist"
+            >
+              <ListPlus className="w-4 h-4" />
+            </button>
+          </>
+        ) : null}
       </div>
 
       {/* 2. Playback Controls & Seekbar (Center - 44%) */}
@@ -211,8 +229,13 @@ export default function BottomPlayer() {
         <div className="flex items-center gap-4 sm:gap-5 mb-1.5">
           <button
             onClick={toggleShuffle}
+            disabled={isGameMode}
             className={`p-1 transition-colors ${
-              isShuffle ? 'text-accent' : 'text-text-muted hover:text-text-primary'
+              isGameMode
+                ? 'opacity-30 cursor-not-allowed text-text-muted'
+                : isShuffle
+                ? 'text-accent'
+                : 'text-text-muted hover:text-text-primary'
             }`}
             title="Shuffle"
           >
@@ -221,7 +244,10 @@ export default function BottomPlayer() {
 
           <button
             onClick={prevTrack}
-            className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+            disabled={isGameMode}
+            className={`p-1 transition-colors ${
+              isGameMode ? 'opacity-30 cursor-not-allowed text-text-muted' : 'text-text-secondary hover:text-text-primary'
+            }`}
             title="Previous track"
           >
             <SkipBack className="w-4 h-4 fill-current" />
@@ -229,11 +255,17 @@ export default function BottomPlayer() {
 
           <button
             ref={playBtnRef}
-            onClick={togglePlay}
+            onClick={() => {
+              if (isGameMode) {
+                audioSession.toggleGamePreview();
+              } else {
+                togglePlay();
+              }
+            }}
             className="w-10 h-10 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg hover:scale-105 active:scale-90 transition-transform shadow-[#C9A94D]/30"
-            title={isPlaying ? 'Pause' : 'Play'}
+            title={isGameMode ? (isGamePlaying ? 'Pause Preview' : 'Play Preview') : (isPlaying ? 'Pause' : 'Play')}
           >
-            {isPlaying ? (
+            {(isGameMode ? isGamePlaying : isPlaying) ? (
               <Pause className="w-4 h-4 fill-current" />
             ) : (
               <Play className="w-4 h-4 fill-current translate-x-0.5" />
@@ -242,7 +274,10 @@ export default function BottomPlayer() {
 
           <button
             onClick={nextTrack}
-            className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+            disabled={isGameMode}
+            className={`p-1 transition-colors ${
+              isGameMode ? 'opacity-30 cursor-not-allowed text-text-muted' : 'text-text-secondary hover:text-text-primary'
+            }`}
             title="Next track"
           >
             <SkipForward className="w-4 h-4 fill-current" />
@@ -250,8 +285,13 @@ export default function BottomPlayer() {
 
           <button
             onClick={cycleRepeat}
+            disabled={isGameMode}
             className={`p-1 transition-colors ${
-              repeatMode !== 'off' ? 'text-accent' : 'text-text-muted hover:text-text-primary'
+              isGameMode
+                ? 'opacity-30 cursor-not-allowed text-text-muted'
+                : repeatMode !== 'off'
+                ? 'text-accent'
+                : 'text-text-muted hover:text-text-primary'
             }`}
             title={`Repeat mode: ${repeatMode}`}
           >
@@ -263,46 +303,15 @@ export default function BottomPlayer() {
           </button>
         </div>
 
-        {/* Progress Seekbar Row */}
-        <div className="w-full flex items-center gap-2.5 text-[11px] font-mono text-text-muted">
-          <span className="w-9 text-right">{formatTime(effectiveProgress)}</span>
-
-          <div className="relative flex-1 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 5 : -5; seekTo(Math.max(0, Math.min(duration || 0, effectiveProgress + d))); }}>
-            <input
-              type="range"
-              min={0}
-              max={duration || 100}
-              value={effectiveProgress}
-              onChange={(e) => {
-                setIsSeeking(true);
-                setTempSeek(parseFloat(e.target.value));
-              }}
-              onMouseUp={() => {
-                setIsSeeking(false);
-                seekTo(tempSeek);
-              }}
-              onTouchEnd={() => {
-                setIsSeeking(false);
-                seekTo(tempSeek);
-              }}
-              onKeyUp={() => {
-                setIsSeeking(false);
-                seekTo(tempSeek);
-              }}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-            />
-            <div
-              className="absolute top-0 left-0 h-full bg-accent group-hover:bg-accent-hover rounded-full transition-all"
-              style={{ width: `${progressPercent}%` }}
-            />
-            {/* Scrubber Thumb Indicator on Hover / Seek */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-accent shadow-lg shadow-black/80 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
-              style={{ left: `${progressPercent}%` }}
-            />
-          </div>
-
-          <span className="w-9 text-left">{formatTime(duration)}</span>
+        {/* Progress Seekbar Row (60FPS Universal Smooth Bar) */}
+        <div className="w-full">
+          <UniversalProgressBar
+            seekable={!isGameMode}
+            showTimestamps={true}
+            overrideDuration={isGameMode ? 15 : undefined}
+            heightClass="h-1 group-hover:h-1.5"
+            className="w-full"
+          />
         </div>
       </div>
 

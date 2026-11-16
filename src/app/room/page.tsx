@@ -46,6 +46,45 @@ function ListeningRoomContent() {
   const isHost = activeRoom ? activeRoom.hostId === (user?.id || 'host') : false;
   const lastSyncedTrackId = useRef<string | null>(null);
 
+  const handleJoin = async (codeToJoin?: string) => {
+    const targetCode = (codeToJoin || joinCodeInput).trim().replace(/^room=/, '').replace(/^.*code=/, '');
+    if (!targetCode) return;
+
+    const currentUser = user || {
+      id: `guest_${Date.now()}`,
+      username: 'orbit_listener',
+      display_name: 'Orbit Listener',
+    };
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'join',
+          code: targetCode,
+          user: currentUser,
+          track: currentTrack,
+        }),
+      });
+
+      if (res.ok) {
+        const room: RoomData = await res.json();
+        setActiveRoom(room);
+        setJoinCodeInput('');
+
+        // Immediately sync track if host already has one playing!
+        if (room.currentTrack) {
+          lastSyncedTrackId.current = room.currentTrack.id;
+          playTrack(room.currentTrack);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Auto-join if code is in URL
   useEffect(() => {
     if (initialCode && !activeRoom) {
@@ -131,45 +170,6 @@ function ListeningRoomContent() {
         const room = await res.json();
         setActiveRoom(room);
         setRoomNameInput('');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleJoin = async (codeToJoin?: string) => {
-    const targetCode = (codeToJoin || joinCodeInput).trim().replace(/^room=/, '').replace(/^.*code=/, '');
-    if (!targetCode) return;
-
-    const currentUser = user || {
-      id: `guest_${Date.now()}`,
-      username: 'orbit_listener',
-      display_name: 'Orbit Listener',
-    };
-
-    setLoading(true);
-    try {
-      const res = await fetch('/api/room', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'join',
-          code: targetCode,
-          user: currentUser,
-          track: currentTrack,
-        }),
-      });
-
-      if (res.ok) {
-        const room: RoomData = await res.json();
-        setActiveRoom(room);
-        setJoinCodeInput('');
-
-        // Immediately sync track if host already has one playing!
-        if (room.currentTrack) {
-          lastSyncedTrackId.current = room.currentTrack.id;
-          playTrack(room.currentTrack);
-        }
       }
     } finally {
       setLoading(false);

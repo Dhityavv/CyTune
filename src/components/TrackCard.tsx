@@ -105,7 +105,7 @@ export default function TrackCard({ track }: TrackCardProps) {
           </button>
         </div>
 
-        {/* Quick Actions: Like & Add to Playlist */}
+        {/* Quick Actions: Like, Add to Playlist & More Options */}
         <div
           className={`absolute top-2 right-2 flex flex-col gap-1.5 z-20 transition-all duration-300 ${
             isCurrent ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'

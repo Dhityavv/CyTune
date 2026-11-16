@@ -187,7 +187,6 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
                       {comment.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={comment.avatar_url} alt={comment.user_name} className="w-full h-full object-cover" />
                       ) : (
                         comment.user_name.charAt(0).toUpperCase()
