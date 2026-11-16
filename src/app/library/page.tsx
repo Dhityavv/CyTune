@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
 import CoverImage from '@/components/CoverImage';
 import { Track } from '@/types/music';
+import { clickable } from '@/lib/a11y';
 
 function formatRelativeTime(timestamp: number): string {
   const diffMs = Date.now() - timestamp;
@@ -36,14 +37,15 @@ function LibraryContent() {
   };
 
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [newPlaylistDescription, setNewPlaylistDescription] = useState('');
+  const [createError, setCreateError] = useState('');
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
-  const [viewingPlaylistId, setViewingPlaylistId] = useState<string | null>(null);
 
-  // Deep-link: /library?tab=playlists&pl=<id> opens that playlist (sidebar links)
+  // Deep-link compatibility: /library?pl=<id> now opens the dedicated playlist page.
   const playlistParam = searchParams.get('pl');
   useEffect(() => {
-    if (playlistParam) setViewingPlaylistId(playlistParam);
-  }, [playlistParam]);
+    if (playlistParam) router.replace(`/playlist?id=${playlistParam}`);
+  }, [playlistParam, router]);
 
   const playTrack = usePlayerStore((s) => s.playTrack);
 
@@ -77,19 +79,33 @@ function LibraryContent() {
 
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPlaylistName.trim()) return;
+    const name = newPlaylistName.trim();
+    if (!name) {
+      setCreateError('Enter a playlist name.');
+      return;
+    }
+    const duplicate = (playlists ?? []).find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+    if (duplicate) {
+      setCreateError(`A playlist named “${duplicate.name}” already exists.`);
+      return;
+    }
 
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `pl_${Date.now()}`;
     await db.playlists.add({
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `pl_${Date.now()}`,
-      name: newPlaylistName.trim(),
-      description: 'Custom playlist',
+      id,
+      name,
+      description: newPlaylistDescription.trim(),
       tracks: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
 
     setNewPlaylistName('');
+    setNewPlaylistDescription('');
+    setCreateError('');
     setIsCreatingPlaylist(false);
+    router.push(`/playlist?id=${id}`);
   };
 
   const handleDeletePlaylist = async (id: string, name: string) => {
@@ -372,20 +388,49 @@ function LibraryContent() {
               <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">
                 New Playlist
               </h3>
+              <input
+                type="text"
+                value={newPlaylistName}
+                onChange={(e) => {
+                  setNewPlaylistName(e.target.value);
+                  setCreateError('');
+                }}
+                placeholder="Playlist name..."
+                autoFocus
+                aria-label="Playlist name"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent"
+              />
+              <input
+                type="text"
+                value={newPlaylistDescription}
+                onChange={(e) => setNewPlaylistDescription(e.target.value)}
+                placeholder="Description (optional)"
+                aria-label="Playlist description"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent"
+              />
+              {createError && (
+                <p role="alert" className="text-[11px] text-red-400">
+                  {createError}
+                </p>
+              )}
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newPlaylistName}
-                  onChange={(e) => setNewPlaylistName(e.target.value)}
-                  placeholder="Playlist name..."
-                  autoFocus
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent"
-                />
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-text-primary text-canvas font-semibold text-xs hover:opacity-90 shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-accent text-[#101114] font-semibold text-xs hover:bg-accent-hover transition-colors"
                 >
-                  Save
+                  Create Playlist
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreatingPlaylist(false);
+                    setNewPlaylistName('');
+                    setNewPlaylistDescription('');
+                    setCreateError('');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-surface-hover text-text-primary text-xs font-semibold hover:bg-surface-active transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
             </form>
@@ -396,7 +441,8 @@ function LibraryContent() {
               {playlists.map((pl) => (
                 <div
                   key={pl.id}
-                  onClick={() => setViewingPlaylistId(pl.id)}
+                  onClick={() => router.push(`/playlist?id=${pl.id}`)}
+                  {...clickable(() => router.push(`/playlist?id=${pl.id}`))}
                   className="group relative p-3.5 rounded-2xl bg-surface/60 hover:bg-surface-hover border border-border-subtle hover:border-border-hover transition-all cursor-pointer flex flex-col shadow-md hover:shadow-xl hover:shadow-black/50"
                 >
                   <div className="relative aspect-square rounded-xl bg-sidebar overflow-hidden flex items-center justify-center mb-3 shadow-sm ring-1 ring-border-subtle">
@@ -454,77 +500,6 @@ function LibraryContent() {
             </div>
           )}
 
-          {/* Playlist detail view */}
-          {viewingPlaylistId && (() => {
-            const pl = (playlists || []).find((p) => p.id === viewingPlaylistId);
-            if (!pl) return null;
-            const handleRemove = async (trackId: string) => {
-              await db.playlists.update(pl.id, {
-                tracks: pl.tracks.filter((t) => t.id !== trackId),
-                updatedAt: Date.now(),
-              });
-            };
-            return (
-              <div className="space-y-4 mt-6 p-5 rounded-2xl bg-surface border border-border-subtle animate-fade-up">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-sidebar flex items-center justify-center flex-shrink-0 ring-1 ring-border-subtle">
-                      {pl.tracks[0]?.thumbnail ? (
-                        <CoverImage src={pl.tracks[0].thumbnail} alt={pl.name} size="sm" className="w-full h-full object-cover" />
-                      ) : (
-                        <Music className="w-6 h-6 text-text-muted" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-text-primary truncate">{pl.name}</h3>
-                      <p className="text-xs text-text-secondary">{pl.tracks.length} songs</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {pl.tracks.length > 0 && (
-                      <button
-                        onClick={() => handlePlayAll(pl.tracks, false)}
-                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-all shadow-md shadow-[#C9A94D]/20 active:scale-95"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        Play All
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setViewingPlaylistId(null)}
-                      className="px-3 py-2 rounded-xl bg-surface-hover text-text-primary text-xs font-semibold hover:bg-surface-active transition-all"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-                {pl.tracks.length === 0 ? (
-                  <p className="text-sm text-text-muted text-center py-8">No songs yet. Add via the + button on any track.</p>
-                ) : (
-                  <div className="bg-surface/40 p-3 rounded-2xl border border-border-subtle">
-                    <TrackTableHeader />
-                    <div className="space-y-1">
-                      {pl.tracks.map((track, idx) => (
-                        <div key={track.id + idx} className="flex items-center gap-2">
-                          <div className="flex-1 min-w-0">
-                            <TrackRow track={track} index={idx} />
-                          </div>
-                          <button
-                            onClick={() => handleRemove(track.id)}
-                            className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-surface transition-colors"
-                            title="Remove from playlist"
-                            aria-label={`Remove ${track.title} from playlist`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
       )}
 

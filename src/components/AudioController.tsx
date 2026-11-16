@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getHighResCover } from '@/types/music';
 
@@ -20,7 +21,23 @@ export default function AudioController() {
     seekTo,
     recordFeedback,
     setIsBuffering,
-  } = usePlayerStore();
+    setPlaybackError,
+  } = usePlayerStore(
+    useShallow((s) => ({
+      currentTrack: s.currentTrack,
+      isPlaying: s.isPlaying,
+      volume: s.volume,
+      isMuted: s.isMuted,
+      nextTrack: s.nextTrack,
+      prevTrack: s.prevTrack,
+      updateTime: s.updateTime,
+      togglePlay: s.togglePlay,
+      seekTo: s.seekTo,
+      recordFeedback: s.recordFeedback,
+      setIsBuffering: s.setIsBuffering,
+      setPlaybackError: s.setPlaybackError,
+    }))
+  );
 
   // Handle Play / Pause & Track Change cleanly using loadedTrackIdRef
   useEffect(() => {
@@ -30,6 +47,7 @@ export default function AudioController() {
     if (currentTrack) {
       if (loadedTrackIdRef.current !== currentTrack.id) {
         loadedTrackIdRef.current = currentTrack.id;
+        setPlaybackError(null);
         const streamUrl = `/api/stream/${currentTrack.id}`;
         audio.src = streamUrl;
         audio.load();
@@ -50,7 +68,9 @@ export default function AudioController() {
     } else {
       loadedTrackIdRef.current = null;
       audio.pause();
-      audio.src = '';
+      // Assigning '' resolves to the page URL and fires a bogus media error.
+      audio.removeAttribute('src');
+      audio.load();
     }
   }, [currentTrack?.id, isPlaying]);
 
@@ -100,15 +120,30 @@ export default function AudioController() {
       onWaiting={() => setIsBuffering(true)}
       onCanPlay={() => {
         setIsBuffering(false);
+        setPlaybackError(null);
         usePlayerStore.setState({ loadingTrackId: null });
       }}
       onPlaying={() => {
         setIsBuffering(false);
+        setPlaybackError(null);
         usePlayerStore.setState({ loadingTrackId: null });
       }}
       onTimeUpdate={() => {
-        if (audioRef.current) {
-          updateTime(audioRef.current.currentTime, audioRef.current.duration);
+        const el = audioRef.current;
+        if (!el) return;
+        updateTime(el.currentTime, el.duration);
+
+        // Keep the OS media-session scrubber in sync with real playback.
+        if ('mediaSession' in navigator && Number.isFinite(el.duration) && el.duration > 0) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: el.duration,
+              playbackRate: el.playbackRate || 1,
+              position: Math.min(el.currentTime, el.duration),
+            });
+          } catch {
+            // Older browsers reject partial states; nothing to recover.
+          }
         }
       }}
       onEnded={() => {
@@ -126,6 +161,7 @@ export default function AudioController() {
         }
         console.warn('Audio playback error on track:', e);
         setIsBuffering(false);
+        setPlaybackError('This track could not be streamed. Try another one.');
         usePlayerStore.setState({ loadingTrackId: null });
       }}
     />

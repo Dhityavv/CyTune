@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Pause, Heart, Plus, ListMusic } from 'lucide-react';
+import { Play, Pause, Heart, Plus } from 'lucide-react';
 import { Track } from '@/types/music';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import CoverImage from '@/components/CoverImage';
 import { useRouter } from 'next/navigation';
+import { clickable } from '@/lib/a11y';
+import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 
 interface TrackCardProps {
   track: Track;
@@ -21,18 +22,20 @@ export default function TrackCard({ track }: TrackCardProps) {
   const togglePlay = usePlayerStore((s) => s.togglePlay);
 
   const isCurrent = currentTrack?.id === track.id;
-  const [showMenu, setShowMenu] = useState(false);
   const isLiked = useLiveQuery(async () => !!(await db.likedTracks.get(track.id)), [track.id], false);
-  const playlists = useLiveQuery(() => db.playlists.toArray(), [], []);
   const router = useRouter();
 
-  const handlePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const play = () => {
     if (isCurrent) {
       togglePlay();
     } else {
       playTrack(track);
     }
+  };
+
+  const handlePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    play();
   };
 
   const toggleLike = async (e: React.MouseEvent) => {
@@ -44,23 +47,15 @@ export default function TrackCard({ track }: TrackCardProps) {
     }
   };
 
-  const addToPlaylist = async (plId: string) => {
-    const pl = await db.playlists.get(plId);
-    if (!pl) return;
-    if (pl.tracks.some((t) => t.id === track.id)) {
-      setShowMenu(false);
-      return;
-    }
-    await db.playlists.update(plId, {
-      tracks: [...pl.tracks, track],
-      updatedAt: Date.now(),
-    });
-    setShowMenu(false);
+  const openAddToPlaylist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    usePlaylistDialogStore.getState().open(track);
   };
 
   return (
     <div
-      onClick={handlePlay}
+      onClick={play}
+      {...clickable(play)}
       className={`group relative p-2.5 rounded-2xl bg-surface/80 hover:bg-surface-hover border border-border-subtle hover:border-border-hover hover:shadow-xl hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col select-none ${
         isCurrent ? 'bg-surface-hover border-accent/50 shadow-lg shadow-black/40' : ''
       }`}
@@ -101,7 +96,7 @@ export default function TrackCard({ track }: TrackCardProps) {
         {/* Quick Actions: Like & Add to Playlist */}
         <div
           className={`absolute top-2 right-2 flex flex-col gap-1.5 z-20 transition-all duration-200 ${
-            isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            isCurrent ? 'opacity-100' : 'opacity-90 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
           <button
@@ -112,35 +107,13 @@ export default function TrackCard({ track }: TrackCardProps) {
             <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-accent text-accent' : ''}`} />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v); }}
+            onClick={openAddToPlaylist}
             className="w-9 h-9 rounded-full bg-canvas/70 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-canvas/90 hover:border-border-hover transition-colors"
             title="Add to playlist"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
-
-        {showMenu && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-10 right-2 z-30 w-44 rounded-xl bg-surface border border-border-hover shadow-xl py-1.5 max-h-48 overflow-y-auto"
-          >
-            {playlists && playlists.length > 0 ? (
-              playlists.map((pl) => (
-                <button
-                  key={pl.id}
-                  onClick={() => addToPlaylist(pl.id)}
-                  className="w-full text-left px-3 py-1.5 text-[12px] text-text-primary hover:bg-surface-hover truncate flex items-center gap-2"
-                >
-                  <ListMusic className="w-3 h-3 text-text-muted" />
-                  {pl.name}
-                </button>
-              ))
-            ) : (
-              <p className="px-3 py-1.5 text-[11px] text-text-muted">No playlists. Create one in Library.</p>
-            )}
-          </div>
-        )}
 
         {/* Active Playing Equalizer Badge */}
         {isCurrent && isPlaying && (

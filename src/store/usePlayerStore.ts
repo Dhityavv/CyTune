@@ -7,6 +7,7 @@ interface PlayerStore {
   currentTrack: Track | null;
   isPlaying: boolean;
   isBuffering: boolean;
+  playbackError: string | null;
   loadingTrackId: string | null;
   currentTime: number;
   duration: number;
@@ -49,6 +50,7 @@ interface PlayerStore {
   toggleQueueDrawer: () => void;
   closeQueueDrawer: () => void;
   setIsBuffering: (buffering: boolean) => void;
+  setPlaybackError: (message: string | null) => void;
   setLoadingTrackId: (id: string | null) => void;
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
@@ -81,6 +83,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentTrack: null,
   isPlaying: false,
   isBuffering: false,
+  playbackError: null,
   loadingTrackId: null,
   currentTime: 0,
   duration: 0,
@@ -105,6 +108,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   consecutiveArtistStreak: 0,
 
   setIsBuffering: (buffering: boolean) => set({ isBuffering: buffering }),
+  setPlaybackError: (message: string | null) => set({ playbackError: message }),
   setLoadingTrackId: (id: string | null) => set({ loadingTrackId: id }),
   toggleQueueDrawer: () => set((state) => ({ isQueueDrawerOpen: !state.isQueueDrawerOpen })),
   closeQueueDrawer: () => set({ isQueueDrawerOpen: false }),
@@ -190,7 +194,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       duration: track.duration || 0,
       lyrics: null,
       consecutiveArtistStreak: streak,
-      smartAutoplayEnabled: true,
     });
 
     try {
@@ -289,7 +292,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     const prevSong = queue[prevIdx];
     if (prevSong) {
-      get().playTrack(prevSong);
+      get().playTrack(prevSong, queue);
     }
   },
 
@@ -353,15 +356,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       newQueue.splice(index, 1);
       let newIndex = state.queueIndex;
       if (index < state.queueIndex) {
-        newIndex = Math.max(0, state.queueIndex - 1);
-      } else if (index === state.queueIndex && newIndex >= newQueue.length) {
-        newIndex = Math.max(0, newQueue.length - 1);
+        newIndex = state.queueIndex - 1;
+      } else if (index === state.queueIndex) {
+        // Removing the playing entry keeps it playing; point the index at the
+        // entry before it so "next" resumes with the track that slid in.
+        newIndex = Math.min(index - 1, newQueue.length - 1);
       }
       return { queue: newQueue, queueIndex: newIndex };
     });
   },
 
-  clearQueue: () => set({ queue: [] }),
+  clearQueue: () => set({ queue: [], queueIndex: -1 }),
 
   setAmbientColor: (color: string) => set({ ambientColor: color }),
 
@@ -480,6 +485,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   dismissRecommendation: async (track: Track) => {
     // Record rejection feedback so the recommender down-weights it
     await get().recordFeedback('dismissed_recommendation', track);
+    // Cooldown keeps the dismissed track out of the next candidate batch
+    try {
+      await db.recommendationCooldowns.put({
+        trackId: track.id,
+        artist: track.artist,
+        cooldownUntil: Date.now() + 2.5 * 60 * 60 * 1000,
+        timesRecommended: 1,
+      });
+    } catch {
+      // Ignored
+    }
     get().removeRecommendation(track.id);
   },
 

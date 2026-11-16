@@ -3,23 +3,52 @@ import { getAutoplayCandidates } from '@/lib/youtube';
 import { scoreCandidate, UserSignals } from '@/lib/recommender';
 import { Track, RecommendedTrack } from '@/types/music';
 
+// Client-supplied signal lists are unauthenticated: cap length and item size.
+const MAX_ITEMS = 500;
+const MAX_LIMIT = 30;
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v): v is string => typeof v === 'string' && v.length > 0 && v.length <= 64)
+    .slice(0, MAX_ITEMS);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const seedTrack: Track = body.seedTrack;
+    // The body is unauthenticated, so cap it before parsing
+    const raw = await req.text();
+    if (raw.length > 64_000) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
 
-    if (!seedTrack || !seedTrack.id || !seedTrack.title) {
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const seedTrack = body?.seedTrack as Track;
+
+    if (
+      !seedTrack ||
+      typeof seedTrack.id !== 'string' ||
+      typeof seedTrack.title !== 'string' ||
+      !seedTrack.id ||
+      !seedTrack.title
+    ) {
       return NextResponse.json({ error: 'Valid seedTrack is required' }, { status: 400 });
     }
 
-    const recentIds = new Set<string>(body.recentIds || []);
-    const cooldownIds = new Set<string>(body.cooldownIds || []);
-    const skippedTrackIds = new Set<string>(body.skippedTrackIds || []);
-    const skippedArtists = new Set<string>((body.skippedArtists || []).map((a: string) => a.toLowerCase().trim()));
-    const likedArtists = new Set<string>((body.likedArtists || []).map((a: string) => a.toLowerCase().trim()));
-    const likedTrackIds = new Set<string>(body.likedTrackIds || []);
-    const consecutiveArtistCount = Number(body.consecutiveArtistCount || 0);
-    const limit = Number(body.limit || 12);
+    const recentIds = new Set(stringList(body.recentIds));
+    const cooldownIds = new Set(stringList(body.cooldownIds));
+    const skippedTrackIds = new Set(stringList(body.skippedTrackIds));
+    const skippedArtists = new Set(stringList(body.skippedArtists).map((a) => a.toLowerCase().trim()));
+    const likedArtists = new Set(stringList(body.likedArtists).map((a) => a.toLowerCase().trim()));
+    const likedTrackIds = new Set(stringList(body.likedTrackIds));
+    const consecutiveArtistCount = Math.min(50, Math.max(0, Number(body.consecutiveArtistCount) || 0));
+    const limit = Math.min(MAX_LIMIT, Math.max(1, Math.trunc(Number(body.limit)) || 12));
 
     const signals: UserSignals = {
       recentTrackIds: recentIds,
@@ -98,7 +127,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('API Recommendations Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to generate recommendations' },
+      { error: 'Failed to generate recommendations' },
       { status: 500 }
     );
   }

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStreamUrl } from '@/lib/youtube';
 
+// YouTube video ids are 11 chars; allow a little slack for future formats
+// while still rejecting paths, spaces and other junk.
+const VIDEO_ID = /^[A-Za-z0-9_-]{8,24}$/;
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  if (!id) {
-    return NextResponse.json({ error: 'Video ID is required' }, { status: 400 });
+  if (!id || !VIDEO_ID.test(id)) {
+    return NextResponse.json({ error: 'Invalid video id' }, { status: 400 });
   }
 
   try {
@@ -18,7 +22,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.redirect(streamInfo.url, {
         status: 307,
         headers: {
-          'Access-Control-Allow-Origin': '*',
           'Cache-Control': 'no-cache',
         },
       });
@@ -33,7 +36,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       fetchHeaders['Range'] = rangeHeader;
     }
 
-    const audioRes = await fetch(streamInfo.url, { headers: fetchHeaders });
+    const audioRes = await fetch(streamInfo.url, {
+      headers: fetchHeaders,
+      signal: AbortSignal.timeout(15000),
+    });
     const responseHeaders = new Headers();
     responseHeaders.set('Content-Type', streamInfo.mimeType);
     responseHeaders.set('Accept-Ranges', 'bytes');
@@ -50,6 +56,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   } catch (error: any) {
     console.error('API Stream Error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to resolve stream URL' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to resolve stream URL' }, { status: 500 });
   }
 }

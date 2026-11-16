@@ -1,0 +1,153 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+// Fallback in-memory store for guest/local demonstration when Supabase is awaiting remote credentials
+const localCommentsStore: Record<string, Array<{
+  id: string;
+  song_id: string;
+  user_id: string;
+  user_name: string;
+  avatar_url?: string;
+  content: string;
+  parent_comment_id?: string | null;
+  likes: number;
+  created_at: string;
+  liked_by?: string[];
+}>> = {
+  // Sample initial community discussion for popular tracks
+  default: [
+    {
+      id: 'c1',
+      song_id: 'default',
+      user_id: 'demo-1',
+      user_name: 'AcousticSoul',
+      content: 'The production quality on this track is absolutely stunning. That bassline at the drop gives me goosebumps every single time!',
+      parent_comment_id: null,
+      likes: 14,
+      created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+    },
+    {
+      id: 'c2',
+      song_id: 'default',
+      user_id: 'demo-2',
+      user_name: 'NocturneListener',
+      content: 'OrbitTune audio fidelity is genuinely next level. Finally a clean Hi-Fi player without bloated ads.',
+      parent_comment_id: null,
+      likes: 8,
+      created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+    },
+  ],
+};
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const songId = searchParams.get('songId');
+
+  if (!songId) {
+    return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          song_id,
+          user_id,
+          content,
+          parent_comment_id,
+          created_at,
+          profiles (
+            username,
+            display_name,
+            avatar_url
+          ),
+          comment_likes (
+            user_id
+          )
+        `)
+        .eq('song_id', songId)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const comments = data.map((c: any) => ({
+          id: c.id,
+          song_id: c.song_id,
+          user_id: c.user_id,
+          user_name: c.profiles?.display_name || c.profiles?.username || 'Listener',
+          avatar_url: c.profiles?.avatar_url || '',
+          content: c.content,
+          parent_comment_id: c.parent_comment_id,
+          likes: c.comment_likes?.length || 0,
+          created_at: c.created_at,
+        }));
+        return NextResponse.json({ comments });
+      }
+    } catch {
+      // fallback to local below
+    }
+  }
+
+  // Local memory store fallback
+  const list = localCommentsStore[songId] || localCommentsStore['default'] || [];
+  return NextResponse.json({ comments: list });
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { songId, content, parentCommentId, user } = body;
+
+    if (!songId || !content?.trim()) {
+      return NextResponse.json({ error: 'Invalid comment payload' }, { status: 400 });
+    }
+
+    const supabase = await createSupabaseServerClient();
+    if (supabase) {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user) {
+        const { data, error } = await supabase
+          .from('comments')
+          .insert({
+            song_id: songId,
+            user_id: authData.user.id,
+            content: content.trim(),
+            parent_comment_id: parentCommentId || null,
+            status: 'published',
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          return NextResponse.json({ comment: data });
+        }
+      }
+    }
+
+    // Local fallback creation
+    const newComment = {
+      id: 'local_' + Date.now(),
+      song_id: songId,
+      user_id: user?.id || 'guest_' + Date.now(),
+      user_name: user?.display_name || 'Listener',
+      avatar_url: user?.avatar_url || '',
+      content: content.trim(),
+      parent_comment_id: parentCommentId || null,
+      likes: 0,
+      created_at: new Date().toISOString(),
+    };
+
+    if (!localCommentsStore[songId]) {
+      localCommentsStore[songId] = [];
+    }
+    localCommentsStore[songId].unshift(newComment);
+
+    return NextResponse.json({ comment: newComment });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Failed to post comment' }, { status: 500 });
+  }
+}

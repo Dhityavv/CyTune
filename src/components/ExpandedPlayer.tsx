@@ -19,13 +19,18 @@ import {
   Sparkles,
   RefreshCw,
   X,
+  ListPlus,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
+import { useShallow } from 'zustand/react/shallow';
+import { useVolumeWheel } from '@/hooks/useVolumeWheel';
 import CoverImage from '@/components/CoverImage';
 import QueueItem from '@/components/QueueItem';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
+import { clickable } from '@/lib/a11y';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -71,10 +76,49 @@ export default function ExpandedPlayer() {
     recordFeedback,
     playQueueIndex,
     removeFromQueue,
-  } = usePlayerStore();
+  } = usePlayerStore(
+    useShallow((s) => ({
+      currentTrack: s.currentTrack,
+      isPlaying: s.isPlaying,
+      isBuffering: s.isBuffering,
+      currentTime: s.currentTime,
+      duration: s.duration,
+      volume: s.volume,
+      isMuted: s.isMuted,
+      queue: s.queue,
+      queueIndex: s.queueIndex,
+      repeatMode: s.repeatMode,
+      isShuffle: s.isShuffle,
+      isExpanded: s.isExpanded,
+      showLyrics: s.showLyrics,
+      lyrics: s.lyrics,
+      loadingLyrics: s.loadingLyrics,
+      smartAutoplayEnabled: s.smartAutoplayEnabled,
+      recommendationQueue: s.recommendationQueue,
+      loadingRecommendations: s.loadingRecommendations,
+      toggleExpanded: s.toggleExpanded,
+      togglePlay: s.togglePlay,
+      nextTrack: s.nextTrack,
+      prevTrack: s.prevTrack,
+      seekTo: s.seekTo,
+      setVolume: s.setVolume,
+      toggleMute: s.toggleMute,
+      toggleShuffle: s.toggleShuffle,
+      cycleRepeat: s.cycleRepeat,
+      loadLyricsForCurrent: s.loadLyricsForCurrent,
+      toggleSmartAutoplay: s.toggleSmartAutoplay,
+      fetchSmartRecommendations: s.fetchSmartRecommendations,
+      playRecommendedTrack: s.playRecommendedTrack,
+      dismissRecommendation: s.dismissRecommendation,
+      recordFeedback: s.recordFeedback,
+      playQueueIndex: s.playQueueIndex,
+      removeFromQueue: s.removeFromQueue,
+    }))
+  );
 
   const [tabOverride, setTabOverride] = useState<'lyrics' | 'queue' | null>(null);
   const router = useRouter();
+  const volumeSliderRef = useVolumeWheel<HTMLDivElement>();
   const activeTab = tabOverride ?? (showLyrics ? 'lyrics' : 'queue');
   const setActiveTab = (tab: 'lyrics' | 'queue') => setTabOverride(tab);
   const activeLyricRef = useRef<HTMLDivElement>(null);
@@ -214,16 +258,28 @@ export default function ExpandedPlayer() {
                 </p>
               </div>
 
-              <button
-                onClick={toggleFavorite}
-                className="p-2.5 rounded-lg hover:bg-surface transition-colors flex-shrink-0"
-              >
-                <Heart
-                  className={`w-6 h-6 transition-colors ${
-                    isLiked ? 'fill-accent text-accent' : 'text-text-muted hover:text-text-primary'
-                  }`}
-                />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={toggleFavorite}
+                  className="p-2.5 rounded-lg hover:bg-surface transition-colors flex-shrink-0"
+                  title={isLiked ? 'Unlike' : 'Like'}
+                >
+                  <Heart
+                    className={`w-6 h-6 transition-colors ${
+                      isLiked ? 'fill-accent text-accent' : 'text-text-muted hover:text-text-primary'
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={() => {
+                    if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
+                  }}
+                  className="p-2.5 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                  title="Add to playlist"
+                >
+                  <ListPlus className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* Seek Bar */}
@@ -312,7 +368,7 @@ export default function ExpandedPlayer() {
                   <Volume2 className="w-4 h-4" />
                 )}
               </button>
-              <div className="relative flex-1 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
+              <div ref={volumeSliderRef} className="relative flex-1 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center">
                 <input
                   type="range"
                   min={0}
@@ -379,6 +435,7 @@ export default function ExpandedPlayer() {
                         key={idx}
                         ref={isActive ? activeLyricRef : null}
                         onClick={() => seekTo(line.time)}
+                        {...clickable(() => seekTo(line.time))}
                         className={`cursor-pointer transition-all duration-300 ${
                           isActive
                             ? 'text-text-primary text-xl sm:text-2xl font-bold drop-shadow-[0_0_12px_rgba(201,169,77,0.45)]'

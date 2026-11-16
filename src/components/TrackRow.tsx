@@ -1,11 +1,13 @@
 'use client';
 
-import { Play, Pause, Heart, Plus } from 'lucide-react';
+import { Play, Pause, Heart, Plus, ListPlus } from 'lucide-react';
 import { Track } from '@/types/music';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import CoverImage from '@/components/CoverImage';
+import { clickable } from '@/lib/a11y';
+import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 
 interface TrackRowProps {
   track: Track;
@@ -73,6 +75,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
   return (
     <div
       onClick={handleRowClick}
+      {...clickable(handleRowClick)}
       className={`group grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_100px] items-center px-3 py-2 rounded-xl transition-all cursor-pointer select-none border ${
         isCurrent
           ? 'bg-surface border-accent/40 text-text-primary shadow-sm'
@@ -138,10 +141,21 @@ export default function TrackRow({ track, index }: TrackRowProps) {
             e.stopPropagation();
             addToQueue(track);
           }}
-          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
+          className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
           title="Add to queue"
         >
           <Plus className="w-3.5 h-3.5" />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            usePlaylistDialogStore.getState().open(track);
+          }}
+          className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
+          title="Add to playlist"
+        >
+          <ListPlus className="w-3.5 h-3.5" />
         </button>
 
         <button
@@ -149,7 +163,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
           className={`p-1.5 rounded-lg transition-colors ${
             isLiked
               ? 'text-accent fill-accent opacity-100'
-              : 'opacity-0 group-hover:opacity-100 text-text-muted hover:text-text-primary'
+              : 'opacity-80 sm:opacity-0 sm:group-hover:opacity-100 text-text-muted hover:text-text-primary'
           }`}
           title={isLiked ? 'Remove from favorites' : 'Add to favorites'}
         >

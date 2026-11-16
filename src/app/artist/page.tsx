@@ -211,7 +211,7 @@ function ArtistContent() {
                         if (item.kind === 'artist') {
                           router.push(`/artist?id=${encodeURIComponent(item.id)}`);
                         } else if (item.kind === 'album' || item.kind === 'playlist') {
-                          router.push(`/search?q=${encodeURIComponent(item.title)}`);
+                          router.push(`/album?id=${encodeURIComponent(item.id)}&title=${encodeURIComponent(item.title)}`);
                         } else {
                           // try play: search
                           router.push(`/search?q=${encodeURIComponent(item.title)}`);

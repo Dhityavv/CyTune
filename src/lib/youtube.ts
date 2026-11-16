@@ -22,6 +22,61 @@ export function getYtdl(): Ytdl {
   return ytdlInstance;
 }
 
+export interface SearchArtistResult {
+  id: string;
+  name: string;
+  subtitle?: string;
+  subscribers?: string;
+  thumbnail?: string;
+}
+
+export async function searchArtist(query: string): Promise<SearchArtistResult | null> {
+  try {
+    const yt = await getInnertube();
+    const res = await yt.music.search(query, { type: 'artist' });
+    const shelf = res.contents?.[0];
+    const contents = (shelf as any)?.contents || [];
+    if (!contents.length) return null;
+
+    const first = contents[0];
+    if (!first || !first.id) return null;
+
+    const thumbs = first.thumbnail?.contents || first.thumbnails || [];
+    let rawThumb = '';
+    if (Array.isArray(thumbs) && thumbs.length > 0) {
+      rawThumb = thumbs[thumbs.length - 1]?.url || thumbs[0]?.url;
+    } else if (typeof thumbs === 'string') {
+      rawThumb = thumbs;
+    }
+
+    const thumbnail = rawThumb
+      ? rawThumb.replace(/=w\d+-h\d+.*$/, '=w540-h540-p-l90-rj').replace(/=s\d+.*$/, '=s540')
+      : '';
+
+    const name = typeof first.name === 'string' ? first.name : (first.title?.text || first.title || query);
+    const subtitle = first.subtitle?.text || first.subtitle || 'Artist';
+
+    return {
+      id: first.id,
+      name,
+      subtitle,
+      subscribers: first.subscribers?.text || first.subscribers,
+      thumbnail,
+    };
+  } catch (err) {
+    console.warn('Artist search error:', err);
+    return null;
+  }
+}
+
+export async function searchCatalog(query: string): Promise<{ tracks: Track[]; artist: SearchArtistResult | null }> {
+  const [tracks, artist] = await Promise.all([
+    searchMusic(query),
+    searchArtist(query),
+  ]);
+  return { tracks, artist };
+}
+
 export async function searchMusic(query: string): Promise<Track[]> {
   try {
     const yt = await getInnertube();
@@ -185,7 +240,15 @@ export async function getExploreTracks(): Promise<{ title: string; tracks: Track
   }
 }
 
+// Candidate lists depend only on the seed track, not on user signals, so a
+// short TTL cache is safe and removes one upstream round-trip per track change.
+const candidateCache = new Map<string, { tracks: Track[]; expiresAt: number }>();
+const CANDIDATE_TTL_MS = 10 * 60 * 1000;
+
 export async function getAutoplayCandidates(seedTrack: Track): Promise<Track[]> {
+  const cached = candidateCache.get(seedTrack.id);
+  if (cached && cached.expiresAt > Date.now()) return cached.tracks;
+
   try {
     const yt = await getInnertube();
     const candidatesMap = new Map<string, Track>();
@@ -241,7 +304,15 @@ export async function getAutoplayCandidates(seedTrack: Track): Promise<Track[]> 
       // Ignored
     }
 
-    return Array.from(candidatesMap.values());
+    const result = Array.from(candidatesMap.values());
+    if (result.length > 0) {
+      if (candidateCache.size >= 100) candidateCache.clear();
+      candidateCache.set(seedTrack.id, {
+        tracks: result,
+        expiresAt: Date.now() + CANDIDATE_TTL_MS,
+      });
+    }
+    return result;
   } catch (error) {
     console.error('getAutoplayCandidates error:', error);
     return [];

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useShallow } from 'zustand/react/shallow';
 import {
   Play,
   Pause,
@@ -17,11 +19,14 @@ import {
   ListMusic,
   Maximize2,
   Sparkles,
+  ListPlus,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useVolumeWheel } from '@/hooks/useVolumeWheel';
 import CoverImage from '@/components/CoverImage';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
+import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -42,6 +47,7 @@ export default function BottomPlayer() {
     repeatMode,
     showLyrics,
     smartAutoplayEnabled,
+    playbackError,
     toggleSmartAutoplay,
     togglePlay,
     nextTrack,
@@ -56,10 +62,39 @@ export default function BottomPlayer() {
     isQueueDrawerOpen,
     toggleQueueDrawer,
     recordFeedback,
-  } = usePlayerStore();
+  } = usePlayerStore(
+    useShallow((s) => ({
+      currentTrack: s.currentTrack,
+      isPlaying: s.isPlaying,
+      currentTime: s.currentTime,
+      duration: s.duration,
+      volume: s.volume,
+      isMuted: s.isMuted,
+      isShuffle: s.isShuffle,
+      repeatMode: s.repeatMode,
+      showLyrics: s.showLyrics,
+      smartAutoplayEnabled: s.smartAutoplayEnabled,
+      playbackError: s.playbackError,
+      toggleSmartAutoplay: s.toggleSmartAutoplay,
+      togglePlay: s.togglePlay,
+      nextTrack: s.nextTrack,
+      prevTrack: s.prevTrack,
+      seekTo: s.seekTo,
+      setVolume: s.setVolume,
+      toggleMute: s.toggleMute,
+      toggleShuffle: s.toggleShuffle,
+      cycleRepeat: s.cycleRepeat,
+      toggleExpanded: s.toggleExpanded,
+      toggleLyrics: s.toggleLyrics,
+      isQueueDrawerOpen: s.isQueueDrawerOpen,
+      toggleQueueDrawer: s.toggleQueueDrawer,
+      recordFeedback: s.recordFeedback,
+    }))
+  );
 
   const [isSeeking, setIsSeeking] = useState(false);
   const [tempSeek, setTempSeek] = useState(0);
+  const volumeSliderRef = useVolumeWheel<HTMLDivElement>();
 
   const isLiked = useLiveQuery(
     async () => {
@@ -95,9 +130,10 @@ export default function BottomPlayer() {
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-4 md:px-6 h-[76px] flex items-center justify-between gap-4 select-none shadow-2xl">
       {/* 1. Track Info (Left - 28%) */}
       <div className="flex items-center gap-3 min-w-0 w-1/4 max-w-[28%]">
-        <div
-          onClick={toggleExpanded}
-          className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle shadow-sm cursor-pointer group"
+        <Link
+          href="/listening"
+          className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle shadow-sm cursor-pointer group block"
+          title="Open Listening Page"
         >
           <CoverImage
             src={currentTrack.thumbnail}
@@ -108,22 +144,32 @@ export default function BottomPlayer() {
           <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
             <Maximize2 className="w-3.5 h-3.5 text-text-primary" />
           </div>
-        </div>
+        </Link>
 
         <div className="min-w-0 flex-1">
-          <p
-            onClick={toggleExpanded}
-            className="text-[13px] font-semibold text-text-primary truncate cursor-pointer hover:text-accent transition-colors leading-tight"
+          <Link
+            href="/listening"
+            className="block w-full text-left text-[13px] font-semibold text-text-primary truncate cursor-pointer hover:text-accent transition-colors leading-tight"
             title={currentTrack.title}
           >
             {currentTrack.title}
-          </p>
-          <p
-            className="text-[11px] text-text-secondary truncate mt-0.5"
-            title={currentTrack.artist}
-          >
-            {currentTrack.artist}
-          </p>
+          </Link>
+          {playbackError ? (
+            <p
+              role="status"
+              className="text-[11px] text-red-400 truncate mt-0.5"
+              title={playbackError}
+            >
+              {playbackError}
+            </p>
+          ) : (
+            <p
+              className="text-[11px] text-text-secondary truncate mt-0.5"
+              title={currentTrack.artist}
+            >
+              {currentTrack.artist}
+            </p>
+          )}
         </div>
 
         <button
@@ -136,6 +182,17 @@ export default function BottomPlayer() {
           title={isLiked ? 'Remove from liked' : 'Add to liked'}
         >
           <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
+          }}
+          className="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+          title="Add to playlist"
+        >
+          <ListPlus className="w-4 h-4" />
         </button>
       </div>
 
@@ -218,6 +275,10 @@ export default function BottomPlayer() {
                 setIsSeeking(false);
                 seekTo(tempSeek);
               }}
+              onKeyUp={() => {
+                setIsSeeking(false);
+                seekTo(tempSeek);
+              }}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
             <div
@@ -278,13 +339,13 @@ export default function BottomPlayer() {
         </button>
 
         {/* Fullscreen Expand */}
-        <button
-          onClick={toggleExpanded}
+        <Link
+          href="/listening"
           className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-          title="Open Fullscreen Player"
+          title="Open Dedicated Listening Page"
         >
           <Maximize2 className="w-4 h-4" />
-        </button>
+        </Link>
 
         {/* Filled Volume Slider (Hidden on mobile) */}
         <div className="hidden lg:flex items-center gap-2 pl-1 border-l border-border-subtle">
@@ -301,7 +362,7 @@ export default function BottomPlayer() {
               <Volume2 className="w-4 h-4" />
             )}
           </button>
-          <div className="relative w-18 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center" onWheel={(e) => { e.preventDefault(); const d = e.deltaY < 0 ? 0.05 : -0.05; setVolume(Math.max(0, Math.min(1, (isMuted ? 0 : volume) + d))); }}>
+          <div ref={volumeSliderRef} className="relative w-18 h-1 bg-surface-hover hover:h-1.5 rounded-full cursor-pointer group transition-all flex items-center">
             <input
               type="range"
               min={0}

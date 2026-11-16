@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getInnertube } from '@/lib/youtube';
 import { Track } from '@/types/music';
 
+// Artist pages are re-opened often; cache the upstream payload briefly.
+const artistCache = new Map<string, { payload: unknown; expiresAt: number }>();
+const ARTIST_TTL_MS = 5 * 60 * 1000;
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
 
   if (!id || !id.trim()) {
     return NextResponse.json({ error: 'Query parameter id is required' }, { status: 400 });
+  }
+
+  const cached = artistCache.get(id);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json(cached.payload);
   }
 
   try {
@@ -87,9 +96,12 @@ export async function GET(req: NextRequest) {
       sections.push({ title: titleText, type, items: carouselItems });
     }
 
-    return NextResponse.json({ id, header: { title, description, thumbnail, subscribers: subs }, sections });
+    const payload = { id, header: { title, description, thumbnail, subscribers: subs }, sections };
+    if (artistCache.size >= 50) artistCache.clear();
+    artistCache.set(id, { payload, expiresAt: Date.now() + ARTIST_TTL_MS });
+    return NextResponse.json(payload);
   } catch (error: any) {
     console.error('API Artist Error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch artist' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch artist' }, { status: 500 });
   }
 }

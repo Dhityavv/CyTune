@@ -27,6 +27,15 @@ const GENRE_CATEGORIES = [
   { name: 'Acoustic Soul', query: 'acoustic folk songs', border: 'border-t-[#A3925C]', img: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=70' },
 ];
 
+const MOOD_CATEGORIES = [
+  { mood: 'Focus', query: 'deep focus ambient electronic study', icon: '🧠', desc: 'Flow state acoustics & minimal beats' },
+  { mood: 'Chill', query: 'chill lo-fi beats aesthetic study lounge', icon: '☕', desc: 'Laid-back vibes & warm textures' },
+  { mood: 'Night Drive', query: 'night drive synthwave late night r&b', icon: '🌃', desc: 'Cinematic basslines & neon atmosphere' },
+  { mood: 'Energetic', query: 'high energy workout electronic dance', icon: '⚡', desc: 'Uplifting rhythms & driving percussion' },
+  { mood: 'Relax', query: 'peaceful relaxing acoustic piano strings', icon: '🌿', desc: 'Gentle melodies for calm decompression' },
+  { mood: 'Rainy Day', query: 'rainy day acoustic indie bedroom pop', icon: '🌧️', desc: 'Cozy indie ballads & soft vocals' },
+];
+
 const TRENDING_SOURCES = [
   { query: 'spotify top 50 global', label: 'Global Top 50' },
   { query: 'lagu indonesia terbaru 2026', label: 'new Indonesian releases' },
@@ -378,6 +387,50 @@ export default function Home() {
           </div>
         </motion.section>
       )}
+
+      {/* 3b. Interactive Mood Selector */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="space-y-3.5"
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+            Curated Mood Selector
+          </h3>
+          <span className="text-xs text-accent font-semibold uppercase tracking-wider">
+            Atmosphere
+          </span>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
+          {MOOD_CATEGORIES.map((m) => (
+            <button
+              key={m.mood}
+              type="button"
+              onClick={() => router.push(`/search?q=${encodeURIComponent(m.query)}`)}
+              className="w-[160px] sm:w-[180px] shrink-0 snap-start p-4 rounded-2xl bg-surface/70 hover:bg-surface-hover border border-border-subtle hover:border-accent/40 shadow-md hover:shadow-xl transition-all duration-200 text-left group flex flex-col justify-between h-32 hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">{m.icon}</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-accent opacity-80 group-hover:opacity-100">
+                  Mood
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors">
+                  {m.mood}
+                </p>
+                <p className="text-[10px] text-text-secondary line-clamp-1 mt-0.5">
+                  {m.desc}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </motion.section>
 
       {/* 4. Browse by Vibe & Mood (Visual Variation) */}
       <motion.section

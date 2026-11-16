@@ -2,12 +2,21 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search as SearchIcon, X, Play, Loader2, Disc } from 'lucide-react';
+import Link from 'next/link';
+import { Search as SearchIcon, X, Play, Loader2, Disc, Sparkles, ChevronRight } from 'lucide-react';
 import { Track } from '@/types/music';
 import CoverImage from '@/components/CoverImage';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
 import TrackCard from '@/components/TrackCard';
+
+interface SearchArtist {
+  id: string;
+  name: string;
+  subtitle?: string;
+  subscribers?: string;
+  thumbnail?: string;
+}
 
 const TRENDING_SEARCHES = [
   'Taylor Swift',
@@ -42,6 +51,7 @@ function SearchContent() {
 
   const [query, setQuery] = useState(initialQuery);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [artist, setArtist] = useState<SearchArtist | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(Boolean(initialQuery));
   const playTrack = usePlayerStore((s) => s.playTrack);
@@ -49,6 +59,7 @@ function SearchContent() {
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setTracks([]);
+      setArtist(null);
       setHasSearched(false);
       return;
     }
@@ -60,6 +71,7 @@ function SearchContent() {
       if (res.ok) {
         const data = await res.json();
         setTracks(data.tracks || []);
+        setArtist(data.artist || null);
       }
     } catch (err) {
       console.error('Search error:', err);
@@ -68,7 +80,7 @@ function SearchContent() {
     }
   }, []);
 
-  // Search when initialQuery changes or typed
+  // Search when initialQuery changes
   useEffect(() => {
     if (initialQuery) {
       setQuery(initialQuery);
@@ -80,6 +92,7 @@ function SearchContent() {
   useEffect(() => {
     if (!query.trim()) {
       setTracks([]);
+      setArtist(null);
       setHasSearched(false);
       return;
     }
@@ -106,12 +119,18 @@ function SearchContent() {
 
   return (
     <div className="space-y-8 pb-24 max-w-7xl mx-auto">
-      {/* Search Input Bar */}
+      {/* Search Input Bar (Smooth rounded focus ring without rectangular box) */}
       <form onSubmit={handleSubmit} className="relative max-w-2xl">
         <label htmlFor="orbit-search" className="block text-[10px] font-bold text-text-muted uppercase tracking-[0.16em] mb-2">
           Search the catalog
         </label>
-        <div className={`relative flex items-center bg-surface border focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/25 rounded-2xl transition-all shadow-lg ${loading ? 'border-accent/40' : 'border-border-subtle'}`}>
+        <div
+          className={`relative flex items-center bg-surface border rounded-2xl transition-all shadow-lg overflow-hidden ${
+            loading
+              ? 'border-accent/40 ring-2 ring-accent/20'
+              : 'border-border-subtle hover:border-border-hover'
+          } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30`}
+        >
           {loading ? (
             <Loader2 className="absolute left-4 w-[18px] h-[18px] text-accent animate-spin pointer-events-none" />
           ) : (
@@ -125,7 +144,7 @@ function SearchContent() {
             placeholder="Songs, artists, or albums…"
             autoFocus
             autoComplete="off"
-            className="w-full pl-11 pr-11 py-4 bg-transparent text-text-primary placeholder-text-muted text-[15px] focus:outline-none"
+            className="w-full pl-11 pr-11 py-4 bg-transparent text-text-primary placeholder-text-muted text-[15px] outline-none focus:outline-none border-none ring-0 focus:ring-0 rounded-2xl"
           />
           {query && (
             <button
@@ -133,10 +152,11 @@ function SearchContent() {
               onClick={() => {
                 setQuery('');
                 setTracks([]);
+                setArtist(null);
                 setHasSearched(false);
               }}
               aria-label="Clear search"
-              className="absolute right-3 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
+              className="absolute right-3 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus:outline-none"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -160,7 +180,7 @@ function SearchContent() {
                     setQuery(tag);
                     performSearch(tag);
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm active:scale-95"
+                  className="px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm active:scale-95 outline-none focus:outline-none"
                 >
                   {tag}
                 </button>
@@ -182,7 +202,7 @@ function SearchContent() {
                     setQuery(cat.query);
                     performSearch(cat.query);
                   }}
-                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/50 transition-all text-left flex flex-col justify-between h-32 group hover:-translate-y-0.5 shadow-md hover:shadow-xl`}
+                  className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/50 transition-all text-left flex flex-col justify-between h-32 group hover:-translate-y-0.5 shadow-md hover:shadow-xl outline-none focus:outline-none`}
                 >
                   <img
                     src={cat.img}
@@ -224,7 +244,73 @@ function SearchContent() {
             <span className="text-xs text-text-muted font-mono">{tracks.length} tracks</span>
           </div>
 
-          {tracks.length === 0 ? (
+          {/* DEDICATED ARTIST GUI CARD (When artist is found) */}
+          {artist && (
+            <div className="relative p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-surface via-surface/90 to-surface-hover/60 border border-border-subtle hover:border-accent/50 transition-all shadow-xl group overflow-hidden">
+              <div className="absolute -right-12 -top-12 w-48 h-48 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
+                <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                  {/* Circular Artist Avatar with Gold Glow */}
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden shrink-0 ring-2 ring-accent/30 group-hover:ring-accent/80 transition-all shadow-2xl bg-sidebar">
+                    {artist.thumbnail ? (
+                      <img
+                        src={artist.thumbnail}
+                        alt={artist.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-surface-elevated text-accent font-bold text-2xl">
+                        {artist.name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/10" />
+                  </div>
+
+                  {/* Artist Details */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent border border-accent/25 flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Artist
+                      </span>
+                      {artist.subscribers && (
+                        <span className="text-[11px] text-text-muted font-mono">{artist.subscribers}</span>
+                      )}
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight truncate group-hover:text-accent transition-colors">
+                      {artist.name}
+                    </h3>
+                    <p className="text-xs text-text-secondary mt-0.5 line-clamp-1">
+                      {artist.subtitle || 'Verified Music Artist'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Direct Actions */}
+                <div className="flex items-center gap-3 w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                  {topResult && (
+                    <button
+                      type="button"
+                      onClick={() => playTrack(topResult)}
+                      className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-[#C9A94D]/25 active:scale-95 transition-all"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      Play Top Song
+                    </button>
+                  )}
+                  <Link
+                    href={`/artist?id=${encodeURIComponent(artist.id)}`}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/50 text-text-primary text-xs font-semibold flex items-center justify-center gap-2 transition-all group/btn"
+                  >
+                    <span>View Artist</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-accent group-hover/btn:translate-x-0.5 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tracks.length === 0 && !artist ? (
             <div className="py-20 text-center space-y-3">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-surface border border-border-subtle flex items-center justify-center">
                 <Disc className="w-6 h-6 text-text-muted" />
@@ -236,7 +322,7 @@ function SearchContent() {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Top Result + Songs 2-Column Section (Spotify style) */}
+              {/* Top Result + Songs 2-Column Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Top Result Card (5 Cols) */}
                 {topResult && (

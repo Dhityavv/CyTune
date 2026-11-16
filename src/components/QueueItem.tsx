@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Play, Pause, Trash2, Loader2 } from 'lucide-react';
+import { Play, Trash2, Loader2 } from 'lucide-react';
 import { Track } from '@/types/music';
 import CoverImage from '@/components/CoverImage';
+import { clickable } from '@/lib/a11y';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -33,6 +34,7 @@ export const QueueItem = React.memo(function QueueItem({
   return (
     <div
       onClick={onSelect}
+      {...clickable(onSelect)}
       className={`group flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer select-none border ${
         isCurrent
           ? 'bg-surface-hover border-accent/40 shadow-md shadow-black/40 text-text-primary'
@@ -61,7 +63,7 @@ export const QueueItem = React.memo(function QueueItem({
                   <span className="w-0.5 h-2.5 bg-accent rounded-full animate-pulse delay-150" />
                 </div>
               ) : (
-                <Pause className="w-3 h-3 text-accent fill-accent" />
+                <Play className="w-3 h-3 text-accent fill-current translate-x-0.5" />
               )}
             </div>
           ) : (
@@ -102,7 +104,7 @@ export const QueueItem = React.memo(function QueueItem({
               e.stopPropagation();
               onRemove();
             }}
-            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-all"
+            className="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-all"
             title="Remove from queue"
           >
             <Trash2 className="w-3.5 h-3.5" />
