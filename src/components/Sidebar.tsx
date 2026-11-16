@@ -42,10 +42,10 @@ function NavRow({
     <Link
       href={href}
       title={collapsed ? label : undefined}
-      className={`group relative flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2'} rounded-xl text-[13px] font-medium transition-all duration-150 ${
+      className={`group relative flex items-center ${collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2'} rounded-xl text-[13px] font-medium transition-all duration-200 hover:translate-x-0.5 active:scale-[0.98] ${
         active
-          ? 'bg-surface border border-border-subtle text-text-primary font-semibold shadow-sm'
-          : 'text-text-secondary hover:text-text-primary hover:bg-surface/60 border border-transparent'
+          ? 'bg-surface border border-border-subtle text-text-primary font-semibold shadow-sm ring-1 ring-accent/20'
+          : 'text-text-secondary hover:text-text-primary hover:bg-surface/60 border border-transparent hover:border-border-subtle'
       }`}
     >
       {active && (

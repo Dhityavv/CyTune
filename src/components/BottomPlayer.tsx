@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useShallow } from 'zustand/react/shallow';
+import { initMagneticEffect } from '@/lib/motion';
 import {
   Play,
   Pause,
@@ -91,6 +92,14 @@ export default function BottomPlayer() {
       recordFeedback: s.recordFeedback,
     }))
   );
+
+  const playBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (playBtnRef.current) {
+      return initMagneticEffect(playBtnRef.current, 0.25);
+    }
+  }, []);
 
   const [isSeeking, setIsSeeking] = useState(false);
   const [tempSeek, setTempSeek] = useState(0);
@@ -219,8 +228,9 @@ export default function BottomPlayer() {
           </button>
 
           <button
+            ref={playBtnRef}
             onClick={togglePlay}
-            className="w-9 h-9 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/20"
+            className="w-10 h-10 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg hover:scale-105 active:scale-90 transition-transform shadow-[#C9A94D]/30"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
