@@ -52,14 +52,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // 2. Fallback Streaming: Try resolving track title and streaming fallback preview
     try {
       let query = '';
-      try {
-        const yt = await getInnertube();
-        const basic = await yt.getBasicInfo(id);
-        const title = basic.basic_info.title;
-        const author = basic.basic_info.author;
-        if (title) query = `${title} ${author || ''}`.trim();
-      } catch {
-        // ignore
+      const searchParams = req.nextUrl.searchParams;
+      const paramTitle = searchParams.get('title');
+      const paramArtist = searchParams.get('artist');
+      if (paramTitle) {
+        query = `${paramTitle} ${paramArtist || ''}`.trim();
+      }
+
+      if (!query) {
+        try {
+          const yt = await getInnertube();
+          const basic = await yt.getBasicInfo(id);
+          const title = basic.basic_info.title;
+          const author = basic.basic_info.author;
+          if (title) query = `${title} ${author || ''}`.trim();
+        } catch {
+          // ignore
+        }
       }
 
       if (query) {
