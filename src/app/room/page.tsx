@@ -12,6 +12,9 @@ import { Track } from '@/types/music';
 interface RoomMember {
   id: string;
   name: string;
+  username?: string;
+  avatar_url?: string;
+  isHost?: boolean;
 }
 
 interface RoomData {
@@ -19,6 +22,7 @@ interface RoomData {
   name: string;
   hostName: string;
   hostId: string;
+  hostAvatar?: string;
   members: RoomMember[];
   currentTrack: Track | null;
   isPlaying: boolean;
@@ -36,7 +40,7 @@ function ListeningRoomContent() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { user, signInAsGuest } = useAuthStore();
+  const { user } = useAuthStore();
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const currentTime = usePlayerStore((s) => s.currentTime);
@@ -50,11 +54,10 @@ function ListeningRoomContent() {
     const targetCode = (codeToJoin || joinCodeInput).trim().replace(/^room=/, '').replace(/^.*code=/, '');
     if (!targetCode) return;
 
-    const currentUser = user || {
-      id: `guest_${Date.now()}`,
-      username: 'orbit_listener',
-      display_name: 'Orbit Listener',
-    };
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -64,7 +67,12 @@ function ListeningRoomContent() {
         body: JSON.stringify({
           action: 'join',
           code: targetCode,
-          user: currentUser,
+          user: {
+            id: user.id,
+            username: user.username,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+          },
           track: currentTrack,
         }),
       });
@@ -146,11 +154,10 @@ function ListeningRoomContent() {
   }, [activeRoom?.id, isHost, playTrack]);
 
   const handleCreate = async () => {
-    const currentUser = user || {
-      id: `user_${Date.now()}`,
-      username: 'host_listener',
-      display_name: 'Host Listener',
-    };
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -160,7 +167,12 @@ function ListeningRoomContent() {
         body: JSON.stringify({
           action: 'create',
           roomName: roomNameInput.trim(),
-          user: currentUser,
+          user: {
+            id: user.id,
+            username: user.username,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+          },
           track: currentTrack,
           isPlaying,
         }),
@@ -206,6 +218,24 @@ function ListeningRoomContent() {
           </p>
         </div>
       </div>
+
+      {!user && !activeRoom && (
+        <div className="p-4 rounded-2xl bg-accent/10 border border-accent/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-4 h-4 text-accent shrink-0" />
+            <p className="text-xs text-text-primary">
+              Masuk dengan akunmu agar avatar dan nama profil aslimu muncul saat mendengarkan musik bersama teman.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAuthOpen(true)}
+            className="px-4 py-1.5 rounded-xl bg-accent text-[#101114] font-bold text-xs hover:bg-accent-hover shrink-0 transition-all shadow-sm cursor-pointer"
+          >
+            Masuk Akun
+          </button>
+        </div>
+      )}
 
       {!activeRoom ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -379,19 +409,42 @@ function ListeningRoomContent() {
               </div>
 
               <div className="space-y-2">
-                {(activeRoom.members || []).map((member, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5 p-2 rounded-xl bg-surface text-xs font-semibold text-text-primary">
-                    <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-[10px]">
-                      {member.name.charAt(0).toUpperCase()}
+                {(activeRoom.members || []).map((member, idx) => {
+                  const isMemberHost = member.id === activeRoom.hostId || member.isHost || idx === 0;
+                  return (
+                    <div
+                      key={member.id || idx}
+                      className="flex items-center gap-2.5 p-2 rounded-xl bg-surface border border-border-subtle/50 text-xs font-semibold text-text-primary"
+                    >
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-accent/20 text-accent flex items-center justify-center font-bold text-[10px] shrink-0 border border-accent/20">
+                        {member.avatar_url ? (
+                          <img
+                            src={member.avatar_url}
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          member.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-bold leading-tight">
+                          {member.name}
+                        </span>
+                        {member.username && (
+                          <span className="block text-[10px] text-text-muted font-mono leading-tight">
+                            @{member.username}
+                          </span>
+                        )}
+                      </div>
+                      {isMemberHost && (
+                        <span className="shrink-0 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25">
+                          Host
+                        </span>
+                      )}
                     </div>
-                    <span>{member.name}</span>
-                    {idx === 0 && (
-                      <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-accent/15 text-accent">
-                        Host
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

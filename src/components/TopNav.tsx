@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Moon, Sun, Sparkles, User, LogOut, Palette, Settings, Gamepad2, ExternalLink, Info } from 'lucide-react';
+import { Search, Moon, Sun, Sparkles, User, LogOut, Palette, Settings, Gamepad2, ExternalLink, Info, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import AuthModal from '@/components/AuthModal';
 
@@ -97,13 +97,25 @@ export default function TopNav() {
           {theme === 'dark' ? <Sun className="w-4 h-4 text-accent" /> : <Moon className="w-4 h-4" />}
         </button>
 
+        {/* Coins indicator if logged in */}
+        {user && (
+          <Link
+            href="/store"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-xs font-mono font-bold transition-all shadow-sm"
+            title="Orbit Coins - Earn in Mini Games, spend on Premium"
+          >
+            <span className="text-xs">🪙</span>
+            <span>{(user.coins ?? 500).toLocaleString()}</span>
+          </Link>
+        )}
+
         {/* User Account / Profile Menu */}
         {user ? (
           <div className="relative" ref={profileMenuRef}>
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-all active:scale-95"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-all active:scale-95 cursor-pointer"
             >
               <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-[11px] overflow-hidden shrink-0">
                 {user.avatar_url ? (
@@ -113,6 +125,7 @@ export default function TopNav() {
                 )}
               </div>
               <span className="max-w-[110px] truncate hidden sm:inline font-medium">{user.display_name}</span>
+              {user.isPremium && <Crown className="w-3 h-3 text-accent shrink-0" />}
             </button>
 
             {/* Expanded Account Dropdown Menu */}
@@ -122,13 +135,23 @@ export default function TopNav() {
               >
                 {/* User info banner */}
                 <div className="px-4 py-2.5 border-b border-border-subtle">
-                  <p className="font-bold text-text-primary truncate">{user.display_name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-bold text-text-primary truncate">{user.display_name}</p>
+                    {user.isPremium && <Crown className="w-3.5 h-3.5 text-accent shrink-0" />}
+                  </div>
                   <p className="text-[11px] text-text-muted truncate mt-0.5">
                     {user.email || `@${user.username}`}
                   </p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-accent/15 text-accent">
-                    {user.isGuest ? 'Guest Listener' : 'Orbit Member'}
-                  </span>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-accent/15 text-accent font-mono">
+                      🪙 {(user.coins ?? 500).toLocaleString()} Coins
+                    </span>
+                    {user.isPremium && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-accent text-[#101114]">
+                        Hi-Fi Premium
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Navigation links */}

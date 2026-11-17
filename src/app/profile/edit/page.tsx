@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -14,7 +14,9 @@ import {
   AlertCircle,
   Eye,
   ShoppingBag,
-  Layers
+  Layers,
+  FolderOpen,
+  Crop,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
@@ -26,15 +28,11 @@ import {
 import AvatarFrame from '@/components/cosmetics/AvatarFrame';
 import ProfileBorder from '@/components/cosmetics/ProfileBorder';
 import ProfileBackground from '@/components/cosmetics/ProfileBackground';
+import AvatarCropModal from '@/components/AvatarCropModal';
+import AuthModal from '@/components/AuthModal';
 
-const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=200&auto=format&fit=crop&q=80',
-];
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80';
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -46,7 +44,7 @@ export default function EditProfilePage() {
     user?.bio || 'Exploring synthwave horizons, nocturnal beats, and hi-res acoustic frequencies.'
   );
   const [avatarUrl, setAvatarUrl] = useState(
-    user?.avatar_url || PRESET_AVATARS[0]
+    user?.avatar_url || DEFAULT_AVATAR
   );
   const [selectedFrame, setSelectedFrame] = useState<string | null>(
     user?.equippedFrame || 'frame-solar-halo'
@@ -61,9 +59,49 @@ export default function EditProfilePage() {
   const [cosmeticTab, setCosmeticTab] = useState<'frame' | 'border' | 'background'>('frame');
   const [toastMessage, setToastMessage] = useState<{ title: string; type: 'success' | 'error' } | null>(null);
 
+  // Avatar Device Selection & Cropper State
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const showToast = (title: string, type: 'success' | 'error') => {
     setToastMessage({ title, type });
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleProcessFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (JPG, PNG, WEBP)', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageToCrop(reader.result);
+        setCropperOpen(true);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleProcessFile(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleOpenExistingCrop = () => {
+    if (!avatarUrl) return;
+    setImageToCrop(avatarUrl);
+    setCropperOpen(true);
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    setAvatarUrl(croppedDataUrl);
+    showToast('Avatar cropped & updated! Click Save Profile Changes to apply.', 'success');
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -90,6 +128,32 @@ export default function EditProfilePage() {
       router.push('/profile');
     }, 1200);
   };
+
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="py-20 max-w-md mx-auto text-center space-y-5 select-none">
+        <div className="w-16 h-16 rounded-3xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center mx-auto shadow-xl shadow-[#C9A94D]/20">
+          <User className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-text-primary">Edit Profil</h1>
+          <p className="text-xs text-text-secondary leading-relaxed">
+            Masuk dengan akun Email atau Google untuk mengubah nama, avatar, bio, dan kustomisasi kosmetik profil.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAuthOpen(true)}
+          className="px-6 py-3 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-lg shadow-[#C9A94D]/25 transition-all active:scale-95 cursor-pointer"
+        >
+          Masuk / Daftar Akun
+        </button>
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-28 max-w-5xl mx-auto select-none">
@@ -250,43 +314,106 @@ export default function EditProfilePage() {
               </div>
             </div>
 
-            {/* Avatar Selector */}
+            {/* Avatar Photo Selection & Cropper */}
             <div className="p-6 rounded-3xl bg-surface/70 border border-border-subtle shadow-xl space-y-4">
-              <h2 className="text-sm font-bold text-text-primary">Avatar Selection</h2>
-
-              <div>
-                <span className="text-[11px] text-text-secondary block mb-2.5">
-                  Pick from curated aesthetic portraits or paste your own image URL:
-                </span>
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
-                  {PRESET_AVATARS.map((url, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setAvatarUrl(url)}
-                      className={`relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 transition-all ${
-                        avatarUrl === url
-                          ? 'border-accent scale-105 shadow-md shadow-[#C9A94D]/30'
-                          : 'border-border-subtle hover:border-text-secondary opacity-70 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={url} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-text-primary">Avatar Photo</h2>
+                  <p className="text-[11px] text-text-secondary">
+                    Choose a photo from your device. You can zoom and crop non-square images to 1:1.
+                  </p>
                 </div>
+                <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-accent/10 border border-accent/25 text-accent font-semibold">
+                  1:1 Square & Circle
+                </span>
               </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1">
-                  Custom Avatar URL
-                </label>
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent transition-all"
-                  placeholder="https://example.com/avatar.jpg"
-                />
+              {/* Upload & Dropzone Area */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingFile(true);
+                }}
+                onDragLeave={() => setIsDraggingFile(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingFile(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleProcessFile(file);
+                }}
+                className={`relative rounded-2xl border-2 border-dashed p-5 transition-all flex flex-col sm:flex-row items-center gap-5 ${
+                  isDraggingFile
+                    ? 'border-accent bg-accent/10'
+                    : 'border-border-subtle hover:border-text-secondary/40 bg-sidebar/50'
+                }`}
+              >
+                {/* Current Avatar Circle */}
+                <div className="relative group shrink-0">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-accent/60 shadow-lg bg-surface flex items-center justify-center">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Current Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-8 h-8 text-text-muted" />
+                    )}
+                  </div>
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleOpenExistingCrop}
+                      className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-opacity cursor-pointer"
+                      title="Adjust crop"
+                    >
+                      <Crop className="w-4 h-4 text-accent mb-0.5" />
+                      <span>Crop</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Info & Action Buttons */}
+                <div className="flex-1 space-y-2.5 text-center sm:text-left">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-text-primary">
+                      Select photo from your device
+                    </p>
+                    <p className="text-[11px] text-text-muted leading-relaxed">
+                      Upload any portrait or landscape image (JPG, PNG, WEBP). An interactive cropper will open immediately so you can reposition and zoom to 1:1.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-0.5">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5" />
+                      <span>Choose from Device</span>
+                    </button>
+
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={handleOpenExistingCrop}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer"
+                      >
+                        <Crop className="w-3.5 h-3.5 text-accent" />
+                        <span>Adjust Crop</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -468,6 +595,14 @@ export default function EditProfilePage() {
           </form>
         </div>
       </div>
+
+      {/* Interactive Avatar Cropper Modal */}
+      <AvatarCropModal
+        isOpen={cropperOpen}
+        imageSrc={imageToCrop}
+        onClose={() => setCropperOpen(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }

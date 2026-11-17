@@ -1,5 +1,5 @@
 import { Innertube, UniversalCache } from 'youtubei.js';
-import { Ytdl } from '@distube/ytdl-core';
+import { Ytdl, Client } from '@distube/ytdl-core';
 import { Track, getHighResCover } from '@/types/music';
 
 let innertubeInstance: Innertube | null = null;
@@ -17,7 +17,18 @@ export async function getInnertube(): Promise<Innertube> {
 
 export function getYtdl(): Ytdl {
   if (!ytdlInstance) {
-    ytdlInstance = new Ytdl();
+    const cookie = process.env.YOUTUBE_COOKIE?.trim();
+    ytdlInstance = new Ytdl({
+      cookie: cookie || undefined,
+      clients: [
+        Client.Tv,
+        Client.WebEmbedded,
+        Client.VisionOS,
+        Client.Mweb,
+        Client.WebCreator,
+        Client.WebMusic,
+      ],
+    });
   }
   return ytdlInstance;
 }
@@ -183,6 +194,33 @@ export async function searchMusic(query: string): Promise<Track[]> {
   } catch (error) {
     console.error('Search error in Innertube:', error);
     return [];
+  }
+}
+
+export async function getAudioDownloadStream(
+  videoId: string,
+  range?: { start?: number; end?: number }
+) {
+  const ytdl = getYtdl();
+  return ytdl.download(videoId, {
+    filter: { hasAudio: true, hasVideo: false },
+    range: range && (range.start !== undefined || range.end !== undefined)
+      ? { start: range.start ?? 0, end: range.end }
+      : undefined,
+  });
+}
+
+export async function getFallbackAudioUrl(query: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.results?.[0]?.previewUrl || null;
+  } catch {
+    return null;
   }
 }
 

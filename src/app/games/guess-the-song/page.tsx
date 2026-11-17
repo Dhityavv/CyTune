@@ -27,6 +27,7 @@ import CoverImage from '@/components/CoverImage';
 import { GUESS_TRACKS_CATALOG, GuessTrack } from '@/lib/guessTracks';
 import { audioSession, GamePreviewState } from '@/lib/audioSession';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface RoundReview {
   round: number;
@@ -49,6 +50,7 @@ export default function GuessTheSongPage() {
   const [bestStreak, setBestStreak] = useState(0);
   const [reviews, setReviews] = useState<RoundReview[]>([]);
   const [gameFinished, setGameFinished] = useState(false);
+  const { addCoins } = useAuthStore();
 
   // Audio preview state
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -227,6 +229,9 @@ export default function GuessTheSongPage() {
     } else {
       // Game Over
       setGameFinished(true);
+      if (score > 0) {
+        addCoins(score, 'Guess the Song Reward');
+      }
       try {
         const currentBest = parseInt(localStorage.getItem('orbittune-guess-song-best') || '0', 10);
         if (score > currentBest) {
@@ -497,6 +502,13 @@ export default function GuessTheSongPage() {
                 Session finished! You identified {reviews.filter((r) => r.isCorrect).length} out of 10 songs correctly with a best streak of {bestStreak}x.
               </p>
             </div>
+
+            {score > 0 && (
+              <div className="p-3.5 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center gap-2.5 text-accent font-bold text-xs font-mono max-w-sm mx-auto shadow-sm">
+                <span className="text-base">🪙</span>
+                <span>+{score} Orbit Coins berhasil ditambahkan ke saldo!</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-center gap-3 pt-2">
               <button

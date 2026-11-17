@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { TRIVIA_QUESTION_BANK, TriviaQuestion } from '@/lib/triviaBank';
+import { useAuthStore } from '@/store/useAuthStore';
 
 type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -83,6 +84,7 @@ export default function MusicTriviaPage() {
   const [gameState, setGameState] = useState<'prep' | 'playing' | 'completed'>('prep');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('Medium');
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>('Medium');
+  const { addCoins } = useAuthStore();
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -214,6 +216,9 @@ export default function MusicTriviaPage() {
     } else {
       // Complete game
       setGameState('completed');
+      if (score > 0) {
+        addCoins(score, 'Trivia Reward');
+      }
       if (score > personalBest) {
         setPersonalBest(score);
         try {
@@ -638,6 +643,14 @@ export default function MusicTriviaPage() {
                 </span>
               </div>
             </div>
+
+            {/* Orbit Coins Reward Banner */}
+            {score > 0 && (
+              <div className="p-3.5 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center gap-2.5 text-accent font-bold text-xs font-mono max-w-lg mx-auto shadow-sm">
+                <span className="text-base">🪙</span>
+                <span>+{score} Orbit Coins berhasil ditambahkan ke saldo akunmu!</span>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-4">

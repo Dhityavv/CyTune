@@ -27,6 +27,7 @@ import AvatarFrame from '@/components/cosmetics/AvatarFrame';
 import ProfileBorder from '@/components/cosmetics/ProfileBorder';
 import ProfileBackground from '@/components/cosmetics/ProfileBackground';
 import TrackRow from '@/components/TrackRow';
+import AuthModal from '@/components/AuthModal';
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const [guessBest, setGuessBest] = useState<number>(0);
   const [triviaBest, setTriviaBest] = useState<number>(0);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   useEffect(() => {
     // Load local db data
@@ -69,6 +71,30 @@ export default function ProfilePage() {
   const equippedFrameObj = getCosmeticById(user?.equippedFrame);
   const equippedBorderObj = getCosmeticById(user?.equippedBorder);
   const equippedBgObj = getCosmeticById(user?.equippedBackground);
+
+  if (!user) {
+    return (
+      <div className="py-20 max-w-md mx-auto text-center space-y-5 select-none">
+        <div className="w-16 h-16 rounded-3xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center mx-auto shadow-xl shadow-[#C9A94D]/20">
+          <User className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-text-primary">Profil Pengguna</h1>
+          <p className="text-xs text-text-secondary leading-relaxed">
+            Masuk dengan akun Email atau Google untuk melihat profil, koin, riwayat, dan kosmetik yang kamu miliki.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAuthOpen(true)}
+          className="px-6 py-3 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-lg shadow-[#C9A94D]/25 transition-all active:scale-95 cursor-pointer"
+        >
+          Masuk / Daftar Akun
+        </button>
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pb-28 max-w-5xl mx-auto select-none">
@@ -116,6 +142,11 @@ export default function ProfilePage() {
                         Free Listener
                       </span>
                     )}
+
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent border border-accent/30 flex items-center gap-1 font-mono">
+                      <span>🪙</span>
+                      <span>{(user.coins ?? 500).toLocaleString()} Coins</span>
+                    </span>
 
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#BBF41D]/15 text-[#BBF41D] border border-[#BBF41D]/30 flex items-center gap-1 font-mono">
                       <Sparkles className="w-2.5 h-2.5" />

@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface RoomState {
+export interface RoomMember {
+  id: string;
+  name: string;
+  username?: string;
+  avatar_url?: string;
+  isHost?: boolean;
+}
+
+export interface RoomState {
   id: string;
   name: string;
   hostName: string;
   hostId: string;
-  members: Array<{ id: string; name: string }>;
+  hostAvatar?: string;
+  members: RoomMember[];
   currentTrack: any | null;
   isPlaying: boolean;
   seekTime: number;
   updatedAt: number;
 }
 
-// In-memory global rooms store (accessible by all tabs / users on same instance)
+// In-memory global rooms store
 const rooms = new Map<string, RoomState>();
 
 export async function GET(req: NextRequest) {
@@ -36,15 +45,29 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, code, roomName, user, track, isPlaying, seekTime } = body;
 
+    const callerId = user?.id || `user_${Date.now()}`;
+    const callerName = user?.display_name || user?.username || 'Orbit Listener';
+    const callerUsername = user?.username || 'listener';
+    const callerAvatar = user?.avatar_url || '';
+
     // Action 1: Create room
     if (action === 'create') {
       const roomId = 'room_' + Math.random().toString(36).substring(2, 8);
       const newRoom: RoomState = {
         id: roomId,
-        name: roomName || `${user?.display_name || 'Host'}’s Lounge`,
-        hostName: user?.display_name || 'Host Listener',
-        hostId: user?.id || 'host',
-        members: [{ id: user?.id || 'host', name: user?.display_name || 'Host Listener' }],
+        name: roomName || `${callerName}’s Lounge`,
+        hostName: callerName,
+        hostId: callerId,
+        hostAvatar: callerAvatar,
+        members: [
+          {
+            id: callerId,
+            name: callerName,
+            username: callerUsername,
+            avatar_url: callerAvatar,
+            isHost: true,
+          },
+        ],
         currentTrack: track || null,
         isPlaying: Boolean(isPlaying),
         seekTime: seekTime || 0,
@@ -56,17 +79,27 @@ export async function POST(req: NextRequest) {
 
     // Action 2: Join room
     if (action === 'join') {
-      const room = rooms.get(code);
-      if (!room) {
-        // Automatically create session with this code so friends joining immediately enter!
+      if (!code) {
+        return NextResponse.json({ error: 'Room code required' }, { status: 400 });
+      }
+
+      const existingRoom = rooms.get(code);
+      if (!existingRoom) {
+        // If room with this code does not exist yet, initialize it with this user as Host!
         const autoRoom: RoomState = {
           id: code,
           name: `Room #${code}`,
-          hostName: 'Host Listener',
-          hostId: 'host',
+          hostName: callerName,
+          hostId: callerId,
+          hostAvatar: callerAvatar,
           members: [
-            { id: 'host', name: 'Host Listener' },
-            { id: user?.id || `user_${Date.now()}`, name: user?.display_name || 'Orbit Listener' },
+            {
+              id: callerId,
+              name: callerName,
+              username: callerUsername,
+              avatar_url: callerAvatar,
+              isHost: true,
+            },
           ],
           currentTrack: track || null,
           isPlaying: true,
@@ -77,14 +110,24 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(autoRoom);
       }
 
-      // Add user to room members if not already present
-      const userId = user?.id || `user_${Date.now()}`;
-      const userName = user?.display_name || 'Guest Listener';
-      if (!room.members.some((m) => m.id === userId || m.name === userName)) {
-        room.members.push({ id: userId, name: userName });
+      // Add or update joining user in room members
+      const existingIdx = existingRoom.members.findIndex((m) => m.id === callerId);
+      if (existingIdx >= 0) {
+        existingRoom.members[existingIdx].name = callerName;
+        existingRoom.members[existingIdx].avatar_url = callerAvatar;
+        existingRoom.members[existingIdx].username = callerUsername;
+      } else {
+        existingRoom.members.push({
+          id: callerId,
+          name: callerName,
+          username: callerUsername,
+          avatar_url: callerAvatar,
+          isHost: callerId === existingRoom.hostId,
+        });
       }
-      room.updatedAt = Date.now();
-      return NextResponse.json(room);
+
+      existingRoom.updatedAt = Date.now();
+      return NextResponse.json(existingRoom);
     }
 
     // Action 3: Sync playback from Host
@@ -100,6 +143,16 @@ export async function POST(req: NextRequest) {
       room.updatedAt = Date.now();
 
       return NextResponse.json(room);
+    }
+
+    // Action 4: Leave room
+    if (action === 'leave') {
+      const room = rooms.get(code);
+      if (room) {
+        room.members = room.members.filter((m) => m.id !== callerId);
+        room.updatedAt = Date.now();
+      }
+      return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
