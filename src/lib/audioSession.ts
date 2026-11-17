@@ -348,15 +348,12 @@ class CentralizedAudioSession {
     }
 
     // Normal session
-    let ytTime: { currentTime: number; duration: number; isPlaying: boolean } | null = null;
-    if (typeof window !== 'undefined' && (window as any).__orbitPlayerGetTime) {
-      ytTime = (window as any).__orbitPlayerGetTime();
-    }
-
+    const audioEl = typeof document !== 'undefined' ? (document.getElementById('orbit-audio-player') as HTMLAudioElement | null) : null;
     const normalStore = usePlayerStore.getState();
-    const cur = ytTime && ytTime.duration > 0 ? ytTime.currentTime : normalStore.currentTime;
-    const dur = ytTime && ytTime.duration > 0 ? ytTime.duration : (normalStore.duration || 0);
-    const isPlaying = ytTime ? ytTime.isPlaying : normalStore.isPlaying;
+    const hasAudio = audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0;
+    const cur = hasAudio ? audioEl.currentTime : normalStore.currentTime;
+    const dur = hasAudio ? audioEl.duration : (normalStore.duration || 0);
+    const isPlaying = hasAudio ? !audioEl.paused : normalStore.isPlaying;
 
     return {
       currentTime: cur,
@@ -382,28 +379,14 @@ class CentralizedAudioSession {
     const tick = () => {
       const snap = this.getProgressSnapshot();
 
-      // Check current authoritative audio element time directly from DOM or player bridge
+      // Check current authoritative audio element time directly from DOM
       if (this.activeSession === 'NORMAL') {
-        let found = false;
-        if (typeof window !== 'undefined' && (window as any).__orbitPlayerGetTime) {
-          const ytTime = (window as any).__orbitPlayerGetTime();
-          if (ytTime && ytTime.duration > 0) {
-            snap.currentTime = ytTime.currentTime;
-            snap.duration = ytTime.duration;
-            snap.progressPercent = (ytTime.currentTime / ytTime.duration) * 100;
-            snap.isPlaying = ytTime.isPlaying;
-            found = true;
-          }
-        }
-
-        if (!found) {
-          const audioEl = document.getElementById('orbit-audio-player') as HTMLAudioElement | null;
-          if (audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
-            snap.currentTime = audioEl.currentTime;
-            snap.duration = audioEl.duration;
-            snap.progressPercent = (audioEl.currentTime / audioEl.duration) * 100;
-            snap.isPlaying = !audioEl.paused;
-          }
+        const audioEl = document.getElementById('orbit-audio-player') as HTMLAudioElement | null;
+        if (audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+          snap.currentTime = audioEl.currentTime;
+          snap.duration = audioEl.duration;
+          snap.progressPercent = (audioEl.currentTime / audioEl.duration) * 100;
+          snap.isPlaying = !audioEl.paused;
         }
       } else if (this.activeSession === 'GAME_PREVIEW' && this.gameAudio) {
         const cur = Math.min(15, this.gameAudio.currentTime);

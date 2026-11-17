@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (primaryErr: any) {
     console.warn(`Primary YouTube stream failed for ${id}:`, primaryErr?.message || primaryErr);
 
-    // 2. Fallback Streaming: Try resolving track title and streaming fallback preview
+    // 2. Fallback Streaming: Try resolving track title and redirecting to high-availability CDN
     try {
       let query = '';
       const searchParams = req.nextUrl.searchParams;
@@ -74,31 +74,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       if (query) {
         const fallbackUrl = await getFallbackAudioUrl(query);
         if (fallbackUrl) {
-          const fetchHeaders: Record<string, string> = {};
-          if (rangeHeader) {
-            fetchHeaders['Range'] = rangeHeader;
-          }
-          const audioRes = await fetch(fallbackUrl, {
-            headers: fetchHeaders,
-            signal: AbortSignal.timeout(10000),
-          });
-
-          if (audioRes.ok || audioRes.status === 206) {
-            const fallbackHeaders = new Headers();
-            fallbackHeaders.set('Content-Type', audioRes.headers.get('content-type') || 'audio/m4a');
-            fallbackHeaders.set('Accept-Ranges', 'bytes');
-            if (audioRes.headers.get('content-range')) {
-              fallbackHeaders.set('Content-Range', audioRes.headers.get('content-range')!);
-            }
-            if (audioRes.headers.get('content-length')) {
-              fallbackHeaders.set('Content-Length', audioRes.headers.get('content-length')!);
-            }
-
-            return new NextResponse(audioRes.body as any, {
-              status: audioRes.status,
-              headers: fallbackHeaders,
-            });
-          }
+          // Redirect browser to stream directly from high-speed Apple CDN (supports 206 range & seeking natively)
+          return NextResponse.redirect(fallbackUrl, 307);
         }
       }
     } catch (fallbackErr) {
