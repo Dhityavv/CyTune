@@ -6,17 +6,28 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getHighResCover } from '@/types/music';
 import { audioSession } from '@/lib/audioSession';
 
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady?: () => void;
+    __orbitPlayerSeek?: (seconds: number) => void;
+    __orbitPlayerSetVolume?: (vol: number) => void;
+    __orbitPlayerSetMuted?: (muted: boolean, vol?: number) => void;
+    __orbitPlayerGetTime?: () => { currentTime: number; duration: number; isPlaying: boolean } | null;
+  }
+}
+
 export default function AudioController() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playerRef = useRef<any>(null);
+  const isPlayerReadyRef = useRef<boolean>(false);
   const loadedTrackIdRef = useRef<string | null>(null);
-  const isRecoveringRef = useRef<boolean>(false);
+  const pendingTrackIdRef = useRef<string | null>(null);
 
   const {
     currentTrack,
     isPlaying,
     volume,
     isMuted,
-    repeatMode,
     nextTrack,
     prevTrack,
     updateTime,
@@ -31,7 +42,6 @@ export default function AudioController() {
       isPlaying: s.isPlaying,
       volume: s.volume,
       isMuted: s.isMuted,
-      repeatMode: s.repeatMode,
       nextTrack: s.nextTrack,
       prevTrack: s.prevTrack,
       updateTime: s.updateTime,
@@ -43,63 +53,306 @@ export default function AudioController() {
     }))
   );
 
-  // Play / Pause & Track Change
+  // 1. Initialize YouTube Player Instance
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    let checkInterval: NodeJS.Timeout | null = null;
 
+    const setupPlayerInstance = () => {
+      if (!window.YT || !window.YT.Player) return false;
+      const targetEl = document.getElementById('orbit-youtube-player-element');
+      if (!targetEl || playerRef.current) return true;
+
+      try {
+        playerRef.current = new window.YT.Player('orbit-youtube-player-element', {
+          height: '200',
+          width: '200',
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 1,
+            enablejsapi: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0,
+            origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+          },
+          events: {
+            onReady: (event: any) => {
+              isPlayerReadyRef.current = true;
+              const store = usePlayerStore.getState();
+              try {
+                event.target.unMute();
+                event.target.setVolume(Math.round(store.volume * 100));
+                if (store.isMuted) {
+                  event.target.mute();
+                }
+              } catch {}
+
+              // If there was a pending track requested while initializing
+              if (pendingTrackIdRef.current) {
+                const targetId = pendingTrackIdRef.current;
+                pendingTrackIdRef.current = null;
+                loadedTrackIdRef.current = targetId;
+                try {
+                  event.target.loadVideoById({ videoId: targetId, startSeconds: 0 });
+                  event.target.unMute();
+                  event.target.setVolume(Math.round(store.volume * 100));
+                  if (usePlayerStore.getState().isPlaying) {
+                    event.target.playVideo();
+                  }
+                } catch (e) {
+                  console.warn('Failed to load pending track into YT player:', e);
+                }
+              }
+            },
+            onStateChange: (event: any) => {
+              const state = event.data;
+              // -1: UNSTARTED, 0: ENDED, 1: PLAYING, 2: PAUSED, 3: BUFFERING, 5: CUED
+              if (state === 1) { // PLAYING
+                setIsBuffering(false);
+                setPlaybackError(null);
+                usePlayerStore.setState({ loadingTrackId: null, isPlaying: true });
+                audioSession.setNormalSessionActive();
+
+                try {
+                  const dur = event.target.getDuration();
+                  if (dur && dur > 0) {
+                    usePlayerStore.setState({ duration: dur });
+                  }
+                } catch {}
+              } else if (state === 3) { // BUFFERING
+                setIsBuffering(true);
+              } else if (state === 2) { // PAUSED
+                setIsBuffering(false);
+              } else if (state === 0) { // ENDED
+                setIsBuffering(false);
+                const curTrack = usePlayerStore.getState().currentTrack;
+                if (curTrack && playerRef.current) {
+                  try {
+                    const dur = playerRef.current.getDuration() || 0;
+                    usePlayerStore.getState().recordFeedback('complete_play', curTrack, dur);
+                  } catch {}
+                }
+
+                const repMode = usePlayerStore.getState().repeatMode;
+                if (repMode === 'one') {
+                  try {
+                    playerRef.current.seekTo(0, true);
+                    playerRef.current.playVideo();
+                  } catch {}
+                } else {
+                  usePlayerStore.getState().nextTrack();
+                }
+              }
+            },
+            onError: (event: any) => {
+              console.warn('YouTube Player error code:', event?.data);
+              setIsBuffering(false);
+              usePlayerStore.setState({ loadingTrackId: null });
+              setPlaybackError('Track playback unavailable on YouTube. Skipping to next song...');
+              setTimeout(() => {
+                const store = usePlayerStore.getState();
+                if (store.playbackError) {
+                  store.setPlaybackError(null);
+                  store.nextTrack();
+                }
+              }, 2000);
+            },
+          },
+        });
+        return true;
+      } catch (err) {
+        console.warn('Error creating YT.Player:', err);
+        return false;
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      if (!window.YT) {
+        const existingScript = document.getElementById('orbit-yt-iframe-api');
+        if (!existingScript) {
+          const script = document.createElement('script');
+          script.id = 'orbit-yt-iframe-api';
+          script.src = 'https://www.youtube.com/iframe_api';
+          script.async = true;
+          document.head.appendChild(script);
+        }
+
+        const prevReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+          if (typeof prevReady === 'function') prevReady();
+          setupPlayerInstance();
+        };
+      } else {
+        setupPlayerInstance();
+      }
+
+      checkInterval = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          if (setupPlayerInstance() && checkInterval) {
+            clearInterval(checkInterval);
+            checkInterval = null;
+          }
+        }
+      }, 300);
+    }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
+  }, [setIsBuffering, setPlaybackError]);
+
+  // 2. Handle Track Changes & Play/Pause State
+  useEffect(() => {
     if (currentTrack) {
       if (loadedTrackIdRef.current !== currentTrack.id) {
         loadedTrackIdRef.current = currentTrack.id;
-        isRecoveringRef.current = false;
         setPlaybackError(null);
         setIsBuffering(true);
 
-        const streamUrl = `/api/stream/${currentTrack.id}?title=${encodeURIComponent(currentTrack.title)}&artist=${encodeURIComponent(currentTrack.artist || '')}`;
-        audio.src = streamUrl;
-        audio.load();
-
-        if (isPlaying) {
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              if (err.name !== 'AbortError') {
-                console.warn('Audio play error/prevented:', err);
-              }
+        if (isPlayerReadyRef.current && playerRef.current) {
+          try {
+            playerRef.current.loadVideoById({
+              videoId: currentTrack.id,
+              startSeconds: 0,
             });
-          }
-        }
-      } else {
-        if (isPlaying) {
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              if (err.name !== 'AbortError') {
-                console.warn('Audio play error/prevented:', err);
-              }
-            });
+            playerRef.current.unMute();
+            playerRef.current.setVolume(Math.round(volume * 100));
+            if (isPlaying) {
+              playerRef.current.playVideo();
+            } else {
+              playerRef.current.pauseVideo();
+            }
+          } catch (e) {
+            console.warn('Failed to load track into YT player:', e);
           }
         } else {
-          audio.pause();
+          pendingTrackIdRef.current = currentTrack.id;
+        }
+      } else {
+        if (isPlayerReadyRef.current && playerRef.current) {
+          try {
+            if (isPlaying) {
+              playerRef.current.unMute();
+              playerRef.current.setVolume(Math.round(volume * 100));
+              playerRef.current.playVideo();
+            } else {
+              playerRef.current.pauseVideo();
+            }
+          } catch {}
         }
       }
     } else {
       loadedTrackIdRef.current = null;
-      isRecoveringRef.current = false;
-      audio.pause();
-      audio.removeAttribute('src');
-      audio.load();
+      pendingTrackIdRef.current = null;
+      if (isPlayerReadyRef.current && playerRef.current) {
+        try {
+          playerRef.current.stopVideo();
+        } catch {}
+      }
     }
-  }, [currentTrack, isPlaying, setIsBuffering, setPlaybackError]);
+  }, [currentTrack, isPlaying, volume, setIsBuffering, setPlaybackError]);
 
-  // Volume & Mute
+  // 3. Handle Volume & Mute Updates
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = isMuted ? 0 : volume;
+    if (isPlayerReadyRef.current && playerRef.current) {
+      try {
+        if (isMuted) {
+          playerRef.current.mute();
+        } else {
+          playerRef.current.unMute();
+          playerRef.current.setVolume(Math.round(volume * 100));
+        }
+      } catch {}
+    }
   }, [volume, isMuted]);
 
-  // MediaSession API for OS and physical media keys
+  // 4. Register Global Player Bridge
+  useEffect(() => {
+    window.__orbitPlayerSeek = (seconds: number) => {
+      if (isPlayerReadyRef.current && playerRef.current) {
+        try {
+          playerRef.current.seekTo(seconds, true);
+        } catch {}
+      }
+    };
+
+    window.__orbitPlayerSetVolume = (vol: number) => {
+      if (isPlayerReadyRef.current && playerRef.current) {
+        try {
+          playerRef.current.setVolume(Math.round(vol * 100));
+        } catch {}
+      }
+    };
+
+    window.__orbitPlayerSetMuted = (muted: boolean, vol: number = 0.8) => {
+      if (isPlayerReadyRef.current && playerRef.current) {
+        try {
+          if (muted) {
+            playerRef.current.mute();
+          } else {
+            playerRef.current.unMute();
+            playerRef.current.setVolume(Math.round(vol * 100));
+          }
+        } catch {}
+      }
+    };
+
+    window.__orbitPlayerGetTime = () => {
+      if (!isPlayerReadyRef.current || !playerRef.current) return null;
+      try {
+        const cur = playerRef.current.getCurrentTime() || 0;
+        const dur = playerRef.current.getDuration() || 0;
+        const state = typeof playerRef.current.getPlayerState === 'function' ? playerRef.current.getPlayerState() : -1;
+        return {
+          currentTime: cur,
+          duration: dur,
+          isPlaying: state === 1,
+        };
+      } catch {
+        return null;
+      }
+    };
+
+    return () => {
+      delete window.__orbitPlayerSeek;
+      delete window.__orbitPlayerSetVolume;
+      delete window.__orbitPlayerSetMuted;
+      delete window.__orbitPlayerGetTime;
+    };
+  }, []);
+
+  // 5. Continuous time ticker for usePlayerStore & OS MediaSession
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      if (!isPlayerReadyRef.current || !playerRef.current) return;
+      try {
+        const cur = playerRef.current.getCurrentTime() || 0;
+        const dur = playerRef.current.getDuration() || 0;
+        if (dur > 0) {
+          updateTime(cur, dur);
+
+          if ('mediaSession' in navigator && Number.isFinite(dur) && dur > 0) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: dur,
+                playbackRate: 1,
+                position: Math.min(cur, dur),
+              });
+            } catch {}
+          }
+        }
+      } catch {}
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, updateTime]);
+
+  // 6. Hook into MediaSession API for OS controls
   useEffect(() => {
     if (!currentTrack || typeof window === 'undefined' || !('mediaSession' in navigator)) return;
 
@@ -129,101 +382,22 @@ export default function AudioController() {
     });
   }, [currentTrack, togglePlay, prevTrack, nextTrack, seekTo]);
 
-  // Client-side auto recovery on stream failure
-  const handlePlaybackError = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
-
-    const audioErr = audio.error;
-    if (audioErr && audioErr.code === 1) return; // MEDIA_ERR_ABORTED
-
-    if (!isRecoveringRef.current) {
-      isRecoveringRef.current = true;
-      console.warn('Primary stream failed for', currentTrack.title, '— attempting client-side fallback...');
-      setIsBuffering(true);
-
-      try {
-        const query = `${currentTrack.title} ${currentTrack.artist}`.trim();
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`);
-        if (res.ok) {
-          const data = await res.json();
-          const fallbackUrl = data.results?.[0]?.previewUrl;
-          if (fallbackUrl && audioRef.current) {
-            console.log('Direct client recovery stream acquired:', fallbackUrl);
-            audioRef.current.src = fallbackUrl;
-            audioRef.current.load();
-            if (usePlayerStore.getState().isPlaying) {
-              audioRef.current.play().catch(() => {});
-            }
-            setIsBuffering(false);
-            setPlaybackError(null);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Direct client recovery attempt failed:', err);
-      }
-    }
-
-    setIsBuffering(false);
-    setPlaybackError('Track could not be streamed. Moving to next track in 2s...');
-    usePlayerStore.setState({ loadingTrackId: null });
-
-    setTimeout(() => {
-      const store = usePlayerStore.getState();
-      if (store.playbackError) {
-        store.setPlaybackError(null);
-        store.nextTrack();
-      }
-    }, 2500);
-  }, [currentTrack, setIsBuffering, setPlaybackError]);
-
   return (
-    <audio
-      id="orbit-audio-player"
-      ref={audioRef}
-      preload="auto"
-      onLoadStart={() => setIsBuffering(true)}
-      onWaiting={() => setIsBuffering(true)}
-      onCanPlay={() => {
-        setIsBuffering(false);
-        setPlaybackError(null);
-        usePlayerStore.setState({ loadingTrackId: null });
-        audioSession.setNormalSessionActive();
+    <div
+      id="orbit-youtube-player-container"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        right: 0,
+        width: '200px',
+        height: '200px',
+        pointerEvents: 'none',
+        clipPath: 'circle(0px at 0 0)',
+        zIndex: -1,
       }}
-      onPlaying={() => {
-        setIsBuffering(false);
-        setPlaybackError(null);
-        usePlayerStore.setState({ loadingTrackId: null });
-        audioSession.setNormalSessionActive();
-      }}
-      onTimeUpdate={() => {
-        const el = audioRef.current;
-        if (!el) return;
-        updateTime(el.currentTime, el.duration);
-
-        if ('mediaSession' in navigator && Number.isFinite(el.duration) && el.duration > 0) {
-          try {
-            navigator.mediaSession.setPositionState({
-              duration: el.duration,
-              playbackRate: el.playbackRate || 1,
-              position: Math.min(el.currentTime, el.duration),
-            });
-          } catch {}
-        }
-      }}
-      onEnded={() => {
-        if (currentTrack && audioRef.current) {
-          recordFeedback('complete_play', currentTrack, audioRef.current.duration);
-        }
-        if (repeatMode === 'one' && audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
-        } else {
-          nextTrack();
-        }
-      }}
-      onError={handlePlaybackError}
-    />
+      aria-hidden="true"
+    >
+      <div id="orbit-youtube-player-element" />
+    </div>
   );
 }

@@ -298,9 +298,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   seekTo: (seconds: number) => {
     set({ currentTime: seconds });
-    const audio = document.getElementById('orbit-audio-player') as HTMLAudioElement;
-    if (audio) {
-      try { audio.currentTime = seconds; } catch {}
+    if (typeof window !== 'undefined' && window.__orbitPlayerSeek) {
+      window.__orbitPlayerSeek(seconds);
     }
   },
 
@@ -314,9 +313,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   setVolume: (vol: number) => {
     const clamped = Math.max(0, Math.min(1, vol));
     set({ volume: clamped, isMuted: clamped === 0 });
-    const audio = document.getElementById('orbit-audio-player') as HTMLAudioElement;
-    if (audio) {
-      audio.volume = clamped;
+    if (typeof window !== 'undefined' && window.__orbitPlayerSetVolume) {
+      window.__orbitPlayerSetVolume(clamped);
     }
   },
 
@@ -324,11 +322,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { isMuted, volume } = get();
     const nextMuted = !isMuted;
     set({ isMuted: nextMuted });
-    const audio = document.getElementById('orbit-audio-player') as HTMLAudioElement;
-    if (nextMuted) {
-      if (audio) audio.volume = 0;
-    } else {
-      if (audio) audio.volume = volume > 0 ? volume : 0.8;
+    if (typeof window !== 'undefined' && window.__orbitPlayerSetMuted) {
+      window.__orbitPlayerSetMuted(nextMuted, volume);
     }
   },
 
