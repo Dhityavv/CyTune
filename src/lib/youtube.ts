@@ -254,15 +254,24 @@ export async function getExploreTracks(): Promise<{ title: string; tracks: Track
     // Default queries for trending and quick picks
     const categories = [
       { key: 'Trending Hits Indonesia', query: 'Top Hits Indonesia 2026' },
-      { key: 'Global Top Chart', query: 'Top Global Pop Music' },
+      { key: 'Global Top Chart', query: 'Global Top 50 Hits' },
       { key: 'Chill & Lo-Fi Lounge', query: 'Lofi Chillhop beats' },
       { key: 'Indie & Alternative Vibes', query: 'Indie Folk Pop' },
     ];
 
+    const junkRegex = /1 hour|10 hours|compilation|full album|best of|mix 202|nonstop|dj remix|ringtone|sound effect|audio library|mashup/i;
+
     const sections = await Promise.all(
       categories.map(async (cat) => {
-        const tracks = await searchMusic(cat.query);
-        const trackList = tracks.slice(0, 10);
+        const rawTracks = await searchMusic(cat.query);
+        // Filter out shorts soundbites, 20-min compilations, and junk uploads
+        const filtered = rawTracks.filter((t) => {
+          if (t.duration > 0 && (t.duration < 75 || t.duration > 540)) return false;
+          if (junkRegex.test(t.title)) return false;
+          if (t.artist === 'Unknown Artist' && !t.title.includes(' - ')) return false;
+          return true;
+        });
+        const trackList = (filtered.length >= 4 ? filtered : rawTracks).slice(0, 10);
         return {
           title: cat.key,
           tracks: trackList,

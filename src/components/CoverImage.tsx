@@ -119,7 +119,7 @@ export default function CoverImage({
 
   return (
     <div
-      className={`relative overflow-hidden bg-surface ${aspectClass} ${containerClassName}`}
+      className={`relative overflow-hidden bg-surface w-full h-full ${aspectClass} ${containerClassName}`}
     >
       {/* Loading Skeleton */}
       {isLoading && !hasError && (
@@ -135,6 +135,8 @@ export default function CoverImage({
           alt={alt || 'Album cover'}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
+          referrerPolicy="no-referrer"
+          crossOrigin="anonymous"
           onLoad={handleLoad}
           onError={handleError}
           className={`${className} ${

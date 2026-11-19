@@ -63,7 +63,7 @@ export interface RecommendedTrack extends Track {
 
 export function getHighResCover(url?: string): string {
   if (!url || typeof url !== 'string' || !url.trim()) return '';
-  if (url.includes('googleusercontent.com')) {
+  if (url.includes('googleusercontent.com') || url.includes('ggpht.com')) {
     if (/=w\d+-h\d+/.test(url)) {
       return url.replace(/=w\d+-h\d+[^?#]*/, '=w800-h800-l90-rj');
     }
@@ -87,16 +87,21 @@ export function getThumbnailFallbackChain(url?: string): string[] {
     if (videoIdMatch && videoIdMatch[1]) {
       const vid = videoIdMatch[1];
       chain.push(`https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`);
+      chain.push(`https://i.ytimg.com/vi/${vid}/sddefault.jpg`);
       chain.push(`https://i.ytimg.com/vi/${vid}/hqdefault.jpg`);
       chain.push(`https://i.ytimg.com/vi/${vid}/mqdefault.jpg`);
       return chain;
     }
   }
 
-  if (url.includes('googleusercontent.com')) {
+  if (url.includes('googleusercontent.com') || url.includes('ggpht.com')) {
     const highRes = getHighResCover(url);
     if (highRes) chain.push(highRes);
-    const midRes = url.replace(/=w\d+-h\d+[^?#]*/, '=w544-h544-l90-rj');
+    const midRes = /=w\d+-h\d+/.test(url)
+      ? url.replace(/=w\d+-h\d+[^?#]*/, '=w544-h544-l90-rj')
+      : /=s\d+/.test(url)
+      ? url.replace(/=s\d+[^?#]*/, '=s544-c')
+      : `${url}=w544-h544-l90-rj`;
     if (midRes && midRes !== highRes) chain.push(midRes);
     if (url && url !== highRes && url !== midRes) chain.push(url);
     return Array.from(new Set(chain));
