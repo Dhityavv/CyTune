@@ -89,7 +89,7 @@ export default function QueueDrawer() {
                 {queue.length > 0 && (
                   <button
                     onClick={clearQueue}
-                    className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="min-w-11 min-h-11 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors flex items-center justify-center"
                     aria-label="Clear queue"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function QueueDrawer() {
                 {smartAutoplayEnabled && currentTrack && (
                   <button
                     onClick={() => fetchSmartRecommendations(currentTrack, true)}
-                    className={`p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors ${
+                    className={`min-w-11 min-h-11 rounded-lg text-text-muted hover:text-text-primary transition-colors flex items-center justify-center ${
                       loadingRecommendations ? 'animate-spin text-accent' : ''
                     }`}
                     aria-label="Refresh recommendations"
@@ -246,7 +246,7 @@ export default function QueueDrawer() {
                             await db.likedTracks.put({ ...rec, likedAt: Date.now() });
                             recordFeedback('liked', rec);
                           }}
-                          className="p-1 text-text-muted hover:text-accent transition-colors"
+                          className="min-w-11 min-h-11 rounded-lg text-text-muted hover:text-accent hover:bg-surface transition-colors flex items-center justify-center"
                           aria-label="Add to liked"
                         >
                           <Heart className="w-3.5 h-3.5" />
@@ -256,7 +256,7 @@ export default function QueueDrawer() {
                             e.stopPropagation();
                             dismissRecommendation(rec);
                           }}
-                          className="p-1 text-text-muted hover:text-text-primary transition-colors"
+                          className="min-w-11 min-h-11 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors flex items-center justify-center"
                           aria-label="Dismiss recommendation"
                         >
                           <X className="w-3.5 h-3.5" />

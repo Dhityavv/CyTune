@@ -104,7 +104,7 @@ export default function TrackCard({ track, queueContext }: TrackCardProps) {
           <button
             type="button"
             onClick={() => router.push(`/artist?id=${encodeURIComponent(track.artistId!)}`)}
-            className="max-w-full text-[11px] text-text-secondary truncate hover:text-accent hover:underline text-left"
+            className="max-w-full min-h-6 inline-flex items-center text-[11px] text-text-secondary truncate hover:text-accent hover:underline text-left"
           >
             {track.artist}
           </button>

@@ -65,6 +65,8 @@ export default function UniversalProgressBar({
     };
   }, []);
 
+  const isOverrideReset = overrideTime === 0;
+
   // Reset optimistic state & progress snapshot whenever track changes or resets to 0
   useEffect(() => {
     setOptimisticPercent(null);
@@ -78,7 +80,7 @@ export default function UniversalProgressBar({
       progressPercent: 0,
       isBuffering: true,
     }));
-  }, [trackId, overrideDuration, overrideTime === 0]);
+  }, [trackId, overrideDuration, isOverrideReset]);
 
   const rawDuration = overrideDuration !== undefined ? overrideDuration : progressInfo.duration;
   const effectiveDuration = Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : 0;

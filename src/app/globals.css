@@ -20,7 +20,7 @@
   /* — Editorial Typography — */
   --color-text-primary: #E8E4D9;      /* Soft Ivory — headings, primary text */
   --color-text-secondary: #89919C;    /* Silver Gray — secondary text */
-  --color-text-muted: #6B7280;        /* deep silver — metadata */
+  --color-text-muted: #7B8490;        /* accessible silver — metadata */
 
   /* — Champagne Gold Brand Accent (selective use) — */
   --color-accent: #C9A94D;
@@ -50,7 +50,7 @@
   --surface-elevated: #2A2D33;
   --text-primary: #E8E4D9;
   --text-secondary: #89919C;
-  --text-muted: #6B7280;
+  --text-muted: #7B8490;
   --accent: #C9A94D;
   --accent-hover: #DDC473;
   --teal-bright: #4E8A82;
@@ -319,7 +319,7 @@ html.light {
   --color-surface-elevated: #FAF8F1;
   --color-text-primary: #1A1B1E;
   --color-text-secondary: #5D626B;
-  --color-text-muted: #838A93;
+  --color-text-muted: #606873;
   --color-accent: #9A7B1F;
   --color-accent-hover: #C9A94D;
   --color-accent-subtle: rgba(154, 123, 31, 0.12);

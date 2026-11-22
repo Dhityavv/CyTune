@@ -20,7 +20,7 @@ import {
   Gamepad2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { db, LikedTrack, PlaylistRecord } from '@/lib/db';
+import { db, HistoryRecord, LikedTrack, PlaylistRecord } from '@/lib/db';
 import { getCosmeticById } from '@/lib/cosmetics';
 import AvatarFrame from '@/components/cosmetics/AvatarFrame';
 import ProfileBorder from '@/components/cosmetics/ProfileBorder';
@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const { user } = useAuthStore();
   const [likedTracks, setLikedTracks] = useState<LikedTrack[]>([]);
   const [playlists, setPlaylists] = useState<PlaylistRecord[]>([]);
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [guessBest, setGuessBest] = useState<number>(0);
   const [triviaBest, setTriviaBest] = useState<number>(0);
   const [copiedShare, setCopiedShare] = useState(false);
@@ -46,6 +47,8 @@ export default function ProfilePage() {
         setLikedTracks(likes.filter((track) => (track.userId || 'guest') === activeUserId));
         const lists = await db.playlists.toArray();
         setPlaylists(lists.filter((playlist) => (playlist.userId || 'guest') === activeUserId));
+        const plays = await db.history.toArray();
+        setHistory(plays.filter((item) => (item.userId || 'guest') === activeUserId));
 
         const savedGuess = localStorage.getItem('cytune-guess-song-best') || localStorage.getItem('orbittune-guess-song-best');
         if (savedGuess) setGuessBest(parseInt(savedGuess, 10));
@@ -67,6 +70,11 @@ export default function ProfilePage() {
       setTimeout(() => setCopiedShare(false), 2500);
     }
   };
+
+  const minutesStreamed = Math.round(
+    history.reduce((total, item) => total + (item.track?.duration || 0), 0) / 60
+  );
+  const topGenreLabel = history.length > 0 ? 'Based on recent playback' : 'No history yet';
 
   const equippedFrameObj = getCosmeticById(user?.equippedFrame);
   const equippedBorderObj = getCosmeticById(user?.equippedBorder);
@@ -275,19 +283,19 @@ export default function ProfilePage() {
             Minutes Streamed
           </span>
           <span className="text-xl sm:text-2xl font-extrabold text-accent font-mono block">
-            2,840 m
+            {minutesStreamed.toLocaleString()} m
           </span>
-          <span className="text-[10px] text-text-secondary block">Top 5% Hi-Fi listener</span>
+          <span className="text-[10px] text-text-secondary block">From local playback history</span>
         </div>
 
         <div className="p-5 rounded-2xl bg-surface/70 border border-border-subtle space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono block">
-            Top Genre
+            Recent Signal
           </span>
           <span className="text-base sm:text-lg font-bold text-text-primary block truncate">
-            Synthwave & R&B
+            {history.length > 0 ? history[0]?.track?.artist || 'Listening history' : 'Not enough data'}
           </span>
-          <span className="text-[10px] text-text-secondary block">52 tracks logged</span>
+          <span className="text-[10px] text-text-secondary block">{topGenreLabel}</span>
         </div>
 
         <div className="p-5 rounded-2xl bg-surface/70 border border-border-subtle space-y-1">

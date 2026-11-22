@@ -260,7 +260,7 @@ export default function AudioController() {
         } catch {}
       }
     }
-  }, [currentTrack, isPlaying, volume, setIsBuffering, setPlaybackError]);
+  }, [currentTrack, isPlaying, volume, setIsBuffering, setPlaybackError, updateTime]);
 
   // 3. Handle Volume & Mute Updates
   useEffect(() => {

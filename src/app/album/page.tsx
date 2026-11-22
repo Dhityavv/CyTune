@@ -39,18 +39,23 @@ function AlbumContent() {
       try {
         const query = id ? `id=${encodeURIComponent(id)}` : `q=${encodeURIComponent(titleQuery || '')}`;
         const res = await fetch(`/api/album?${query}`);
-        if (res.ok) {
-          const data = await res.json();
-          setAlbum(data.album);
-          setTracks(data.tracks || []);
-        }
-      } catch {
-        // ignore
+        if (!res.ok) throw new Error(`Album request failed with status ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        setAlbum(data.album || null);
+        setTracks(Array.isArray(data.tracks) ? data.tracks : []);
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Album request failed:', error);
+        setLoadError('The album could not be loaded. Check your connection and try again.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadAlbum();
+    return () => {
+      cancelled = true;
+    };
   }, [id, titleQuery]);
 
   const playAll = (shuffle = false) => {
@@ -78,7 +83,10 @@ function AlbumContent() {
         <div className="w-14 h-14 rounded-2xl bg-surface border border-border-subtle flex items-center justify-center text-text-muted mx-auto">
           <Disc3 className="w-6 h-6" />
         </div>
-        <h1 className="text-base font-bold text-text-primary">Album not found</h1>
+        <h1 className="text-base font-bold text-text-primary">
+          {loadError ? 'Album unavailable' : 'Album not found'}
+        </h1>
+        {loadError && <p role="alert" className="text-xs text-red-300 max-w-sm mx-auto">{loadError}</p>}
         <AppLink
           href="/"
           className="inline-block px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors"

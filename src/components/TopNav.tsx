@@ -99,7 +99,7 @@ export default function TopNav() {
         <AppLink
           href="/search"
           aria-label="Search music"
-          className="sm:hidden w-10 h-10 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+          className="flex sm:hidden w-10 h-10 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle items-center justify-center text-text-muted hover:text-text-primary transition-colors"
         >
           <Search className="w-4 h-4" />
         </AppLink>

@@ -29,7 +29,7 @@ function DialogBody({ track, close }: { track: Track; close: () => void }) {
       return (rawPlaylists ?? []).filter((p) => !p.userId || p.userId === 'guest');
     }
     return (rawPlaylists ?? []).filter((p) => !p.userId || p.userId === user.id || p.userId === 'guest');
-  }, [rawPlaylists, user?.id]);
+  }, [rawPlaylists, user]);
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState('');

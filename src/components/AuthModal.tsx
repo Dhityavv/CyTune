@@ -14,7 +14,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useClerk } from '@clerk/nextjs';
+import { useClerk, useSignIn } from '@clerk/nextjs';
+import type { OAuthStrategy } from '@clerk/nextjs/types';
 import gsap from 'gsap';
 import { useModalFocus } from '@/hooks/useModalFocus';
 
@@ -56,6 +57,7 @@ export default function AuthModal({
   } = useAuthStore();
 
   const { openSignIn } = useClerk();
+  const { signIn } = useSignIn();
   const router = useRouter();
 
   useEffect(() => {
@@ -110,15 +112,28 @@ export default function AuthModal({
 
   if (!isOpen || !mounted) return null;
 
-  const handleOAuthSignIn = (strategy?: string) => {
-    handleClose();
+  const handleOAuthSignIn = async (strategy: OAuthStrategy) => {
+    setError('');
+
     try {
-      openSignIn({
-        fallbackRedirectUrl: '/',
-        signUpFallbackRedirectUrl: '/',
+      if (!signIn) throw new Error('Clerk sign-in is not ready');
+      const { error: oauthError } = await signIn.sso({
+        strategy,
+        redirectCallbackUrl: '/sso-callback',
+        redirectUrl: '/',
       });
-    } catch {
-      router.push('/sign-in');
+      if (oauthError) throw oauthError;
+    } catch (oauthError) {
+      console.error('OAuth sign-in failed:', oauthError);
+      try {
+        openSignIn({
+          fallbackRedirectUrl: '/',
+          signUpFallbackRedirectUrl: '/',
+        });
+        handleClose();
+      } catch {
+        router.push('/sign-in');
+      }
     }
   };
 

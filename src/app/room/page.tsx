@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Radio, Users, Play, Pause, Plus, Copy, Check, LogOut, Loader2, Sparkles, Volume2 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -39,6 +39,7 @@ function ListeningRoomContent() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [roomError, setRoomError] = useState('');
 
   const { user } = useAuthStore();
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -48,9 +49,10 @@ function ListeningRoomContent() {
   const togglePlay = usePlayerStore((s) => s.togglePlay);
 
   const isHost = activeRoom ? activeRoom.hostId === (user?.id || 'host') : false;
+  const activeRoomId = activeRoom?.id;
   const lastSyncedTrackId = useRef<string | null>(null);
 
-  const handleJoin = async (codeToJoin?: string) => {
+  const handleJoin = useCallback(async (codeToJoin?: string) => {
     const targetCode = (codeToJoin || joinCodeInput).trim().replace(/^room=/, '').replace(/^.*code=/, '');
     if (!targetCode) return;
 
@@ -60,6 +62,7 @@ function ListeningRoomContent() {
     }
 
     setLoading(true);
+    setRoomError('');
     try {
       const res = await fetch('/api/room', {
         method: 'POST',
@@ -77,32 +80,35 @@ function ListeningRoomContent() {
         }),
       });
 
-      if (res.ok) {
-        const room: RoomData = await res.json();
-        setActiveRoom(room);
-        setJoinCodeInput('');
+      if (!res.ok) throw new Error(`Unable to join room (${res.status})`);
 
-        // Immediately sync track if host already has one playing!
-        if (room.currentTrack) {
-          lastSyncedTrackId.current = room.currentTrack.id;
-          playTrack(room.currentTrack);
-        }
+      const room: RoomData = await res.json();
+      setActiveRoom(room);
+      setJoinCodeInput('');
+
+      // Immediately sync track if host already has one playing!
+      if (room.currentTrack) {
+        lastSyncedTrackId.current = room.currentTrack.id;
+        playTrack(room.currentTrack);
       }
+    } catch (error) {
+      console.error('Unable to join room:', error);
+      setRoomError('Room tidak dapat dibuka. Periksa kode atau koneksi lalu coba lagi.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentTrack, joinCodeInput, playTrack, user]);
 
   // Auto-join if code is in URL
   useEffect(() => {
-    if (initialCode && !activeRoom) {
+    if (initialCode && !activeRoomId) {
       handleJoin(initialCode);
     }
-  }, [initialCode]);
+  }, [activeRoomId, handleJoin, initialCode]);
 
   // Host: Send live playback sync updates to server
   useEffect(() => {
-    if (!activeRoom || !isHost) return;
+    if (!activeRoomId || !isHost) return;
 
     const syncPlayback = async () => {
       try {
@@ -111,7 +117,7 @@ function ListeningRoomContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'sync',
-            code: activeRoom.id,
+            code: activeRoomId,
             track: currentTrack,
             isPlaying,
             seekTime: Math.floor(currentTime),
@@ -124,15 +130,15 @@ function ListeningRoomContent() {
 
     const handler = setTimeout(syncPlayback, 400);
     return () => clearTimeout(handler);
-  }, [activeRoom?.id, isHost, currentTrack, isPlaying, currentTime]);
+  }, [activeRoomId, isHost, currentTrack, isPlaying, currentTime]);
 
   // Listener: Poll room state to sync track from Host in real time
   useEffect(() => {
-    if (!activeRoom) return;
+    if (!activeRoomId) return;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/room?code=${encodeURIComponent(activeRoom.id)}`);
+        const res = await fetch(`/api/room?code=${encodeURIComponent(activeRoomId)}`);
         if (res.ok) {
           const remoteRoom: RoomData = await res.json();
           setActiveRoom((prev) => (prev ? { ...prev, ...remoteRoom } : remoteRoom));
@@ -151,7 +157,7 @@ function ListeningRoomContent() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [activeRoom?.id, isHost, playTrack]);
+  }, [activeRoomId, isHost, playTrack]);
 
   const handleCreate = async () => {
     if (!user) {
@@ -160,6 +166,7 @@ function ListeningRoomContent() {
     }
 
     setLoading(true);
+    setRoomError('');
     try {
       const res = await fetch('/api/room', {
         method: 'POST',
@@ -178,11 +185,14 @@ function ListeningRoomContent() {
         }),
       });
 
-      if (res.ok) {
-        const room = await res.json();
-        setActiveRoom(room);
-        setRoomNameInput('');
-      }
+      if (!res.ok) throw new Error(`Unable to create room (${res.status})`);
+
+      const room = await res.json();
+      setActiveRoom(room);
+      setRoomNameInput('');
+    } catch (error) {
+      console.error('Unable to create room:', error);
+      setRoomError('Room tidak dapat dibuat. Periksa koneksi lalu coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -237,6 +247,12 @@ function ListeningRoomContent() {
         </div>
       )}
 
+      {roomError && !activeRoom && (
+        <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-950/40 px-4 py-3 text-xs text-red-300">
+          {roomError}
+        </div>
+      )}
+
       {!activeRoom ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Create Room Card */}
@@ -255,7 +271,10 @@ function ListeningRoomContent() {
               <input
                 type="text"
                 value={roomNameInput}
-                onChange={(e) => setRoomNameInput(e.target.value)}
+                onChange={(e) => {
+                  setRoomNameInput(e.target.value);
+                  setRoomError('');
+                }}
                 placeholder="Nama Room (misal: Chill Malam, Lofi Focus)..."
                 className="w-full px-4 py-3 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent"
               />
@@ -287,7 +306,10 @@ function ListeningRoomContent() {
               <input
                 type="text"
                 value={joinCodeInput}
-                onChange={(e) => setJoinCodeInput(e.target.value)}
+                onChange={(e) => {
+                  setJoinCodeInput(e.target.value);
+                  setRoomError('');
+                }}
                 placeholder="Tempel kode room atau link undangan..."
                 className="w-full px-4 py-3 rounded-xl bg-sidebar border border-border-subtle text-text-primary text-xs focus:outline-none focus:border-accent font-mono"
               />

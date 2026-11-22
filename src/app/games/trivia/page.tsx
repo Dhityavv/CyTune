@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AppLink from '@/components/AppLink';
 import {
   Trophy,
@@ -21,6 +21,7 @@ import {
 import { TRIVIA_QUESTION_BANK, TriviaQuestion } from '@/lib/triviaBank';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuthModalStore } from '@/store/useAuthModalStore';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -99,6 +100,10 @@ export default function MusicTriviaPage() {
 
   // Leave confirmation modal state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const exitDialogRef = useRef<HTMLDivElement>(null);
+  const resumeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useModalFocus(showExitConfirm, exitDialogRef, () => setShowExitConfirm(false), resumeButtonRef);
 
   // Load personal best per user
   useEffect(() => {
@@ -291,20 +296,29 @@ export default function MusicTriviaPage() {
       {/* Leave Session Confirmation Modal */}
       {showExitConfirm && (
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-3xl bg-surface/95 border border-border-subtle p-6 shadow-2xl space-y-4">
+          <div
+            ref={exitDialogRef}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="leave-trivia-title"
+            aria-describedby="leave-trivia-description"
+            tabIndex={-1}
+            className="relative w-full max-w-md rounded-3xl bg-surface/95 border border-border-subtle p-6 shadow-2xl space-y-4"
+          >
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-lg font-bold text-text-primary">Leave Active Trivia?</h3>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <h3 id="leave-trivia-title" className="text-lg font-bold text-text-primary">Leave Active Trivia?</h3>
+              <p id="leave-trivia-description" className="text-xs text-text-secondary leading-relaxed">
                 Your current session progress, score ({score} pts), and streak will be discarded.
               </p>
             </div>
 
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
+                ref={resumeButtonRef}
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
                 className="px-5 py-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-primary font-semibold text-xs"
