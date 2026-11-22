@@ -6,7 +6,6 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import CoverImage from '@/components/CoverImage';
-import { clickable } from '@/lib/a11y';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 
 interface TrackRowProps {
@@ -24,16 +23,16 @@ function formatDuration(seconds: number): string {
 
 export function TrackTableHeader({ showAlbum = true }: { showAlbum?: boolean }) {
   return (
-    <div className="grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_100px] items-center px-3 py-2 text-[11px] font-semibold text-text-muted uppercase tracking-wider border-b border-border-subtle mb-1 select-none">
+    <div className="grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_132px] items-center px-3 py-2 text-[11px] font-semibold text-text-muted uppercase tracking-wider border-b border-border-subtle mb-1 select-none">
       <span className="text-center">#</span>
       <span className="pl-3">Title</span>
       {showAlbum && <span className="hidden md:block">Album</span>}
-      <span className="text-right pr-2">Duration</span>
+      <span className="text-right pr-2">Actions</span>
     </div>
   );
 }
 
-export default function TrackRow({ track, index }: TrackRowProps) {
+export default function TrackRow({ track, index, queueContext }: TrackRowProps) {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const playTrack = usePlayerStore((s) => s.playTrack);
@@ -41,136 +40,122 @@ export default function TrackRow({ track, index }: TrackRowProps) {
   const addToQueue = usePlayerStore((s) => s.addToQueue);
 
   const isCurrent = currentTrack?.id === track.id;
+  const isLiked = useLiveQuery(async () => !!(await db.likedTracks.get(track.id)), [track.id], false);
 
-  const isLiked = useLiveQuery(
-    async () => {
-      const found = await db.likedTracks.get(track.id);
-      return !!found;
-    },
-    [track.id],
-    false
-  );
-
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleFavorite = async () => {
     if (isLiked) {
       await db.likedTracks.delete(track.id);
     } else {
-      await db.likedTracks.put({
-        ...track,
-        likedAt: Date.now(),
-      });
+      await db.likedTracks.put({ ...track, likedAt: Date.now() });
       usePlayerStore.getState().recordFeedback('liked', track);
     }
   };
 
-  const handleRowClick = () => {
+  const handlePlay = () => {
     if (isCurrent) {
       togglePlay();
     } else {
-      playTrack(track);
+      playTrack(track, queueContext);
     }
   };
 
   return (
     <div
-      onClick={handleRowClick}
-      {...clickable(handleRowClick)}
-      className={`group grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_100px] items-center px-3 py-2 rounded-xl transition-all cursor-pointer select-none border ${
+      className={`group grid grid-cols-[36px_minmax(0,1fr)_80px] md:grid-cols-[36px_minmax(0,1fr)_minmax(120px,220px)_132px] items-center px-3 py-2 rounded-xl transition-all select-none border ${
         isCurrent
           ? 'bg-surface border-accent/40 text-text-primary shadow-sm'
           : 'bg-transparent border-transparent hover:bg-surface-hover/80 hover:border-border-subtle text-text-secondary'
       }`}
     >
-      {/* 1. Index / Equalizer / Play/Pause Hover Button */}
-      <div className="w-9 flex items-center justify-center flex-shrink-0">
-        <div className="flex items-center justify-center text-xs font-mono text-text-muted group-hover:hidden">
+      <button
+        type="button"
+        onClick={handlePlay}
+        aria-label={`${isCurrent && isPlaying ? 'Pause' : 'Play'} ${track.title} by ${track.artist}`}
+        aria-pressed={isCurrent && isPlaying}
+        className="w-9 h-10 rounded-lg flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface focus-visible:text-accent"
+      >
+        <span className="group-hover:hidden group-focus-within:hidden font-mono text-xs">
           {isCurrent && isPlaying ? (
-            <div className="flex items-end gap-0.5 h-3">
+            <span className="flex items-end gap-0.5 h-3" aria-hidden="true">
               <span className="w-0.5 h-3 bg-accent rounded-full animate-pulse" />
               <span className="w-0.5 h-1.5 bg-accent rounded-full animate-pulse delay-75" />
               <span className="w-0.5 h-2.5 bg-accent rounded-full animate-pulse delay-150" />
-            </div>
+            </span>
           ) : (
             index + 1
           )}
-        </div>
-        <div className="hidden group-hover:flex items-center justify-center text-text-primary">
+        </span>
+        <span className="hidden group-hover:flex group-focus-within:flex items-center justify-center" aria-hidden="true">
           {isCurrent && isPlaying ? (
             <Pause className="w-3.5 h-3.5 fill-current" />
           ) : (
             <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
           )}
-        </div>
-      </div>
+        </span>
+      </button>
 
-      {/* 2. Thumbnail, Title & Artist */}
-      <div className="flex items-center gap-3 min-w-0 pr-3">
-        <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sidebar shadow-sm">
-          <CoverImage
-            src={track.thumbnail}
-            alt={track.title}
-            size="sm"
-            className="w-full h-full object-cover"
-          />
-        </div>
+      <button
+        type="button"
+        onClick={handlePlay}
+        className="flex items-center gap-3 min-w-0 pr-3 text-left rounded-lg"
+        aria-label={`Play ${track.title} by ${track.artist}`}
+      >
+        <span className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sidebar shadow-sm">
+          <CoverImage src={track.thumbnail} alt={track.title} size="sm" className="w-full h-full object-cover" />
+        </span>
 
-        <div className="min-w-0 flex-1">
-          <p
-            className={`text-[13px] font-medium truncate ${
+        <span className="min-w-0 flex-1">
+          <span
+            className={`block text-[13px] font-medium truncate ${
               isCurrent ? 'text-accent font-semibold' : 'text-text-primary group-hover:text-text-primary'
             }`}
           >
             {track.title}
-          </p>
-          <p className="text-[11px] text-text-secondary truncate mt-0.5">{track.artist}</p>
-        </div>
-      </div>
+          </span>
+          <span className="block text-[11px] text-text-secondary truncate mt-0.5">{track.artist}</span>
+        </span>
+      </button>
 
-      {/* 3. Album */}
       <div className="hidden md:block min-w-0 pr-3">
         <p className="text-[12px] text-text-muted truncate group-hover:text-text-secondary transition-colors">
           {track.album || '-'}
         </p>
       </div>
 
-      {/* 4. Actions & Duration */}
-      <div className="flex items-center justify-end gap-1.5 flex-shrink-0">
+      <div className="flex items-center justify-end gap-1 flex-shrink-0">
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addToQueue(track);
-          }}
-          className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
-          aria-label="Add to queue"
+          type="button"
+          onClick={() => addToQueue(track)}
+          aria-label={`Add ${track.title} to queue`}
+          className="w-9 h-9 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all flex items-center justify-center"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
 
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            usePlaylistDialogStore.getState().open(track);
-          }}
-          className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
-          aria-label="Add to playlist"
+          type="button"
+          onClick={() => usePlaylistDialogStore.getState().open(track)}
+          aria-label={`Add ${track.title} to playlist`}
+          className="w-9 h-9 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all flex items-center justify-center"
         >
           <ListPlus className="w-3.5 h-3.5" />
         </button>
 
         <button
+          type="button"
           onClick={toggleFavorite}
-          className={`p-1.5 rounded-lg transition-colors ${
+          aria-label={isLiked ? `Remove ${track.title} from favorites` : `Add ${track.title} to favorites`}
+          aria-pressed={Boolean(isLiked)}
+          className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center ${
             isLiked
               ? 'text-accent fill-accent opacity-100'
-              : 'opacity-80 sm:opacity-0 sm:group-hover:opacity-100 text-text-muted hover:text-text-primary'
+              : 'opacity-80 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 text-text-muted hover:text-text-primary'
           }`}
-          aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
         >
           <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
         </button>
 
-        <span className="text-[11px] font-mono text-text-muted w-10 text-right pr-1">
+        <span className="hidden md:block text-[11px] font-mono text-text-muted w-10 text-right pr-1">
           {formatDuration(track.duration)}
         </span>
       </div>

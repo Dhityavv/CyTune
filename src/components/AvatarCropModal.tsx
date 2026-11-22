@@ -13,6 +13,7 @@ import {
   Crop,
   Sparkles,
 } from 'lucide-react';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 interface AvatarCropModalProps {
   isOpen: boolean;
@@ -39,6 +40,10 @@ export default function AvatarCropModal({
 
   const imageRef = useRef<HTMLImageElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useModalFocus(isOpen && Boolean(imageSrc), dialogRef, onClose, closeButtonRef);
 
   // Load natural dimensions when imageSrc changes
   useEffect(() => {
@@ -174,6 +179,11 @@ export default function AvatarCropModal({
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="avatar-crop-title"
+        tabIndex={-1}
         className="relative w-full max-w-md rounded-3xl bg-[#101114] border border-border-subtle shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -184,14 +194,16 @@ export default function AvatarCropModal({
               <Crop className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-text-primary">Edit & Crop Avatar</h2>
+              <h2 id="avatar-crop-title" className="text-sm font-bold text-text-primary">Edit & Crop Avatar</h2>
               <p className="text-[11px] text-text-muted">Reposition and zoom to fit 1:1 circle</p>
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-surface text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Close avatar editor"
+            className="min-w-11 min-h-11 rounded-xl hover:bg-surface text-text-muted hover:text-text-primary transition-colors flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -334,12 +346,14 @@ export default function AvatarCropModal({
                 <button
                   type="button"
                   onClick={() => setZoom((z) => Math.max(1, Number((z - 0.1).toFixed(2))))}
-                  className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors"
+                  aria-label="Zoom out"
+                  className="min-w-11 min-h-11 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors flex items-center justify-center"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
                 <input
                   type="range"
+                  aria-label="Avatar zoom level"
                   min="1"
                   max="3"
                   step="0.02"
@@ -350,7 +364,8 @@ export default function AvatarCropModal({
                 <button
                   type="button"
                   onClick={() => setZoom((z) => Math.min(3, Number((z + 0.1).toFixed(2))))}
-                  className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors"
+                  aria-label="Zoom in"
+                  className="min-w-11 min-h-11 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors flex items-center justify-center"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>

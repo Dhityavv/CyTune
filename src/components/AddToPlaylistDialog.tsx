@@ -9,6 +9,7 @@ import CoverImage from '@/components/CoverImage';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuthModalStore } from '@/store/useAuthModalStore';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 export default function AddToPlaylistDialog() {
   const track = usePlaylistDialogStore((s) => s.track);
@@ -35,19 +36,10 @@ function DialogBody({ track, close }: { track: Track; close: () => void }) {
   const [error, setError] = useState('');
   const [newName, setNewName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    searchRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [close]);
+  useModalFocus(true, dialogRef, close, searchRef);
 
   const filtered = useMemo(() => {
     const list = playlists ?? [];
@@ -110,9 +102,11 @@ function DialogBody({ track, close }: { track: Track; close: () => void }) {
       onClick={close}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-to-playlist-title"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         className="w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-sidebar border-t sm:border border-border-subtle shadow-2xl overflow-hidden"
       >

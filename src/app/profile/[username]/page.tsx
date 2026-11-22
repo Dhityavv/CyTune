@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   Share2,
   Crown,
-  Sparkles,
   Music,
   Heart,
   Check,
@@ -42,16 +41,23 @@ function PublicProfileContent() {
   useEffect(() => {
     async function loadData() {
       try {
+        const profileUserId = isSelf ? user?.id : null;
+        if (!profileUserId) {
+          setLikedTracks([]);
+          setPlaylists([]);
+          return;
+        }
+
         const likes = await db.likedTracks.toArray();
-        setLikedTracks(likes);
+        setLikedTracks(likes.filter((track) => (track.userId || 'guest') === profileUserId));
         const lists = await db.playlists.toArray();
-        setPlaylists(lists);
+        setPlaylists(lists.filter((playlist) => (playlist.userId || 'guest') === profileUserId));
       } catch {
         // ignore
       }
     }
     loadData();
-  }, []);
+  }, [isSelf, user?.id]);
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -112,10 +118,7 @@ function PublicProfileContent() {
                       Hi-Fi Member
                     </span>
 
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#BBF41D]/15 text-[#BBF41D] border border-[#BBF41D]/30 flex items-center gap-1 font-mono">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      Verified
-                    </span>
+
                   </div>
 
                   <p className="text-xs text-text-muted font-mono">@{username}</p>

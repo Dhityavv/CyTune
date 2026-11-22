@@ -380,7 +380,7 @@ export default function Home() {
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory ">
               {recentHistory.map((track, idx) => (
                 <div key={`rec-${track.id}-${idx}`} className="w-[170px] sm:w-[190px] shrink-0 snap-start">
-                  <TrackCard track={track} />
+                  <TrackCard track={track} queueContext={recentHistory} />
                 </div>
               ))}
             </div>
@@ -513,6 +513,7 @@ export default function Home() {
                         key={track.id}
                         track={track}
                         index={idx}
+                        queueContext={trackList.slice(0, 8)}
                       />
                     ))}
                   </div>
@@ -545,7 +546,7 @@ export default function Home() {
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory ">
                   {trackList.map((track) => (
                     <div key={track.id} className="w-[170px] sm:w-[190px] md:w-[200px] shrink-0 snap-start">
-                      <TrackCard track={track} />
+                      <TrackCard track={track} queueContext={trackList} />
                     </div>
                   ))}
                 </div>

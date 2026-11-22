@@ -31,6 +31,7 @@ export function VinylPlaceholder({ size = 'md' }: { size?: 'xs' | 'sm' | 'md' | 
       style={{
         background: 'radial-gradient(circle at 35% 35%, var(--placeholder-grad-1) 0%, var(--placeholder-grad-2) 60%, var(--placeholder-grad-3) 100%)',
       }}
+      role="img"
       aria-label="Album cover placeholder"
     >
       {/* Vinyl record grooves */}

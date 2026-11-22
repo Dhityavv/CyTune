@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AppLink from '@/components/AppLink';
 import {
   ShoppingBag,
@@ -29,6 +29,7 @@ import AvatarFrame from '@/components/cosmetics/AvatarFrame';
 import ProfileBorder from '@/components/cosmetics/ProfileBorder';
 import ProfileBackground from '@/components/cosmetics/ProfileBackground';
 import AuthModal from '@/components/AuthModal';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 export default function CosmeticStorePage() {
   const { user, equipCosmetic, unlockCosmetic, buyPremiumWithCoins } = useAuthStore();
@@ -37,6 +38,13 @@ export default function CosmeticStorePage() {
   const [toastMessage, setToastMessage] = useState<{ title: string; type: 'success' | 'error' } | null>(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const previewDialogRef = useRef<HTMLDivElement>(null);
+  const previewCloseRef = useRef<HTMLButtonElement>(null);
+  const premiumDialogRef = useRef<HTMLDivElement>(null);
+  const premiumCloseRef = useRef<HTMLButtonElement>(null);
+
+  useModalFocus(Boolean(previewItem), previewDialogRef, () => setPreviewItem(null), previewCloseRef);
+  useModalFocus(isPremiumModalOpen, premiumDialogRef, () => setIsPremiumModalOpen(false), premiumCloseRef);
 
   const userCoins = typeof user?.coins === 'number' ? user.coins : 500;
   const PREMIUM_PRICE = 5000;
@@ -113,6 +121,8 @@ export default function CosmeticStorePage() {
       {/* Toast Notification */}
       {toastMessage && (
         <div
+          role="status"
+          aria-live="polite"
           className={`fixed bottom-24 right-6 z-[9999] px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 ${
             toastMessage.type === 'success'
               ? 'bg-[#101114]/90 border-accent/60 text-accent'
@@ -421,9 +431,18 @@ export default function CosmeticStorePage() {
       {/* Live Preview Modal (Glass3D Inspection Studio) */}
       {previewItem && (
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl rounded-3xl bg-surface/90 border border-border-subtle p-6 sm:p-8 shadow-2xl backdrop-blur-2xl space-y-6">
+          <div
+            ref={previewDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cosmetic-preview-title"
+            tabIndex={-1}
+            className="relative w-full max-w-xl rounded-3xl bg-surface/90 border border-border-subtle p-6 sm:p-8 shadow-2xl backdrop-blur-2xl space-y-6"
+          >
             <button
+              ref={previewCloseRef}
               type="button"
+              aria-label="Close cosmetic preview"
               onClick={() => setPreviewItem(null)}
               className="absolute top-5 right-5 p-2 rounded-full bg-sidebar hover:bg-surface text-text-muted hover:text-text-primary transition-all"
             >
@@ -434,7 +453,7 @@ export default function CosmeticStorePage() {
               <span className="text-[10px] font-bold uppercase tracking-wider text-accent font-mono">
                 Live Cosmetic Inspection
               </span>
-              <h2 className="text-xl font-bold text-text-primary">{previewItem.name}</h2>
+              <h2 id="cosmetic-preview-title" className="text-xl font-bold text-text-primary">{previewItem.name}</h2>
               <p className="text-xs text-text-secondary">{previewItem.description}</p>
             </div>
 
@@ -530,9 +549,18 @@ export default function CosmeticStorePage() {
       {/* Hi-Fi Premium Purchase Modal */}
       {isPremiumModalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-3xl bg-[#101114] border border-border-subtle p-6 shadow-2xl space-y-5">
+          <div
+            ref={premiumDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="premium-dialog-title"
+            tabIndex={-1}
+            className="relative w-full max-w-md rounded-3xl bg-[#101114] border border-border-subtle p-6 shadow-2xl space-y-5"
+          >
             <button
+              ref={premiumCloseRef}
               type="button"
+              aria-label="Close premium dialog"
               onClick={() => setIsPremiumModalOpen(false)}
               className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-surface text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             >
@@ -543,7 +571,7 @@ export default function CosmeticStorePage() {
               <div className="w-14 h-14 rounded-2xl bg-accent/20 border border-accent/40 text-accent flex items-center justify-center mx-auto shadow-lg shadow-[#C9A94D]/30">
                 <Crown className="w-7 h-7" />
               </div>
-              <h2 className="text-xl font-extrabold text-text-primary tracking-tight">
+              <h2 id="premium-dialog-title" className="text-xl font-extrabold text-text-primary tracking-tight">
                 Unlock Hi-Fi Premium Pass
               </h2>
               <p className="text-xs text-text-secondary leading-relaxed">

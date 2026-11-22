@@ -156,7 +156,57 @@ export default function BottomPlayer() {
   const isGameMode = activeSession === 'GAME_PREVIEW';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-4 md:px-6 h-[76px] flex items-center justify-between gap-4 select-none shadow-2xl">
+    <>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[76px] bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-3 flex items-center gap-3 select-none shadow-2xl">
+        <AppLink
+          href="/listening"
+          aria-label="Open listening page"
+          className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle"
+        >
+          {currentTrack ? (
+            <CoverImage src={currentTrack.thumbnail} alt={currentTrack.title} size="md" className="w-full h-full object-cover" />
+          ) : (
+            <Disc className="w-5 h-5 text-accent m-auto mt-3" />
+          )}
+        </AppLink>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold text-text-primary truncate">
+            {isGameMode ? 'Guess the Song' : currentTrack?.title}
+          </p>
+          <p className="text-xs text-text-secondary truncate mt-0.5">
+            {isGameMode ? 'Game audio preview' : currentTrack?.artist}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (isGameMode) audioSession.toggleGamePreview();
+            else togglePlay();
+          }}
+          aria-label={isGameMode ? (isGamePlaying ? 'Pause preview' : 'Play preview') : isPlaying ? 'Pause' : 'Play'}
+          className="w-11 h-11 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+        >
+          {(isGameMode ? isGamePlaying : isPlaying) ? (
+            <Pause className="w-4 h-4 fill-current" />
+          ) : (
+            <Play className="w-4 h-4 fill-current translate-x-0.5" />
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={nextTrack}
+          disabled={isGameMode}
+          aria-label="Next track"
+          className="w-11 h-11 rounded-full flex items-center justify-center text-text-primary hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <SkipForward className="w-4 h-4 fill-current" />
+        </button>
+      </div>
+
+      <div className="hidden md:flex fixed bottom-0 left-0 right-0 z-40 bg-sidebar/95 backdrop-blur-xl border-t border-border-subtle px-4 md:px-6 h-[76px] items-center justify-between gap-4 select-none shadow-2xl">
       {/* 1. Track Info (Left - 28%) */}
       <div className="flex items-center gap-3 min-w-0 w-1/4 max-w-[28%]">
         {isGameMode ? (
@@ -403,6 +453,7 @@ export default function BottomPlayer() {
               max={1}
               step={0.01}
               value={isMuted ? 0 : volume}
+              aria-label="Volume"
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
@@ -417,6 +468,7 @@ export default function BottomPlayer() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

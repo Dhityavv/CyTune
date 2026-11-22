@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
 import {
   X,
   ListMusic,
@@ -14,8 +15,11 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import QueueItem from '@/components/QueueItem';
 import CoverImage from '@/components/CoverImage';
 import { db } from '@/lib/db';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 export default function QueueDrawer() {
+  const drawerRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const isQueueDrawerOpen = usePlayerStore((s) => s.isQueueDrawerOpen);
   const closeQueueDrawer = usePlayerStore((s) => s.closeQueueDrawer);
   const queue = usePlayerStore((s) => s.queue);
@@ -38,6 +42,8 @@ export default function QueueDrawer() {
 
   const upcoming = queue.slice(queueIndex + 1);
 
+  useModalFocus(isQueueDrawerOpen, drawerRef, closeQueueDrawer, closeButtonRef);
+
   return (
     <AnimatePresence>
       {isQueueDrawerOpen && (
@@ -54,11 +60,16 @@ export default function QueueDrawer() {
 
           {/* Slide-over Drawer */}
           <motion.aside
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="queue-drawer-title"
+            tabIndex={-1}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="fixed top-0 right-0 bottom-0 w-80 sm:w-96 z-50 bg-sidebar/95 backdrop-blur-xl border-l border-border-subtle shadow-2xl flex flex-col select-none overflow-hidden"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-96 z-50 bg-sidebar/95 backdrop-blur-xl border-l border-border-subtle shadow-2xl flex flex-col select-none overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-sidebar/90">
@@ -67,7 +78,7 @@ export default function QueueDrawer() {
                   <ListMusic className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-text-primary tracking-tight">Queue</h2>
+                  <h2 id="queue-drawer-title" className="text-sm font-bold text-text-primary tracking-tight">Queue</h2>
                   <p className="text-[11px] text-text-secondary">
                     {upcoming.length} upcoming{queue.length > 0 ? ` · ${queue.length} total` : ''}
                   </p>
@@ -85,8 +96,9 @@ export default function QueueDrawer() {
                   </button>
                 )}
                 <button
+                  ref={closeButtonRef}
                   onClick={closeQueueDrawer}
-                  className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
+                  className="min-w-11 min-h-11 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors flex items-center justify-center"
                   aria-label="Close queue drawer"
                 >
                   <X className="w-4 h-4" />

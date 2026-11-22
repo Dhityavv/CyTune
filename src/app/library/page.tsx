@@ -129,14 +129,19 @@ function LibraryContent() {
   };
 
   const handleClearHistory = async () => {
-    if (confirm('Are you sure you want to clear your listening history?')) {
-      await db.history.clear();
-    }
+    if (!confirm('Are you sure you want to clear your listening history?')) return;
+
+    const activeUserId = user?.id || 'guest';
+    await db.history
+      .filter((item) => (item.userId || 'guest') === activeUserId)
+      .delete();
   };
 
   // ---- CSV Import / Export for playlists ----
   const handleExportCsv = async () => {
-    const all = await db.playlists.toArray();
+    const activeUserId = user?.id || 'guest';
+    const allPlaylists = await db.playlists.toArray();
+    const all = allPlaylists.filter((playlist) => (playlist.userId || 'guest') === activeUserId);
     if (!all.length) {
       alert('No playlists to export.');
       return;
@@ -223,6 +228,7 @@ function LibraryContent() {
         tracks,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        userId: user?.id || 'guest',
       });
       count++;
     }
@@ -343,6 +349,7 @@ function LibraryContent() {
                       key={track.id}
                       track={track}
                       index={idx}
+                      queueContext={favorites}
                     />
                   ))}
                 </div>

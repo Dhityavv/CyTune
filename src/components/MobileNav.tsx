@@ -28,7 +28,7 @@ export default function MobileNav() {
     if (href === '/search') return pathname.startsWith('/search');
     if (href === '/find-my-song') return pathname.startsWith('/find-my-song');
     if (href === '/room') return pathname.startsWith('/room');
-    if (href === '/library') return pathname === '/library';
+    if (href === '/library') return pathname === '/library' || pathname === '/playlist';
     return pathname.startsWith(href.split('?')[0]);
   };
 

@@ -30,16 +30,25 @@ export default function TopNav() {
     }
   }, []);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setIsProfileMenuOpen(false);
       }
     }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsProfileMenuOpen(false);
+    }
+
     if (isProfileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
     }
   }, [isProfileMenuOpen]);
 
@@ -58,7 +67,7 @@ export default function TopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-canvas/80 backdrop-blur-xl border-b border-border-subtle px-4 sm:px-8 flex items-center justify-between gap-3 select-none">
+    <header className="sticky top-0 z-30 h-14 bg-canvas/80 backdrop-blur-xl border-b border-border-subtle px-3 sm:px-8 flex items-center justify-between gap-2 sm:gap-3 select-none">
       {/* Brand link for compact view */}
       <div className="flex items-center gap-3 shrink-0">
         <AppLink href="/" className="flex items-center gap-2 group md:hidden" aria-label="CyTune Home">
@@ -72,7 +81,7 @@ export default function TopNav() {
       {/* Global Omnibox Search Bar */}
       <form
         onSubmit={handleSearchSubmit}
-        className="flex-1 max-w-lg mx-2 sm:mx-4 relative group"
+        className="hidden sm:block flex-1 max-w-lg mx-2 sm:mx-4 relative group"
       >
         <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-accent transition-colors" />
         <input
@@ -86,12 +95,20 @@ export default function TopNav() {
       </form>
 
       {/* Right Utilities: Theme, Quick Links, Auth */}
-      <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <AppLink
+          href="/search"
+          aria-label="Search music"
+          className="sm:hidden w-10 h-10 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+        >
+          <Search className="w-4 h-4" />
+        </AppLink>
+
         <button
           type="button"
           onClick={toggleTheme}
           aria-label="Toggle theme"
-          className="w-8 h-8 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+          className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4 text-accent" /> : <Moon className="w-4 h-4" />}
         </button>
@@ -114,7 +131,9 @@ export default function TopNav() {
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-all active:scale-95 cursor-pointer"
+              aria-haspopup="menu"
+              aria-expanded={isProfileMenuOpen}
+              className="min-h-10 flex items-center gap-2 pl-2 pr-2 sm:pr-3 py-1.5 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-all active:scale-95 cursor-pointer"
             >
               <div className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-[11px] overflow-hidden shrink-0">
                 {user.avatar_url ? (
@@ -222,10 +241,10 @@ export default function TopNav() {
           <button
             type="button"
             onClick={() => useAuthModalStore.getState().open()}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95 cursor-pointer"
+            className="min-h-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95 cursor-pointer"
           >
             <User className="w-3.5 h-3.5" />
-            <span>Sign In</span>
+            <span className="hidden min-[380px]:inline">Sign In</span>
           </button>
         )}
       </div>

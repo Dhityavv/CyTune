@@ -104,8 +104,8 @@ export const QueueItem = React.memo(function QueueItem({
               e.stopPropagation();
               onRemove();
             }}
-            className="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-all"
-            aria-label="Remove from queue"
+            className="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 min-w-9 min-h-9 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-all flex items-center justify-center"
+            aria-label={`Remove ${track.title} from queue`}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

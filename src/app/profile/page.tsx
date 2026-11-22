@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   Share2,
   Crown,
-  Sparkles,
   Headphones,
   Music,
   Heart,
@@ -42,10 +41,11 @@ export default function ProfilePage() {
     // Load local db data
     async function loadData() {
       try {
+        const activeUserId = user?.id || 'guest';
         const likes = await db.likedTracks.toArray();
-        setLikedTracks(likes);
+        setLikedTracks(likes.filter((track) => (track.userId || 'guest') === activeUserId));
         const lists = await db.playlists.toArray();
-        setPlaylists(lists);
+        setPlaylists(lists.filter((playlist) => (playlist.userId || 'guest') === activeUserId));
 
         const savedGuess = localStorage.getItem('cytune-guess-song-best') || localStorage.getItem('orbittune-guess-song-best');
         if (savedGuess) setGuessBest(parseInt(savedGuess, 10));
@@ -57,7 +57,7 @@ export default function ProfilePage() {
       }
     }
     loadData();
-  }, []);
+  }, [user?.id]);
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -148,10 +148,7 @@ export default function ProfilePage() {
                       <span>{(user.coins ?? 500).toLocaleString()} Coins</span>
                     </span>
 
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#BBF41D]/15 text-[#BBF41D] border border-[#BBF41D]/30 flex items-center gap-1 font-mono">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      Verified
-                    </span>
+
                   </div>
 
                   <p className="text-xs text-text-muted font-mono">

@@ -81,6 +81,12 @@ export default function AudioController() {
           events: {
             onReady: (event: any) => {
               isPlayerReadyRef.current = true;
+              const iframe = event.target.getIframe?.();
+              if (iframe instanceof HTMLIFrameElement) {
+                iframe.tabIndex = -1;
+                iframe.setAttribute('aria-hidden', 'true');
+                iframe.setAttribute('title', 'CyTune audio engine');
+              }
               const store = usePlayerStore.getState();
               try {
                 event.target.unMute();
@@ -432,6 +438,7 @@ export default function AudioController() {
         zIndex: -1,
       }}
       aria-hidden="true"
+      inert
     >
       <div id="orbit-youtube-player-element" />
     </div>

@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useClerk } from '@clerk/nextjs';
 import gsap from 'gsap';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export default function AuthModal({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     signInWithEmail,
@@ -84,8 +86,6 @@ export default function AuthModal({
     }
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
-
   const handleClose = () => {
     if (modalRef.current && backdropRef.current) {
       gsap.to(modalRef.current, {
@@ -105,6 +105,10 @@ export default function AuthModal({
       onClose();
     }
   };
+
+  useModalFocus(isOpen && mounted, modalRef, handleClose, closeButtonRef);
+
+  if (!isOpen || !mounted) return null;
 
   const handleOAuthSignIn = (strategy?: string) => {
     handleClose();
@@ -179,11 +183,13 @@ export default function AuthModal({
       ref={backdropRef}
       className="fixed inset-0 z-[9999] p-4 bg-black/80 backdrop-blur-md flex items-center justify-center overflow-y-auto"
       onClick={handleClose}
-      aria-modal="true"
-      role="dialog"
     >
       <div
         ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md my-auto max-h-[92vh] flex flex-col rounded-3xl bg-sidebar border border-border-subtle shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden relative"
       >
@@ -208,7 +214,7 @@ export default function AuthModal({
               </button>
             )}
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+              <h2 id="auth-modal-title" className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
                 {mode === 'login' && 'Welcome to CyTune'}
                 {mode === 'register' && 'Create Account'}
                 {mode === 'forgot-password' && 'Reset Password'}
@@ -223,6 +229,7 @@ export default function AuthModal({
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={handleClose}
             aria-label="Close modal"

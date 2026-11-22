@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppLink from '@/components/AppLink';
 import { Search as SearchIcon, X, Play, Loader2, Disc, Sparkles, ChevronRight } from 'lucide-react';
 import { Track } from '@/types/music';
@@ -46,6 +46,7 @@ const GENRE_TILES = [
 ];
 
 function SearchContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
 
@@ -54,62 +55,89 @@ function SearchContent() {
   const [artist, setArtist] = useState<SearchArtist | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(Boolean(initialQuery));
+  const [searchError, setSearchError] = useState('');
+  const activeRequestRef = useRef<AbortController | null>(null);
   const playTrack = usePlayerStore((s) => s.playTrack);
 
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+    const normalizedQuery = searchQuery.trim();
+    if (!normalizedQuery) {
+      activeRequestRef.current?.abort();
       setTracks([]);
       setArtist(null);
+      setSearchError('');
       setHasSearched(false);
+      setLoading(false);
       return;
     }
+
+    activeRequestRef.current?.abort();
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
 
     setLoading(true);
     setHasSearched(true);
+    setSearchError('');
+    setTracks([]);
+    setArtist(null);
+
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTracks(data.tracks || []);
-        setArtist(data.artist || null);
-      }
-    } catch (err) {
-      console.error('Search error:', err);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(normalizedQuery)}`, {
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Search failed with status ${res.status}`);
+
+      const data = await res.json();
+      if (controller.signal.aborted) return;
+
+      setTracks(Array.isArray(data.tracks) ? data.tracks : []);
+      setArtist(data.artist || null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      console.error('Search error:', error);
+      setSearchError('The catalog could not be reached. Check your connection and try again.');
     } finally {
-      setLoading(false);
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+        setLoading(false);
+      }
     }
   }, []);
 
-  // Search when initialQuery changes
   useEffect(() => {
-    if (initialQuery) {
-      setQuery(initialQuery);
-      performSearch(initialQuery);
-    }
+    setQuery(initialQuery);
+    performSearch(initialQuery);
+
+    return () => activeRequestRef.current?.abort();
   }, [initialQuery, performSearch]);
 
-  // Debounced typing search
   useEffect(() => {
-    if (!query.trim()) {
-      setTracks([]);
-      setArtist(null);
-      setHasSearched(false);
-      return;
+    const normalizedQuery = query.trim();
+    if (normalizedQuery === initialQuery.trim()) return;
+
+    if (!normalizedQuery) {
+      const handler = window.setTimeout(() => router.replace('/search', { scroll: false }), 250);
+      return () => window.clearTimeout(handler);
     }
 
-    const handler = setTimeout(() => {
-      if (query.trim().length >= 2) {
-        performSearch(query);
-      }
+    if (normalizedQuery.length < 2) return;
+
+    const handler = window.setTimeout(() => {
+      router.replace(`/search?q=${encodeURIComponent(normalizedQuery)}`, { scroll: false });
     }, 350);
 
-    return () => clearTimeout(handler);
-  }, [query, performSearch]);
+    return () => window.clearTimeout(handler);
+  }, [initialQuery, query, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      performSearch(query);
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) return;
+
+    if (normalizedQuery === initialQuery.trim()) {
+      performSearch(normalizedQuery);
+    } else {
+      router.replace(`/search?q=${encodeURIComponent(normalizedQuery)}`, { scroll: false });
     }
   };
 
@@ -128,6 +156,8 @@ function SearchContent() {
           className={`relative flex items-center bg-surface border rounded-2xl transition-all shadow-lg overflow-hidden ${
             loading
               ? 'border-accent/40 ring-2 ring-accent/20'
+              : searchError
+              ? 'border-red-500/50 ring-2 ring-red-500/15'
               : 'border-border-subtle hover:border-border-hover'
           } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30`}
         >
@@ -150,10 +180,13 @@ function SearchContent() {
             <button
               type="button"
               onClick={() => {
+                activeRequestRef.current?.abort();
                 setQuery('');
                 setTracks([]);
                 setArtist(null);
+                setSearchError('');
                 setHasSearched(false);
+                router.replace('/search', { scroll: false });
               }}
               aria-label="Clear search"
               className="absolute right-3 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus:outline-none"
@@ -178,7 +211,7 @@ function SearchContent() {
                   key={tag}
                   onClick={() => {
                     setQuery(tag);
-                    performSearch(tag);
+                    router.replace(`/search?q=${encodeURIComponent(tag)}`, { scroll: false });
                   }}
                   className="px-3.5 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-xs font-medium text-text-secondary hover:text-text-primary transition-all shadow-sm active:scale-95 outline-none focus:outline-none"
                 >
@@ -200,7 +233,7 @@ function SearchContent() {
                   key={cat.name}
                   onClick={() => {
                     setQuery(cat.query);
-                    performSearch(cat.query);
+                    router.replace(`/search?q=${encodeURIComponent(cat.query)}`, { scroll: false });
                   }}
                   className={`p-4 rounded-2xl relative overflow-hidden bg-gradient-to-b from-surface-hover to-surface border border-border-subtle ${cat.border} border-t-2 hover:border-accent/50 transition-all text-left flex flex-col justify-between h-32 group hover:-translate-y-0.5 shadow-md hover:shadow-xl outline-none focus:outline-none`}
                 >
@@ -234,8 +267,22 @@ function SearchContent() {
         </div>
       )}
 
+      {searchError && !loading && (
+        <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-950/40 p-5 text-center space-y-3">
+          <p className="text-sm font-semibold text-red-300">Search is temporarily unavailable</p>
+          <p className="text-xs text-text-secondary">{searchError}</p>
+          <button
+            type="button"
+            onClick={() => performSearch(query)}
+            className="px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       {/* Search Results */}
-      {!loading && hasSearched && (
+      {!loading && hasSearched && !searchError && (
         <div className="space-y-8 animate-fade-up">
           <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
             <h2 className="text-lg font-bold text-text-primary tracking-tight">
@@ -388,6 +435,7 @@ function SearchContent() {
                           key={track.id}
                           track={track}
                           index={idx + 1}
+                          queueContext={tracks}
                         />
                       ))}
                     </div>
@@ -403,7 +451,7 @@ function SearchContent() {
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {remainingResults.map((track) => (
-                      <TrackCard key={track.id} track={track} />
+                      <TrackCard key={track.id} track={track} queueContext={tracks} />
                     ))}
                   </div>
                 </div>

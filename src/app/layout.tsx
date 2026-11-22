@@ -105,7 +105,7 @@ export default function RootLayout({
             {/* Main Content Column with Persistent Top Navigation */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <TopNav />
-              <main id="main-content" className="flex-1 overflow-y-auto px-4 sm:px-8 lg:px-10 pt-4 md:pt-6 pb-36 md:pb-32">
+              <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-4 sm:px-8 lg:px-10 pt-4 md:pt-6 pb-36 md:pb-32">
                 <div className="max-w-7xl mx-auto w-full">{children}</div>
               </main>
             </div>

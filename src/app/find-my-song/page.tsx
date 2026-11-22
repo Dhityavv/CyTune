@@ -37,6 +37,7 @@ export default function FindMySongPage() {
   const [isSearchingLyrics, setIsSearchingLyrics] = useState(false);
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   const playTrack = usePlayerStore((s) => s.playTrack);
 
@@ -46,6 +47,7 @@ export default function FindMySongPage() {
     setIsSearchingLyrics(true);
     setHasSearched(true);
     setMatches([]);
+    setSearchError('');
 
     try {
       const formData = new FormData();
@@ -57,12 +59,12 @@ export default function FindMySongPage() {
         body: formData,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setMatches(data.matches || []);
-      }
-    } catch {
-      // ignore
+      if (!res.ok) throw new Error(`Recognition failed with status ${res.status}`);
+      const data = await res.json();
+      setMatches(Array.isArray(data.matches) ? data.matches : []);
+    } catch (error) {
+      console.error('Lyric search failed:', error);
+      setSearchError('Pencarian lirik sedang tidak tersedia. Periksa koneksi lalu coba lagi.');
     } finally {
       setIsSearchingLyrics(false);
     }
@@ -88,14 +90,16 @@ export default function FindMySongPage() {
 
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(match.title + ' ' + match.artist)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.tracks && data.tracks.length > 0) {
-          playTrack(data.tracks[0]);
-        }
+      if (!res.ok) throw new Error(`Track lookup failed with status ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data.tracks) && data.tracks.length > 0) {
+        playTrack(data.tracks[0]);
+      } else {
+        setSearchError('Lagu ditemukan, tetapi audionya belum tersedia.');
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('Track lookup failed:', error);
+      setSearchError('Audio lagu tidak dapat dimuat. Silakan coba lagi.');
     }
   };
 
@@ -169,23 +173,37 @@ export default function FindMySongPage() {
           </div>
         )}
 
+        {searchError && !isSearchingLyrics && (
+          <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-950/40 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs text-red-300">{searchError}</p>
+            <button
+              type="button"
+              onClick={() => searchWithText(lyricQuery)}
+              className="px-4 py-2 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-text-primary"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
         {/* Results List */}
         {isSearchingLyrics ? (
           <div className="py-20 flex flex-col items-center justify-center text-text-muted gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-accent" />
             <p className="text-xs">Mencocokkan dengan jutaan database lirik dunia & YouTube...</p>
           </div>
-        ) : matches.length > 0 ? (
+        ) : searchError ? null : matches.length > 0 ? (
           <div className="space-y-3 pt-4">
             <h2 className="text-sm font-bold text-text-primary">
               Lagu yang Ditemukan ({matches.length})
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {matches.map((item, idx) => (
-                <div
+                <button
+                  type="button"
                   key={`${item.id}-${idx}`}
                   onClick={() => playMatch(item)}
-                  className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-surface/70 hover:bg-surface-hover border border-border-subtle hover:border-accent/40 cursor-pointer transition-all shadow-md group"
+                  className="w-full flex items-start gap-3.5 p-3.5 rounded-2xl bg-surface/70 hover:bg-surface-hover border border-border-subtle hover:border-accent/40 cursor-pointer transition-all shadow-md group text-left"
                 >
                   <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-sidebar border border-border-subtle">
                     {item.thumbnail ? (
@@ -211,7 +229,7 @@ export default function FindMySongPage() {
                       </p>
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

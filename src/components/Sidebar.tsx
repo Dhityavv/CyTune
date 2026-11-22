@@ -171,6 +171,7 @@ export default function Sidebar() {
             <AppLink
               href="/"
               onClick={handleNavigate}
+              aria-label="CyTune home"
               className="flex items-center gap-3 group"
             >
               <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-[#101114] ring-1 ring-white/10 shadow-lg shadow-[#C9A94D]/25 transition-transform duration-200 group-hover:scale-105 shrink-0">
@@ -244,7 +245,7 @@ export default function Sidebar() {
                       type="button"
                       onClick={() => setIsCreating(!isCreating)}
                       aria-label="Create playlist"
-                      className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
+                      className="min-w-11 min-h-11 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors flex items-center justify-center"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>

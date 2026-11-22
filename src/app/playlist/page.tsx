@@ -392,7 +392,7 @@ function PlaylistContent() {
                         </button>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <TrackRow track={track} index={realIndex} />
+                        <TrackRow track={track} index={realIndex} queueContext={filtered} />
                       </div>
                       <button
                         type="button"
