@@ -11,7 +11,7 @@ import { db } from '@/lib/db';
 import TrackCard from '@/components/TrackCard';
 import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 
 interface Section {
   title: string;
@@ -368,12 +368,12 @@ export default function Home() {
             <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
               Recently Played
             </h3>
-            <Link
+            <AppLink
               href="/library?tab=history"
               className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
             >
               View all →
-            </Link>
+            </AppLink>
           </div>
 
           <div className="relative">

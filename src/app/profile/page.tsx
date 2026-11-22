@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import {
   User,
   Edit3,
@@ -183,27 +183,27 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 shrink-0 pt-2 md:pt-0">
-                <Link
+                <AppLink
                   href="/profile/edit"
                   className="px-4 py-2.5 rounded-2xl bg-accent hover:bg-accent-hover text-[#101114] font-bold text-xs flex items-center gap-2 shadow-lg shadow-[#C9A94D]/25 transition-all active:scale-95"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit Profile</span>
-                </Link>
+                </AppLink>
 
-                <Link
+                <AppLink
                   href="/store"
                   className="px-4 py-2.5 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-text-primary font-bold text-xs flex items-center gap-2 transition-all active:scale-95"
                 >
                   <ShoppingBag className="w-3.5 h-3.5 text-accent" />
                   <span>Cosmetic Store</span>
-                </Link>
+                </AppLink>
 
                 <button
                   type="button"
                   onClick={handleShare}
                   className="p-2.5 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary transition-all active:scale-95"
-                  title="Share Profile Link"
+                  aria-label="Share Profile Link"
                 >
                   {copiedShare ? (
                     <Check className="w-4 h-4 text-emerald-400" />
@@ -228,12 +228,12 @@ export default function ProfilePage() {
               {equippedFrameObj ? equippedFrameObj.name : 'Default Ring'}
             </span>
           </div>
-          <Link
+          <AppLink
             href="/store"
             className="text-[11px] font-semibold text-accent hover:underline"
           >
             Change
-          </Link>
+          </AppLink>
         </div>
 
         <div className="p-4 rounded-2xl bg-surface/70 border border-border-subtle flex items-center justify-between">
@@ -245,12 +245,12 @@ export default function ProfilePage() {
               {equippedBorderObj ? equippedBorderObj.name : 'Standard Border'}
             </span>
           </div>
-          <Link
+          <AppLink
             href="/store"
             className="text-[11px] font-semibold text-accent hover:underline"
           >
             Change
-          </Link>
+          </AppLink>
         </div>
 
         <div className="p-4 rounded-2xl bg-surface/70 border border-border-subtle flex items-center justify-between">
@@ -262,12 +262,12 @@ export default function ProfilePage() {
               {equippedBgObj ? equippedBgObj.name : 'Nocturne Ambient'}
             </span>
           </div>
-          <Link
+          <AppLink
             href="/store"
             className="text-[11px] font-semibold text-accent hover:underline"
           >
             Change
-          </Link>
+          </AppLink>
         </div>
       </div>
 
@@ -301,9 +301,9 @@ export default function ProfilePage() {
           <span className="text-xl sm:text-2xl font-extrabold text-accent font-mono block">
             {guessBest > 0 ? `${guessBest} pts` : 'Play now'}
           </span>
-          <Link href="/games/guess-the-song" className="text-[10px] text-accent hover:underline block">
+          <AppLink href="/games/guess-the-song" className="text-[10px] text-accent hover:underline block">
             Challenge game →
-          </Link>
+          </AppLink>
         </div>
 
         <div className="p-5 rounded-2xl bg-surface/70 border border-border-subtle space-y-1">
@@ -314,9 +314,9 @@ export default function ProfilePage() {
           <span className="text-xl sm:text-2xl font-extrabold text-[#BBF41D] font-mono block">
             {triviaBest > 0 ? `${triviaBest} pts` : 'Play now'}
           </span>
-          <Link href="/games/trivia" className="text-[10px] text-[#BBF41D] hover:underline block">
+          <AppLink href="/games/trivia" className="text-[10px] text-[#BBF41D] hover:underline block">
             Test knowledge →
-          </Link>
+          </AppLink>
         </div>
       </div>
 
@@ -327,9 +327,9 @@ export default function ProfilePage() {
             <Heart className="w-4 h-4 text-accent" />
             <h2 className="text-base sm:text-lg font-bold text-text-primary">Favorite Songs</h2>
           </div>
-          <Link href="/library" className="text-xs text-accent hover:underline">
+          <AppLink href="/library" className="text-xs text-accent hover:underline">
             View All in Library →
-          </Link>
+          </AppLink>
         </div>
 
         {likedTracks.length > 0 ? (
@@ -349,12 +349,12 @@ export default function ProfilePage() {
             <p className="text-xs text-text-secondary">
               No favorite songs pinned yet. Like songs while listening to showcase them here!
             </p>
-            <Link
+            <AppLink
               href="/search"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface border border-border-subtle text-xs font-semibold hover:border-accent/40"
             >
               <span>Explore Songs</span>
-            </Link>
+            </AppLink>
           </div>
         )}
       </div>
@@ -366,15 +366,15 @@ export default function ProfilePage() {
             <ListMusic className="w-4 h-4 text-[#BBF41D]" />
             <h2 className="text-base sm:text-lg font-bold text-text-primary">Playlists Created</h2>
           </div>
-          <Link href="/library" className="text-xs text-accent hover:underline">
+          <AppLink href="/library" className="text-xs text-accent hover:underline">
             Manage Playlists →
-          </Link>
+          </AppLink>
         </div>
 
         {playlists.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {playlists.map((playlist) => (
-              <Link
+              <AppLink
                 key={playlist.id}
                 href={`/playlist?id=${playlist.id}`}
                 className="group p-4 rounded-2xl bg-surface/70 border border-border-subtle hover:border-accent/40 transition-all flex items-center gap-4"
@@ -398,7 +398,7 @@ export default function ProfilePage() {
                     {playlist.tracks?.length || 0} tracks
                   </p>
                 </div>
-              </Link>
+              </AppLink>
             ))}
           </div>
         ) : (

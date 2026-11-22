@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { useParams } from 'next/navigation';
 import {
   User,
@@ -72,13 +72,13 @@ function PublicProfileContent() {
   return (
     <div className="space-y-10 pb-28 max-w-5xl mx-auto select-none">
       <div className="flex items-center justify-between">
-        <Link
+        <AppLink
           href="/profile"
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors py-1 px-2.5 rounded-lg hover:bg-surface/60"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>My Profile</span>
-        </Link>
+        </AppLink>
       </div>
 
       {/* Hero Canvas Banner */}
@@ -143,27 +143,27 @@ function PublicProfileContent() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2.5 shrink-0 pt-2 md:pt-0">
                 {isSelf ? (
-                  <Link
+                  <AppLink
                     href="/profile/edit"
                     className="px-4 py-2.5 rounded-2xl bg-accent hover:bg-accent-hover text-[#101114] font-bold text-xs flex items-center gap-2 shadow-lg shadow-[#C9A94D]/25 transition-all active:scale-95"
                   >
                     <span>Edit Profile</span>
-                  </Link>
+                  </AppLink>
                 ) : (
-                  <Link
+                  <AppLink
                     href="/store"
                     className="px-4 py-2.5 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/40 text-text-primary font-bold text-xs flex items-center gap-2 transition-all active:scale-95"
                   >
                     <ShoppingBag className="w-3.5 h-3.5 text-accent" />
                     <span>Get Cosmetics</span>
-                  </Link>
+                  </AppLink>
                 )}
 
                 <button
                   type="button"
                   onClick={handleShare}
                   className="p-2.5 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary transition-all active:scale-95"
-                  title="Share Profile Link"
+                  aria-label="Share Profile Link"
                 >
                   {copiedShare ? (
                     <Check className="w-4 h-4 text-emerald-400" />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { useRouter } from 'next/navigation';
 import {
   User,
@@ -177,21 +177,21 @@ export default function EditProfilePage() {
 
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <Link
+        <AppLink
           href="/profile"
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors py-1 px-2.5 rounded-lg hover:bg-surface/60"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Profile</span>
-        </Link>
+        </AppLink>
 
-        <Link
+        <AppLink
           href="/store"
           className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-semibold"
         >
           <ShoppingBag className="w-3.5 h-3.5" />
           <span>Browse Cosmetic Store</span>
-        </Link>
+        </AppLink>
       </div>
 
       <div className="relative rounded-3xl overflow-hidden bg-surface/70 border border-border-subtle p-6 sm:p-8 shadow-xl backdrop-blur-md">
@@ -365,7 +365,7 @@ export default function EditProfilePage() {
                       type="button"
                       onClick={handleOpenExistingCrop}
                       className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-opacity cursor-pointer"
-                      title="Adjust crop"
+                      aria-label="Adjust crop"
                     >
                       <Crop className="w-4 h-4 text-accent mb-0.5" />
                       <span>Crop</span>
@@ -533,9 +533,9 @@ export default function EditProfilePage() {
                         <Crown className="w-3.5 h-3.5 shrink-0" />
                         Atmospheres require Hi-Fi Premium.
                       </span>
-                      <Link href="/store" className="font-bold underline">
+                      <AppLink href="/store" className="font-bold underline">
                         Store
-                      </Link>
+                      </AppLink>
                     </div>
                   )}
 
@@ -577,12 +577,12 @@ export default function EditProfilePage() {
 
             {/* Submit Action */}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <Link
+              <AppLink
                 href="/profile"
                 className="px-6 py-3 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary text-xs font-semibold transition-all"
               >
                 Cancel
-              </Link>
+              </AppLink>
 
               <button
                 type="submit"

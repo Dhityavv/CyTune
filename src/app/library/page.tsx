@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { Heart, ListMusic, History, Play, Shuffle, Plus, Trash2, Music, Download, Upload } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
@@ -357,12 +357,12 @@ function LibraryContent() {
               <p className="text-xs text-text-secondary max-w-sm mx-auto">
                 Tap the heart icon on any song while listening to add it to your favorite collection.
               </p>
-              <Link
+              <AppLink
                 href="/search"
                 className="inline-block px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors shadow-md shadow-[#C9A94D]/20"
               >
                 Find Songs
-              </Link>
+              </AppLink>
             </div>
           )}
         </div>
@@ -488,7 +488,6 @@ function LibraryContent() {
                       handleDeletePlaylist(pl.id, pl.name);
                     }}
                     className="absolute top-4 right-4 p-1.5 rounded-lg bg-canvas/70 backdrop-blur-md border border-border-subtle text-text-primary opacity-0 group-hover:opacity-100 hover:bg-red-600/80 transition-all"
-                    title="Delete playlist"
                     aria-label={`Delete playlist ${pl.name}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />

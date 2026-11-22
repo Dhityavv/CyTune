@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Compass,
@@ -41,7 +41,7 @@ function NavItem({
   onNavigate,
 }: NavItemProps) {
   return (
-    <Link
+    <AppLink
       href={href}
       aria-label={label}
       onClick={onNavigate}
@@ -70,7 +70,7 @@ function NavItem({
           {label}
         </div>
       )}
-    </Link>
+    </AppLink>
   );
 }
 
@@ -168,7 +168,7 @@ export default function Sidebar() {
         <div className="flex flex-col flex-1 overflow-hidden px-3 py-4 space-y-5">
           {/* Brand Header */}
           <div className="flex items-center px-2 pt-1">
-            <Link
+            <AppLink
               href="/"
               onClick={handleNavigate}
               className="flex items-center gap-3 group"
@@ -186,7 +186,7 @@ export default function Sidebar() {
                   </span>
                 </div>
               )}
-            </Link>
+            </AppLink>
           </div>
 
           {/* Navigation Links Scrollable Area */}
@@ -266,7 +266,7 @@ export default function Sidebar() {
                   <div className="space-y-0.5">
                     {playlists.length > 0 ? (
                       playlists.map((pl) => (
-                        <Link
+                        <AppLink
                           key={pl.id}
                           href={`/playlist?id=${pl.id}`}
                           onClick={handleNavigate}
@@ -278,7 +278,7 @@ export default function Sidebar() {
                         >
                           <Music className="w-3.5 h-3.5 shrink-0 opacity-70" />
                           <span className="truncate">{pl.name}</span>
-                        </Link>
+                        </AppLink>
                       ))
                     ) : (
                       <p className="px-3.5 py-2 text-[11px] text-text-muted italic">
@@ -304,7 +304,7 @@ export default function Sidebar() {
 
         {/* Restored Info & Support Button (Accessible in both Collapsed and Expanded states) */}
         <div className="p-2.5 border-t border-border-subtle bg-sidebar/80">
-          <Link
+          <AppLink
             href="/info"
             onClick={handleNavigate}
             aria-label="About & Support"
@@ -332,7 +332,7 @@ export default function Sidebar() {
                 About & Support
               </div>
             )}
-          </Link>
+          </AppLink>
         </div>
       </aside>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { Search, Moon, Sun, Sparkles, User, LogOut, Palette, Settings, Gamepad2, ExternalLink, Info, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuthModalStore } from '@/store/useAuthModalStore';
@@ -61,12 +61,12 @@ export default function TopNav() {
     <header className="sticky top-0 z-30 h-14 bg-canvas/80 backdrop-blur-xl border-b border-border-subtle px-4 sm:px-8 flex items-center justify-between gap-3 select-none">
       {/* Brand link for compact view */}
       <div className="flex items-center gap-3 shrink-0">
-        <Link href="/" className="flex items-center gap-2 group md:hidden">
+        <AppLink href="/" className="flex items-center gap-2 group md:hidden" aria-label="CyTune Home">
           <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-[#101114] font-bold text-xs shadow-md shadow-[#C9A94D]/25">
             C
           </div>
           <span className="font-bold text-sm tracking-tight text-text-primary">CyTune</span>
-        </Link>
+        </AppLink>
       </div>
 
       {/* Global Omnibox Search Bar */}
@@ -98,14 +98,14 @@ export default function TopNav() {
 
         {/* Coins indicator if logged in */}
         {user && (
-          <Link
+          <AppLink
             href="/store"
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-xs font-mono font-bold transition-all shadow-sm"
-            title="Orbit Coins - Earn in Mini Games, spend on Premium"
+            aria-label="Orbit Coins"
           >
             <span className="text-xs">🪙</span>
             <span>{(user.coins ?? 500).toLocaleString()}</span>
-          </Link>
+          </AppLink>
         )}
 
         {/* User Account / Profile Menu */}
@@ -155,50 +155,50 @@ export default function TopNav() {
 
                 {/* Navigation links */}
                 <div className="py-1">
-                  <Link
+                  <AppLink
                     href="/profile"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
                   >
                     <User className="w-4 h-4 text-accent" />
                     <span>View Profile</span>
-                  </Link>
+                  </AppLink>
 
-                  <Link
+                  <AppLink
                     href="/profile/edit"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
                   >
                     <Settings className="w-4 h-4 text-text-muted" />
                     <span>Edit Profile</span>
-                  </Link>
+                  </AppLink>
 
-                  <Link
+                  <AppLink
                     href="/store"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
                   >
                     <Palette className="w-4 h-4 text-text-muted" />
                     <span>Cosmetic Store</span>
-                  </Link>
+                  </AppLink>
 
-                  <Link
+                  <AppLink
                     href="/games"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
                   >
                     <Gamepad2 className="w-4 h-4 text-text-muted" />
                     <span>Mini Games</span>
-                  </Link>
+                  </AppLink>
 
-                  <Link
+                  <AppLink
                     href="/info"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="w-full px-4 py-2 hover:bg-surface flex items-center gap-2.5 text-text-primary hover:text-accent transition-colors"
                   >
                     <Info className="w-4 h-4 text-text-muted" />
                     <span>About & Support</span>
-                  </Link>
+                  </AppLink>
                 </div>
 
                 {/* Sign out */}

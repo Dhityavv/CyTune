@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { Search as SearchIcon, X, Play, Loader2, Disc, Sparkles, ChevronRight } from 'lucide-react';
 import { Track } from '@/types/music';
 import CoverImage from '@/components/CoverImage';
@@ -298,13 +298,13 @@ function SearchContent() {
                       Play Top Song
                     </button>
                   )}
-                  <Link
+                  <AppLink
                     href={`/artist?id=${encodeURIComponent(artist.id)}`}
                     className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle hover:border-accent/50 text-text-primary text-xs font-semibold flex items-center justify-center gap-2 transition-all group/btn"
                   >
                     <span>View Artist</span>
                     <ChevronRight className="w-3.5 h-3.5 text-accent group-hover/btn:translate-x-0.5 transition-transform" />
-                  </Link>
+                  </AppLink>
                 </div>
               </div>
             </div>

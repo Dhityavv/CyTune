@@ -79,7 +79,7 @@ export default function QueueDrawer() {
                   <button
                     onClick={clearQueue}
                     className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    title="Clear queue"
+                    aria-label="Clear queue"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -87,7 +87,7 @@ export default function QueueDrawer() {
                 <button
                   onClick={closeQueueDrawer}
                   className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors"
-                  title="Close queue drawer"
+                  aria-label="Close queue drawer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -114,7 +114,7 @@ export default function QueueDrawer() {
                     className={`p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors ${
                       loadingRecommendations ? 'animate-spin text-accent' : ''
                     }`}
-                    title="Refresh recommendations"
+                    aria-label="Refresh recommendations"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                   </button>
@@ -235,7 +235,7 @@ export default function QueueDrawer() {
                             recordFeedback('liked', rec);
                           }}
                           className="p-1 text-text-muted hover:text-accent transition-colors"
-                          title="Add to liked"
+                          aria-label="Add to liked"
                         >
                           <Heart className="w-3.5 h-3.5" />
                         </button>
@@ -245,7 +245,7 @@ export default function QueueDrawer() {
                             dismissRecommendation(rec);
                           }}
                           className="p-1 text-text-muted hover:text-text-primary transition-colors"
-                          title="Dismiss"
+                          aria-label="Dismiss recommendation"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>

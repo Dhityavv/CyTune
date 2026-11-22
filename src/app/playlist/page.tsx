@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useMemo, useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
@@ -78,12 +78,12 @@ function PlaylistContent() {
         <p className="text-xs text-text-secondary">
           It may have been deleted, or the link is wrong.
         </p>
-        <Link
+        <AppLink
           href="/library?tab=playlists"
           className="inline-block px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors"
         >
           Back to Library
-        </Link>
+        </AppLink>
       </div>
     );
   }
@@ -238,7 +238,6 @@ function PlaylistContent() {
                   setNameDraft(playlist.name);
                   setIsRenaming(true);
                 }}
-                title="Rename playlist"
                 aria-label="Rename playlist"
                 className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface transition-colors flex-shrink-0"
               >
@@ -311,13 +310,13 @@ function PlaylistContent() {
               <Shuffle className="w-3.5 h-3.5 text-accent" />
               Shuffle
             </button>
-            <Link
+            <AppLink
               href="/search"
               className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle text-xs font-semibold transition-all"
             >
               <Search className="w-3.5 h-3.5 text-accent" />
               Find songs to add
-            </Link>
+            </AppLink>
             <button
               type="button"
               onClick={deletePlaylist}
@@ -377,7 +376,6 @@ function PlaylistContent() {
                           type="button"
                           onClick={() => moveTrack(realIndex, -1)}
                           disabled={realIndex <= 0}
-                          title="Move up"
                           aria-label={`Move ${track.title} up`}
                           className="p-0.5 rounded text-text-muted hover:text-text-primary disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                         >
@@ -387,7 +385,6 @@ function PlaylistContent() {
                           type="button"
                           onClick={() => moveTrack(realIndex, 1)}
                           disabled={realIndex >= playlist.tracks.length - 1}
-                          title="Move down"
                           aria-label={`Move ${track.title} down`}
                           className="p-0.5 rounded text-text-muted hover:text-text-primary disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                         >
@@ -400,7 +397,6 @@ function PlaylistContent() {
                       <button
                         type="button"
                         onClick={() => removeTrack(track.id)}
-                        title="Remove from playlist"
                         aria-label={`Remove ${track.title} from playlist`}
                         className="p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-surface transition-colors flex-shrink-0"
                       >

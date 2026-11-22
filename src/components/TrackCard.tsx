@@ -95,7 +95,7 @@ export default function TrackCard({ track }: TrackCardProps) {
           <button
             onClick={handlePlay}
             className="w-11 h-11 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-xl shadow-[#C9A94D]/30 hover:bg-accent-hover hover:scale-110 active:scale-95 transition-all"
-            title={isCurrent && isPlaying ? 'Pause' : 'Play'}
+            aria-label={isCurrent && isPlaying ? 'Pause' : 'Play'}
           >
             {isCurrent && isPlaying ? (
               <Pause className="w-4 h-4 fill-current" />
@@ -114,14 +114,14 @@ export default function TrackCard({ track }: TrackCardProps) {
           <button
             onClick={toggleLike}
             className="w-8 h-8 rounded-full bg-canvas/80 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-canvas hover:border-accent/50 transition-all active:scale-90"
-            title={isLiked ? 'Unlike' : 'Like'}
+            aria-label={isLiked ? 'Unlike' : 'Like'}
           >
             <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-accent text-accent' : ''}`} />
           </button>
           <button
             onClick={openAddToPlaylist}
             className="w-8 h-8 rounded-full bg-canvas/80 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-canvas hover:border-accent/50 transition-all active:scale-90"
-            title="Add to playlist"
+            aria-label="Add to playlist"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>

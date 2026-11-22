@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -522,7 +522,7 @@ export default function ListeningPage() {
             type="button"
             onClick={() => router.back()}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-xl border border-white/15 text-white text-xs font-semibold shadow-lg transition-all"
-            title="Back to previous page"
+            aria-label="Back to previous page"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back</span>
@@ -592,18 +592,17 @@ export default function ListeningPage() {
               <div className="min-w-0">
                 <h2
                   className="text-base sm:text-lg font-black text-white truncate tracking-tight"
-                  title={currentTrack.title}
                 >
                   {currentTrack.title}
                 </h2>
                 <p className="text-xs text-white/60 truncate mt-0.5">
                   {currentTrack.artistId ? (
-                    <Link
+                    <AppLink
                       href={`/artist?id=${encodeURIComponent(currentTrack.artistId)}`}
                       className="hover:text-accent transition-colors"
                     >
                       {currentTrack.artist}
-                    </Link>
+                    </AppLink>
                   ) : (
                     currentTrack.artist
                   )}
@@ -622,7 +621,7 @@ export default function ListeningPage() {
                         ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.4)]'
                         : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10'
                     } ${isHeartPopping ? 'scale-125' : ''} ${isHeartUnloving ? 'scale-75' : ''}`}
-                    title={isLiked ? 'Unlike song' : 'Like this song'}
+                    aria-label={isLiked ? 'Unlike song' : 'Like this song'}
                   >
                     <Heart
                       className={`w-4 h-4 transition-transform duration-300 ${
@@ -647,7 +646,7 @@ export default function ListeningPage() {
                     type="button"
                     onClick={() => usePlaylistDialogStore.getState().open(currentTrack)}
                     className="p-2.5 rounded-xl border bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10 transition-all duration-300 active:scale-90"
-                    title="Add to playlist"
+                    aria-label="Add to playlist"
                   >
                     <ListPlus className="w-4 h-4" />
                   </button>
@@ -663,7 +662,7 @@ export default function ListeningPage() {
                         ? 'bg-accent/25 border-accent/50 text-accent shadow-[0_0_16px_rgba(201,169,77,0.4)] scale-105'
                         : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10'
                     }`}
-                    title="Share song link"
+                    aria-label="Share song link"
                   >
                     {copiedShare ? (
                       <Check className="w-4 h-4 text-accent stroke-[3]" />
@@ -713,7 +712,7 @@ export default function ListeningPage() {
                 className={`p-2 rounded-xl transition-colors ${
                   isShuffle ? 'text-accent' : 'text-white/40 hover:text-white'
                 }`}
-                title="Shuffle"
+                aria-label="Shuffle"
               >
                 <Shuffle className="w-4 h-4" />
               </button>
@@ -722,7 +721,7 @@ export default function ListeningPage() {
                 type="button"
                 onClick={prevTrack}
                 className="p-2 rounded-xl text-white/70 hover:text-white transition-transform active:scale-95"
-                title="Previous track"
+                aria-label="Previous track"
               >
                 <SkipBack className="w-5 h-5 fill-current" />
               </button>
@@ -735,7 +734,7 @@ export default function ListeningPage() {
                 style={{
                   boxShadow: `0 0 25px ${ambientColor.rgba(0.6)}`,
                 }}
-                title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
+                aria-label={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
               >
                 {isPlaying ? (
                   <Pause className="w-5 h-5 fill-current" />
@@ -748,7 +747,7 @@ export default function ListeningPage() {
                 type="button"
                 onClick={nextTrack}
                 className="p-2 rounded-xl text-white/70 hover:text-white transition-transform active:scale-95"
-                title="Next track"
+                aria-label="Next track"
               >
                 <SkipForward className="w-5 h-5 fill-current" />
               </button>
@@ -759,7 +758,7 @@ export default function ListeningPage() {
                 className={`p-2 rounded-xl transition-colors ${
                   repeatMode !== 'off' ? 'text-accent' : 'text-white/40 hover:text-white'
                 }`}
-                title={`Repeat: ${repeatMode}`}
+                aria-label={`Repeat: ${repeatMode}`}
               >
                 {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
               </button>
@@ -823,7 +822,7 @@ export default function ListeningPage() {
                             removeFromQueue(absoluteQueueIdx);
                           }}
                           className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                          title="Remove from queue"
+                          aria-label="Remove from queue"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -904,7 +903,7 @@ export default function ListeningPage() {
                   type="submit"
                   disabled={!commentInput.trim()}
                   className="p-1.5 rounded-full bg-accent text-black disabled:opacity-30 disabled:pointer-events-none hover:scale-105 active:scale-95 transition-all shadow-md shadow-accent/20"
-                  title="Post comment"
+                  aria-label="Post comment"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
@@ -953,7 +952,7 @@ export default function ListeningPage() {
                               type="button"
                               onClick={() => handleDeleteComment(comment.id)}
                               className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                              title="Delete your comment"
+                              aria-label="Delete your comment"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -1003,7 +1002,7 @@ export default function ListeningPage() {
                 type="button"
                 onClick={() => jumpLyricLine('up')}
                 className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white/70 hover:text-white flex items-center justify-center transition-all shadow-md active:scale-90"
-                title="Previous lyric line"
+                aria-label="Previous lyric line"
               >
                 <ChevronUp className="w-4 h-4" />
               </button>
@@ -1011,7 +1010,7 @@ export default function ListeningPage() {
                 type="button"
                 onClick={() => jumpLyricLine('down')}
                 className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white/70 hover:text-white flex items-center justify-center transition-all shadow-md active:scale-90"
-                title="Next lyric line"
+                aria-label="Next lyric line"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>

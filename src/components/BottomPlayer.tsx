@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { usePathname } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { initMagneticEffect } from '@/lib/motion';
@@ -172,10 +172,10 @@ export default function BottomPlayer() {
           </>
         ) : currentTrack ? (
           <>
-            <Link
+            <AppLink
               href="/listening"
               className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface border border-border-subtle shadow-sm cursor-pointer group block"
-              title="Open Listening Page"
+              aria-label="Open Listening Page"
             >
               <CoverImage
                 src={currentTrack.thumbnail}
@@ -186,28 +186,26 @@ export default function BottomPlayer() {
               <div className="absolute inset-0 bg-canvas/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
                 <Maximize2 className="w-3.5 h-3.5 text-text-primary" />
               </div>
-            </Link>
+            </AppLink>
 
             <div className="min-w-0 flex-1">
-              <Link
+              <AppLink
                 href="/listening"
                 className="block w-full text-left text-[13px] font-semibold text-text-primary truncate cursor-pointer hover:text-accent transition-colors leading-tight"
-                title={currentTrack.title}
+                aria-label={currentTrack.title}
               >
                 {currentTrack.title}
-              </Link>
+              </AppLink>
               {playbackError ? (
                 <p
                   role="status"
                   className="text-[11px] text-red-400 truncate mt-0.5"
-                  title={playbackError}
                 >
                   {playbackError}
                 </p>
               ) : (
                 <p
                   className="text-[11px] text-text-secondary truncate mt-0.5"
-                  title={currentTrack.artist}
                 >
                   {currentTrack.artist}
                 </p>
@@ -221,7 +219,7 @@ export default function BottomPlayer() {
                   ? 'text-accent fill-accent'
                   : 'text-text-muted hover:text-text-primary'
               }`}
-              title={isLiked ? 'Remove from liked' : 'Add to liked'}
+              aria-label={isLiked ? 'Remove from liked' : 'Add to liked'}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
             </button>
@@ -232,7 +230,7 @@ export default function BottomPlayer() {
                 if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
               }}
               className="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
-              title="Add to playlist"
+              aria-label="Add to playlist"
             >
               <ListPlus className="w-4 h-4" />
             </button>
@@ -254,7 +252,7 @@ export default function BottomPlayer() {
                 ? 'text-accent'
                 : 'text-text-muted hover:text-text-primary'
             }`}
-            title="Shuffle"
+            aria-label="Shuffle"
           >
             <Shuffle className="w-4 h-4" />
           </button>
@@ -265,7 +263,7 @@ export default function BottomPlayer() {
             className={`p-1 transition-colors ${
               isGameMode ? 'opacity-30 cursor-not-allowed text-text-muted' : 'text-text-secondary hover:text-text-primary'
             }`}
-            title="Previous track"
+            aria-label="Previous track"
           >
             <SkipBack className="w-4 h-4 fill-current" />
           </button>
@@ -280,7 +278,7 @@ export default function BottomPlayer() {
               }
             }}
             className="w-10 h-10 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-lg hover:scale-105 active:scale-90 transition-transform shadow-[#C9A94D]/30"
-            title={isGameMode ? (isGamePlaying ? 'Pause Preview' : 'Play Preview') : (isPlaying ? 'Pause' : 'Play')}
+            aria-label={isGameMode ? (isGamePlaying ? 'Pause Preview' : 'Play Preview') : (isPlaying ? 'Pause' : 'Play')}
           >
             {(isGameMode ? isGamePlaying : isPlaying) ? (
               <Pause className="w-4 h-4 fill-current" />
@@ -295,7 +293,7 @@ export default function BottomPlayer() {
             className={`p-1 transition-colors ${
               isGameMode ? 'opacity-30 cursor-not-allowed text-text-muted' : 'text-text-secondary hover:text-text-primary'
             }`}
-            title="Next track"
+            aria-label="Next track"
           >
             <SkipForward className="w-4 h-4 fill-current" />
           </button>
@@ -310,7 +308,7 @@ export default function BottomPlayer() {
                 ? 'text-accent'
                 : 'text-text-muted hover:text-text-primary'
             }`}
-            title={`Repeat mode: ${repeatMode}`}
+            aria-label={`Repeat mode: ${repeatMode}`}
           >
             {repeatMode === 'one' ? (
               <Repeat1 className="w-4 h-4" />
@@ -342,7 +340,7 @@ export default function BottomPlayer() {
               ? 'bg-accent/15 text-accent border-accent/30 shadow-sm'
               : 'bg-transparent text-text-muted border-transparent hover:text-text-secondary'
           }`}
-          title={smartAutoplayEnabled ? 'Smart Autoplay Active' : 'Smart Autoplay Disabled'}
+          aria-label={smartAutoplayEnabled ? 'Smart Autoplay Active' : 'Smart Autoplay Disabled'}
         >
           <Sparkles className="w-3 h-3" />
           <span className="hidden xl:inline">Autoplay</span>
@@ -356,7 +354,7 @@ export default function BottomPlayer() {
               ? 'bg-surface text-accent border border-accent/30'
               : 'text-text-secondary hover:text-text-primary hover:bg-surface'
           }`}
-          title="Toggle Lyrics"
+          aria-label="Toggle Lyrics"
         >
           <Mic2 className="w-4 h-4" />
         </button>
@@ -369,26 +367,26 @@ export default function BottomPlayer() {
               ? 'bg-surface text-accent border border-accent/30'
               : 'text-text-secondary hover:text-text-primary hover:bg-surface'
           }`}
-          title="Toggle Queue Drawer"
+          aria-label="Toggle Queue Drawer"
         >
           <ListMusic className="w-4 h-4" />
         </button>
 
         {/* Fullscreen Expand */}
-        <Link
+        <AppLink
           href="/listening"
           className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-          title="Open Dedicated Listening Page"
+          aria-label="Open Dedicated Listening Page"
         >
           <Maximize2 className="w-4 h-4" />
-        </Link>
+        </AppLink>
 
         {/* Filled Volume Slider (Hidden on mobile) */}
         <div className="hidden lg:flex items-center gap-2 pl-1 border-l border-border-subtle">
           <button
             onClick={toggleMute}
             className="p-1 text-text-secondary hover:text-text-primary transition-colors"
-            title={isMuted ? 'Unmute' : 'Mute'}
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted || volume === 0 ? (
               <VolumeX className="w-4 h-4 text-accent" />

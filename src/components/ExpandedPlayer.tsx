@@ -234,7 +234,7 @@ export default function ExpandedPlayer() {
           <button
             onClick={toggleExpanded}
             className="p-2 rounded-lg bg-surface hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors border border-border-subtle"
-            title="Close"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -278,7 +278,7 @@ export default function ExpandedPlayer() {
                 <button
                   onClick={toggleFavorite}
                   className="p-2.5 rounded-lg hover:bg-surface transition-colors flex-shrink-0"
-                  title={isLiked ? 'Unlike' : 'Like'}
+                  aria-label={isLiked ? 'Unlike' : 'Like'}
                 >
                   <Heart
                     className={`w-6 h-6 transition-colors ${
@@ -291,7 +291,7 @@ export default function ExpandedPlayer() {
                     if (currentTrack) usePlaylistDialogStore.getState().open(currentTrack);
                   }}
                   className="p-2.5 rounded-lg hover:bg-surface text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
-                  title="Add to playlist"
+                  aria-label="Add to playlist"
                 >
                   <ListPlus className="w-6 h-6" />
                 </button>
@@ -315,7 +315,7 @@ export default function ExpandedPlayer() {
                 className={`p-2 transition-colors ${
                   isShuffle ? 'text-accent' : 'text-text-muted hover:text-text-primary'
                 }`}
-                title="Shuffle"
+                aria-label="Shuffle"
               >
                 <Shuffle className="w-5 h-5" />
               </button>
@@ -323,7 +323,7 @@ export default function ExpandedPlayer() {
               <button
                 onClick={prevTrack}
                 className="p-2 text-text-secondary hover:text-text-primary transition-colors"
-                title="Previous"
+                aria-label="Previous track"
               >
                 <SkipBack className="w-6 h-6 fill-current" />
               </button>
@@ -331,7 +331,7 @@ export default function ExpandedPlayer() {
               <button
                 onClick={togglePlay}
                 className="w-14 h-14 rounded-full bg-accent text-[#101114] flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shadow-[#C9A94D]/25"
-                title={isPlaying ? 'Pause' : 'Play'}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
                   <Pause className="w-6 h-6 fill-current" />
@@ -343,7 +343,7 @@ export default function ExpandedPlayer() {
               <button
                 onClick={nextTrack}
                 className="p-2 text-text-secondary hover:text-text-primary transition-colors"
-                title="Next"
+                aria-label="Next track"
               >
                 <SkipForward className="w-6 h-6 fill-current" />
               </button>
@@ -353,7 +353,7 @@ export default function ExpandedPlayer() {
                 className={`p-2 transition-colors ${
                   repeatMode !== 'off' ? 'text-accent' : 'text-text-muted hover:text-text-primary'
                 }`}
-                title={`Repeat: ${repeatMode}`}
+                aria-label={`Repeat: ${repeatMode}`}
               >
                 {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
               </button>
@@ -508,7 +508,7 @@ export default function ExpandedPlayer() {
                         className={`p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors ${
                           loadingRecommendations ? 'animate-spin text-accent' : ''
                         }`}
-                        title="Refresh smart recommendations"
+                        aria-label="Refresh smart recommendations"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                       </button>
@@ -613,7 +613,7 @@ export default function ExpandedPlayer() {
                               recordFeedback('liked', rec);
                             }}
                             className="p-1 text-text-muted hover:text-accent transition-colors"
-                            title="Add to liked"
+                            aria-label="Add to liked"
                           >
                             <Heart className="w-3.5 h-3.5" />
                           </button>
@@ -624,7 +624,7 @@ export default function ExpandedPlayer() {
                               dismissRecommendation(rec);
                             }}
                             className="p-1 text-text-muted hover:text-text-primary transition-colors"
-                            title="Dismiss recommendation"
+                            aria-label="Dismiss recommendation"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>

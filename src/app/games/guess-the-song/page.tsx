@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import {
   Volume2,
   VolumeX,
@@ -304,14 +304,14 @@ export default function GuessTheSongPage() {
     <div className="space-y-8 pb-28 max-w-4xl mx-auto select-none">
       {/* Top Header Bar */}
       <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
-        <Link
+        <AppLink
           href="/games"
           onClick={stopAudio}
           className="flex items-center gap-2 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors py-1 px-2 rounded-lg hover:bg-surface/60"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Exit to Games Hub</span>
-        </Link>
+        </AppLink>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface border border-border-subtle text-xs font-mono font-bold text-accent shadow-sm">
@@ -396,7 +396,7 @@ export default function GuessTheSongPage() {
                   onClick={handleReplay}
                   disabled={audioLoading}
                   className="p-3 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary transition-all active:scale-95 disabled:opacity-40"
-                  title="Replay from start"
+                  aria-label="Replay from start"
                 >
                   <RotateCcw className="w-4 h-4 text-accent" />
                 </button>
@@ -407,7 +407,7 @@ export default function GuessTheSongPage() {
                   onClick={togglePlayAudio}
                   disabled={audioLoading}
                   className="w-14 h-14 rounded-full bg-accent hover:bg-accent-hover text-[#101114] flex items-center justify-center shadow-xl shadow-[#C9A94D]/30 transition-all active:scale-95 disabled:opacity-50"
-                  title={isPlayingAudio ? 'Pause Preview' : 'Play Preview'}
+                  aria-label={isPlayingAudio ? 'Pause Preview' : 'Play Preview'}
                 >
                   {audioLoading ? (
                     <Loader2 className="w-6 h-6 animate-spin text-[#101114]" />
@@ -422,7 +422,7 @@ export default function GuessTheSongPage() {
                   type="button"
                   onClick={toggleMute}
                   className="p-3 rounded-full bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary transition-all active:scale-95"
-                  title={isMuted ? 'Unmute' : 'Mute'}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted ? (
                     <VolumeX className="w-4 h-4 text-red-400" />
@@ -553,12 +553,12 @@ export default function GuessTheSongPage() {
                 <RotateCcw className="w-4 h-4" />
                 <span>Play Again (New 10 Songs)</span>
               </button>
-              <Link
+              <AppLink
                 href="/games"
                 className="px-6 py-3 rounded-2xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-primary font-semibold text-xs transition-all"
               >
                 Mini Games Hub
-              </Link>
+              </AppLink>
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import {
   ShoppingBag,
   Sparkles,
@@ -239,13 +239,13 @@ export default function CosmeticStorePage() {
           ))}
         </div>
 
-        <Link
+        <AppLink
           href="/profile"
           className="text-xs font-semibold text-accent hover:underline flex items-center gap-1.5 shrink-0 px-2"
         >
           <span>View My Profile</span>
           <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        </AppLink>
       </div>
 
       {/* Items Grid */}
@@ -369,7 +369,7 @@ export default function CosmeticStorePage() {
                   type="button"
                   onClick={() => setPreviewItem(item)}
                   className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-text-secondary hover:text-text-primary transition-all shrink-0"
-                  title="Full Live Preview"
+                  aria-label="Full Live Preview"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
@@ -587,22 +587,22 @@ export default function CosmeticStorePage() {
                   Kamu belum punya cukup koin. Kumpulkan Orbit Coins secara gratis dengan bermain mini games:
                 </p>
                 <div className="grid grid-cols-2 gap-2.5">
-                  <Link
+                  <AppLink
                     href="/games/trivia"
                     onClick={() => setIsPremiumModalOpen(false)}
                     className="p-3 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-center space-y-1 transition-all"
                   >
                     <span className="text-xs font-bold text-text-primary block">Music Trivia</span>
                     <span className="text-[10px] text-accent block font-mono">+100 koin/soal</span>
-                  </Link>
-                  <Link
+                  </AppLink>
+                  <AppLink
                     href="/games/guess-the-song"
                     onClick={() => setIsPremiumModalOpen(false)}
                     className="p-3 rounded-xl bg-surface hover:bg-surface-hover border border-border-subtle text-center space-y-1 transition-all"
                   >
                     <span className="text-xs font-bold text-text-primary block">Guess the Song</span>
                     <span className="text-[10px] text-accent block font-mono">+150 koin/lagu</span>
-                  </Link>
+                  </AppLink>
                 </div>
               </div>
             ) : (

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Compass, Search, Library, Sparkles, Radio } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -44,7 +44,7 @@ export default function MobileNav() {
           const Icon = item.icon;
           const isActive = isActiveItem(item.href);
           return (
-            <Link
+            <AppLink
               key={item.href}
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
@@ -65,7 +65,7 @@ export default function MobileNav() {
                 <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : ''}`} />
               </span>
               <span className="truncate">{item.label}</span>
-            </Link>
+            </AppLink>
           );
         })}
       </div>

@@ -142,7 +142,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
             addToQueue(track);
           }}
           className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
-          title="Add to queue"
+          aria-label="Add to queue"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
@@ -153,7 +153,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
             usePlaylistDialogStore.getState().open(track);
           }}
           className="p-1.5 rounded-lg opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-text-muted hover:text-text-primary transition-all"
-          title="Add to playlist"
+          aria-label="Add to playlist"
         >
           <ListPlus className="w-3.5 h-3.5" />
         </button>
@@ -165,7 +165,7 @@ export default function TrackRow({ track, index }: TrackRowProps) {
               ? 'text-accent fill-accent opacity-100'
               : 'opacity-80 sm:opacity-0 sm:group-hover:opacity-100 text-text-muted hover:text-text-primary'
           }`}
-          title={isLiked ? 'Remove from favorites' : 'Add to favorites'}
+          aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
         >
           <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
         </button>

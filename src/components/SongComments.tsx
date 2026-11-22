@@ -201,7 +201,7 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
                       className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-mono transition-colors ${
                         comment.isLiked ? 'text-accent fill-accent bg-accent/15' : 'text-text-muted hover:text-text-primary'
                       }`}
-                      title="Like"
+                      aria-label="Like comment"
                     >
                       <Heart className={`w-3.5 h-3.5 ${comment.isLiked ? 'fill-current' : ''}`} />
                       <span>{comment.likes}</span>
@@ -210,7 +210,7 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
                       type="button"
                       onClick={() => setReplyToId(replyToId === comment.id ? null : comment.id)}
                       className="p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors text-[11px]"
-                      title="Reply"
+                      aria-label="Reply to comment"
                     >
                       <CornerDownRight className="w-3.5 h-3.5" />
                     </button>

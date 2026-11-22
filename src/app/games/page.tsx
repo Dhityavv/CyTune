@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { Gamepad2, Headphones, HelpCircle, Trophy, Sparkles, ArrowRight, Music, Flame, Award, Lock, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -136,13 +136,13 @@ export default function MiniGamesHubPage() {
 
           <div className="pt-6 relative z-10">
             {user ? (
-              <Link
+              <AppLink
                 href="/games/guess-the-song"
                 className="w-full py-3.5 px-5 rounded-2xl bg-accent hover:bg-accent-hover text-[#101114] font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#C9A94D]/25 active:scale-95 transition-all group/btn"
               >
                 <span>Play Guess the Song</span>
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-              </Link>
+              </AppLink>
             ) : (
               <button
                 type="button"
@@ -205,13 +205,13 @@ export default function MiniGamesHubPage() {
 
           <div className="pt-6 relative z-10">
             {user ? (
-              <Link
+              <AppLink
                 href="/games/trivia"
                 className="w-full py-3.5 px-5 rounded-2xl bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle hover:border-[#BBF41D]/50 font-bold text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all group/btn"
               >
                 <span>Play Music Trivia</span>
                 <ArrowRight className="w-4 h-4 text-[#BBF41D] group-hover/btn:translate-x-1 transition-transform" />
-              </Link>
+              </AppLink>
             ) : (
               <button
                 type="button"

@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import { ArrowLeft, Play, Shuffle, Disc3, Music, Loader2 } from 'lucide-react';
 import { Track } from '@/types/music';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -75,12 +75,12 @@ function AlbumContent() {
           <Disc3 className="w-6 h-6" />
         </div>
         <h1 className="text-base font-bold text-text-primary">Album not found</h1>
-        <Link
+        <AppLink
           href="/"
           className="inline-block px-5 py-2.5 rounded-full bg-accent text-[#101114] text-xs font-bold hover:bg-accent-hover transition-colors"
         >
           Explore Music
-        </Link>
+        </AppLink>
       </div>
     );
   }

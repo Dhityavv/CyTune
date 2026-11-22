@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/AppLink';
 import {
   Trophy,
   Flame,
@@ -328,13 +328,13 @@ export default function MusicTriviaPage() {
         <div className="space-y-8 animate-fade-up">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <Link
+            <AppLink
               href="/games"
               className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors py-1 px-2.5 rounded-lg hover:bg-surface/60"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back to Mini Games Hub</span>
-            </Link>
+            </AppLink>
 
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-border-subtle text-xs font-mono font-bold text-accent">
               <Trophy className="w-3.5 h-3.5" />
@@ -694,12 +694,12 @@ export default function MusicTriviaPage() {
                 <RotateCcw className="w-4 h-4" />
                 <span>Play Again (Choose Tier)</span>
               </button>
-              <Link
+              <AppLink
                 href="/games"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-surface border border-border-subtle hover:border-accent/40 text-text-primary font-bold text-xs shadow-md transition-all active:scale-95"
               >
                 <span>Back to Games Hub</span>
-              </Link>
+              </AppLink>
             </div>
           </div>
 
