@@ -26,12 +26,16 @@ function AlbumContent() {
   const [album, setAlbum] = useState<AlbumInfo | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const playTrack = usePlayerStore((s) => s.playTrack);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadAlbum() {
       setLoading(true);
+      setLoadError('');
       try {
         const query = id ? `id=${encodeURIComponent(id)}` : `q=${encodeURIComponent(titleQuery || '')}`;
         const res = await fetch(`/api/album?${query}`);
