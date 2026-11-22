@@ -22,6 +22,7 @@ interface PlayerStore {
   showLyrics: boolean;
   lyrics: SyncedLyrics | null;
   loadingLyrics: boolean;
+  lyricOffset: number;
   ambientColor: string;
   isQueueDrawerOpen: boolean;
 
@@ -58,6 +59,8 @@ interface PlayerStore {
   clearQueue: () => void;
   setAmbientColor: (color: string) => void;
   loadLyricsForCurrent: () => Promise<void>;
+  setLyricOffset: (offset: number) => void;
+  adjustLyricOffset: (delta: number) => void;
 
   // Smart Autoplay Actions
   toggleSmartAutoplay: () => void;
@@ -98,6 +101,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   showLyrics: false,
   lyrics: null,
   loadingLyrics: false,
+  lyricOffset: 0,
   ambientColor: '#10B981',
   isQueueDrawerOpen: false,
 
@@ -370,23 +374,57 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   setAmbientColor: (color: string) => set({ ambientColor: color }),
 
+  setLyricOffset: (offset: number) => {
+    const track = get().currentTrack;
+    if (track && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`cytune_sync_offset_${track.id}`, String(offset));
+      } catch {}
+    }
+    set({ lyricOffset: offset });
+  },
+
+  adjustLyricOffset: (delta: number) => {
+    const track = get().currentTrack;
+    const current = get().lyricOffset;
+    const nextOffset = Math.round((current + delta) * 20) / 20; // 0.05s precision
+    if (track && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`cytune_sync_offset_${track.id}`, String(nextOffset));
+      } catch {}
+    }
+    set({ lyricOffset: nextOffset });
+  },
+
   loadLyricsForCurrent: async () => {
     const track = get().currentTrack;
     if (!track) return;
 
-    set({ loadingLyrics: true });
+    let savedOffset: number | null = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(`cytune_sync_offset_${track.id}`);
+        if (stored !== null) {
+          const parsed = parseFloat(stored);
+          if (!isNaN(parsed)) savedOffset = parsed;
+        }
+      } catch {}
+    }
+
+    set({ loadingLyrics: true, lyricOffset: savedOffset ?? 0 });
     try {
       const res = await fetch(
         `/api/lyrics?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist)}&duration=${track.duration}`
       );
       if (res.ok) {
         const data: SyncedLyrics = await res.json();
-        set({ lyrics: data, loadingLyrics: false });
+        const initialOffset = savedOffset !== null ? savedOffset : (data.autoOffset || 0);
+        set({ lyrics: data, loadingLyrics: false, lyricOffset: initialOffset });
       } else {
-        set({ lyrics: null, loadingLyrics: false });
+        set({ lyrics: null, loadingLyrics: false, lyricOffset: 0 });
       }
     } catch {
-      set({ lyrics: null, loadingLyrics: false });
+      set({ lyrics: null, loadingLyrics: false, lyricOffset: 0 });
     }
   },
 

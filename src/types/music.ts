@@ -35,6 +35,7 @@ export interface SyncedLyrics {
   plainLyrics?: string;
   syncedLyrics?: string;
   hasWordSync?: boolean;
+  autoOffset?: number;
   lines: LyricsLine[];
 }
 

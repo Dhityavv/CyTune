@@ -111,13 +111,24 @@ export async function fetchLyrics(
   duration?: number
 ): Promise<SyncedLyrics | null> {
   try {
+    const cleanArtist = (artist || '').replace(/ - Topic$/i, '').trim();
+
     // Clean title from "Official Video", "(feat. ...)", "[Official Music Video]"
-    const cleanTitle = title
+    let cleanTitle = (title || '')
       .replace(/[\(\[](?:Official|Music|Video|Audio|Lyric|Visualizer|HD|4K|Lyrics)[^\)\]]*[\)\]]/gi, '')
-      .replace(/[\(\[]feat\.[^\)\]]*[\)\]]/gi, '')
+      .replace(/[\(\[](?:feat|ft)\.[^\)\]]*[\)\]]/gi, '')
+      .replace(/["'“”]/g, '')
       .trim();
 
-    const cleanArtist = artist.replace(/ - Topic$/i, '').trim();
+    // If title starts with "Artist - ", strip artist prefix (common YouTube format)
+    if (cleanArtist && cleanTitle.toLowerCase().startsWith(cleanArtist.toLowerCase() + ' - ')) {
+      cleanTitle = cleanTitle.slice(cleanArtist.length + 3).trim();
+    } else if (cleanTitle.includes(' - ')) {
+      const parts = cleanTitle.split(' - ');
+      if (parts.length >= 2 && parts[0].trim().toLowerCase() === cleanArtist.toLowerCase()) {
+        cleanTitle = parts.slice(1).join(' - ').trim();
+      }
+    }
 
     const params = new URLSearchParams({
       track_name: cleanTitle,
@@ -130,46 +141,107 @@ export async function fetchLyrics(
 
     let data: any = null;
 
-    const res = await fetch(`https://lrclib.net/api/get?${params.toString()}`, {
-      headers: {
-        'User-Agent': 'CyTune Music Web App/1.0',
-      },
-      next: { revalidate: 86400 }, // Cache 24 hours
-    });
+    // 1. Exact match attempt via /api/get
+    try {
+      const res = await fetch(`https://lrclib.net/api/get?${params.toString()}`, {
+        headers: {
+          'User-Agent': 'CyTune Music Web App/1.0',
+        },
+        next: { revalidate: 86400 }, // Cache 24 hours
+      });
 
-    if (res.ok) {
-      data = await res.json();
-    } else {
-      // Fallback search
+      if (res.ok) {
+        const json = await res.json();
+        if (json.syncedLyrics || json.lyricsfile) {
+          data = json;
+        }
+      }
+    } catch {
+      // Fall through to smart search
+    }
+
+    // Helper to evaluate and rank candidate results
+    const pickBestCandidate = (searchData: any[]): any => {
+      if (!Array.isArray(searchData) || searchData.length === 0) return null;
+
+      // Filter candidates with synchronized lyrics
+      const withSynced = searchData.filter((c: any) => Boolean(c.syncedLyrics || c.lyricsfile));
+      const pool = withSynced.length > 0 ? withSynced : searchData;
+
+      pool.sort((a: any, b: any) => {
+        const hasA = Boolean(a.syncedLyrics || a.lyricsfile) ? 1 : 0;
+        const hasB = Boolean(b.syncedLyrics || b.lyricsfile) ? 1 : 0;
+        if (hasA !== hasB) return hasB - hasA;
+
+        // Proximity to audio duration is paramount for synchronization accuracy
+        if (duration && duration > 0) {
+          const diffA = Math.abs((a.duration || 0) - duration);
+          const diffB = Math.abs((b.duration || 0) - duration);
+          return diffA - diffB;
+        }
+        return 0;
+      });
+
+      return pool[0];
+    };
+
+    // 2. Fallback search: Title + Artist
+    if (!data) {
       const searchRes = await fetch(
-        `https://lrclib.net/api/search?q=${encodeURIComponent(`${cleanTitle} ${cleanArtist}`)}`,
+        `https://lrclib.net/api/search?q=${encodeURIComponent(`${cleanTitle} ${cleanArtist}`.trim())}`,
         {
           headers: { 'User-Agent': 'CyTune Music Web App/1.0' },
+          next: { revalidate: 86400 },
         }
       );
       if (searchRes.ok) {
         const searchData = await searchRes.json();
-        if (Array.isArray(searchData) && searchData.length > 0) {
-          const item = searchData[0];
-          if (item.id) {
-            // Fetch complete track detail by ID to get lyricsfile
-            try {
-              const detailRes = await fetch(`https://lrclib.net/api/get/${item.id}`, {
-                headers: { 'User-Agent': 'CyTune Music Web App/1.0' },
-              });
-              if (detailRes.ok) {
-                data = await detailRes.json();
-              } else {
-                data = item;
-              }
-            } catch {
-              data = item;
+        const bestItem = pickBestCandidate(searchData);
+        if (bestItem?.id) {
+          try {
+            const detailRes = await fetch(`https://lrclib.net/api/get/${bestItem.id}`, {
+              headers: { 'User-Agent': 'CyTune Music Web App/1.0' },
+            });
+            if (detailRes.ok) {
+              data = await detailRes.json();
+            } else {
+              data = bestItem;
             }
-          } else {
-            data = item;
+          } catch {
+            data = bestItem;
           }
+        } else if (bestItem) {
+          data = bestItem;
         }
       }
+    }
+
+    // 3. Second Fallback search: Clean Title only (in case artist tag on YouTube is an alias/channel name)
+    if (!data || (!data.syncedLyrics && !data.lyricsfile)) {
+      try {
+        const searchRes = await fetch(
+          `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle)}`,
+          {
+            headers: { 'User-Agent': 'CyTune Music Web App/1.0' },
+            next: { revalidate: 86400 },
+          }
+        );
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const bestItem = pickBestCandidate(searchData);
+          if (bestItem?.id) {
+            const detailRes = await fetch(`https://lrclib.net/api/get/${bestItem.id}`, {
+              headers: { 'User-Agent': 'CyTune Music Web App/1.0' },
+            });
+            if (detailRes.ok) {
+              const fullDetail = await detailRes.json();
+              if (fullDetail.syncedLyrics || fullDetail.lyricsfile) {
+                data = fullDetail;
+              }
+            }
+          }
+        }
+      } catch {}
     }
 
     if (!data) return null;
@@ -191,6 +263,19 @@ export async function fetchLyrics(
       lines = parseLrc(data.syncedLyrics);
     }
 
+    // 3. Intelligent auto-offset calculation:
+    // When YouTube stream has an intro/outro delta compared to studio track duration
+    let autoOffset = 0;
+    if (duration && duration > 0 && data.duration && data.duration > 0) {
+      const delta = duration - data.duration;
+      // If YouTube track is 2-10s longer, typically 60% of that delta is intro silence before music kicks in
+      if (delta >= 1.5 && delta <= 12) {
+        autoOffset = Math.round((delta * 0.55) * 10) / 10;
+      } else if (delta <= -1.5 && delta >= -10) {
+        autoOffset = Math.round((delta * 0.45) * 10) / 10;
+      }
+    }
+
     return {
       id: data.id,
       trackName: data.trackName || cleanTitle,
@@ -201,6 +286,7 @@ export async function fetchLyrics(
       plainLyrics: data.plainLyrics,
       syncedLyrics: data.syncedLyrics,
       hasWordSync,
+      autoOffset,
       lines,
     };
   } catch (err) {

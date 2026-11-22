@@ -61,6 +61,9 @@ export default function ExpandedPlayer() {
     showLyrics,
     lyrics,
     loadingLyrics,
+    lyricOffset,
+    setLyricOffset,
+    adjustLyricOffset,
     smartAutoplayEnabled,
     recommendationQueue,
     loadingRecommendations,
@@ -98,6 +101,9 @@ export default function ExpandedPlayer() {
       showLyrics: s.showLyrics,
       lyrics: s.lyrics,
       loadingLyrics: s.loadingLyrics,
+      lyricOffset: s.lyricOffset,
+      setLyricOffset: s.setLyricOffset,
+      adjustLyricOffset: s.adjustLyricOffset,
       smartAutoplayEnabled: s.smartAutoplayEnabled,
       recommendationQueue: s.recommendationQueue,
       loadingRecommendations: s.loadingRecommendations,
@@ -169,11 +175,14 @@ export default function ExpandedPlayer() {
     }
   };
 
+  // Synchronized vocal time with calibrated lead compensation and manual/auto offset alignment
+  const syncedTime = currentTime + 0.35 + (lyricOffset || 0);
+
   // Find active lyric index
   let activeLyricIdx = -1;
   if (lyrics?.lines && lyrics.lines.length > 0) {
     for (let i = 0; i < lyrics.lines.length; i++) {
-      if (currentTime >= lyrics.lines[i].time) {
+      if (syncedTime >= lyrics.lines[i].time) {
         activeLyricIdx = i;
       } else {
         break;
@@ -427,35 +436,71 @@ export default function ExpandedPlayer() {
                     <p className="text-xs">Loading lyrics from LRCLIB...</p>
                   </div>
                 ) : lyrics?.lines && lyrics.lines.length > 0 ? (
-                  lyrics.lines.map((line: { time: number; text: string; words?: any[]; endTime?: number }, idx: number) => {
-                    const isActive = idx === activeLyricIdx;
-                    const isPast = idx < activeLyricIdx;
-                    const nextLine = lyrics.lines[idx + 1];
-                    return (
-                      <div
-                        key={idx}
-                        ref={isActive ? activeLyricRef : null}
-                        onClick={() => seekTo(line.time)}
-                        {...clickable(() => seekTo(line.time))}
-                        className={`cursor-pointer transition-all duration-300 rounded-xl p-2 sm:p-2.5 ${
-                          isActive
-                            ? 'bg-white/[0.04] drop-shadow-[0_0_16px_rgba(201,169,77,0.35)]'
-                            : 'hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        <LyricLineRenderer
-                          line={line}
-                          index={idx}
-                          isActive={isActive}
-                          isPast={isPast}
-                          currentTime={currentTime}
-                          nextStartTime={nextLine?.time}
-                          songPace={songPace}
-                          size="md"
-                        />
+                  <>
+                    <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-border-subtle text-[11px] font-mono text-text-secondary">
+                      <span className="text-[10px] uppercase font-sans font-semibold text-accent flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                        LIVE SYNC
+                      </span>
+                      <div className="flex items-center gap-1 bg-surface border border-border-subtle rounded-full px-2 py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => adjustLyricOffset(-0.25)}
+                          aria-label="Shift lyrics 0.25 seconds earlier"
+                          className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white font-medium active:scale-95 transition-all"
+                        >
+                          -0.25s
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLyricOffset(0)}
+                          aria-label="Reset sync offset"
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
+                            Math.abs(lyricOffset) < 0.01 ? 'text-white/40' : 'text-[#101114] bg-accent'
+                          }`}
+                        >
+                          {Math.abs(lyricOffset) < 0.01 ? '0.00s' : `${lyricOffset > 0 ? '+' : ''}${lyricOffset.toFixed(2)}s`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => adjustLyricOffset(+0.25)}
+                          aria-label="Shift lyrics 0.25 seconds later"
+                          className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white font-medium active:scale-95 transition-all"
+                        >
+                          +0.25s
+                        </button>
                       </div>
-                    );
-                  })
+                    </div>
+                    {lyrics.lines.map((line: { time: number; text: string; words?: any[]; endTime?: number }, idx: number) => {
+                      const isActive = idx === activeLyricIdx;
+                      const isPast = idx < activeLyricIdx;
+                      const nextLine = lyrics.lines[idx + 1];
+                      return (
+                        <div
+                          key={idx}
+                          ref={isActive ? activeLyricRef : null}
+                          onClick={() => seekTo(line.time)}
+                          {...clickable(() => seekTo(line.time))}
+                          className={`cursor-pointer transition-all duration-300 rounded-xl p-2 sm:p-2.5 ${
+                            isActive
+                              ? 'bg-white/[0.04] drop-shadow-[0_0_16px_rgba(201,169,77,0.35)]'
+                              : 'hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <LyricLineRenderer
+                            line={line}
+                            index={idx}
+                            isActive={isActive}
+                            isPast={isPast}
+                            currentTime={syncedTime}
+                            nextStartTime={nextLine?.time}
+                            songPace={songPace}
+                            size="md"
+                          />
+                        </div>
+                      );
+                    })}
+                  </>
                 ) : lyrics?.plainLyrics ? (
                   <div className="whitespace-pre-line text-sm text-text-primary leading-relaxed">
                     {lyrics.plainLyrics}
