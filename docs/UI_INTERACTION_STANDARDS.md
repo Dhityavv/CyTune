@@ -6,12 +6,11 @@ This document defines the strict, permanent UI and interaction standards for Orb
 
 ---
 
-### 1. Tooltip & Title Attribute Standards
+### 1. Tooltip, Title Attribute & URL Preview Standards
 
-- **Do NOT add unnecessary tooltips**: Avoid floating tooltips or popup helpers on common, self-explanatory controls (e.g., standard play, pause, volume, navigation buttons).
-- **Do NOT add unnecessary HTML `title` attributes**: Native browser `title` tooltips produce delayed, distracting OS-style yellow/gray boxes that conflict with modern web motion and custom UI overlays.
+- **STRICTLY NO BROWSER URL PREVIEWS**: Never use Next.js `<Link href="...">` or raw `<a href="...">` for internal UI navigation, menus, cards, controls, or buttons. Anchor tags trigger native browser link preview bubbles in the bottom-left corner of the screen. ALWAYS use `AppLink` (`@/components/AppLink`) or programmatic `router.push()` for all internal routes.
+- **Do NOT add unnecessary HTML `title` attributes**: Native browser `title` tooltips produce delayed, distracting OS-style yellow/gray boxes. Always use `aria-label` or visually hidden text (`sr-only`) on icon-only buttons so that screen readers have full accessibility context without generating visual hover clutter.
 - **Collapsed Sidebar Exception**: Tooltips are permitted exclusively in the collapsed desktop sidebar to identify icon-only buttons for users who have not yet memorized the icons. In expanded view, text labels must be used directly in the DOM without tooltips.
-- **Preserve Accessible Labels**: Always use `aria-label` or visually hidden text (`sr-only`) on icon-only buttons so that screen readers have full accessibility context without generating visual hover clutter.
 
 ---
 

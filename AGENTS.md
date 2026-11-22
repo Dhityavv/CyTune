@@ -12,11 +12,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 When developing or modifying any part of OrbitTune (`Website Version/`), you MUST strictly adhere to the following permanent rules documented in `docs/UI_INTERACTION_STANDARDS.md`:
 
-1. **Tooltip & Title Attributes**:
-   - Do NOT add unnecessary tooltips or HTML `title` attributes to buttons and controls.
-   - Do NOT introduce route preview overlays or expose debug path labels in the UI.
-   - Keep interactive controls visually clean on hover while preserving accessibility (`aria-label`, `sr-only`).
-   - Tooltips are allowed ONLY on the collapsed desktop sidebar for icon-only navigation items.
+1. **Tooltip, Title Attributes & URL Preview Standards**:
+   - **STRICTLY NO URL PREVIEWS**: Never use Next.js `<Link href="...">` or raw `<a href="...">` for internal app navigation, buttons, cards, menus, or GUI elements. Browsers display an unwanted URL preview bar at the bottom-left corner on hover for anchor tags. ALWAYS use `AppLink` (`@/components/AppLink`) or `router.push()` instead.
+   - **STRICTLY NO HTML `title` ATTRIBUTES**: Do NOT add HTML `title` attributes to buttons, icons, or controls. Use `aria-label` or `sr-only` for accessibility.
+   - Keep interactive controls visually 100% clean on hover. Tooltips are allowed ONLY on the collapsed desktop sidebar for icon-only navigation items.
 
 2. **Nocturne Visual Identity**:
    - Deep obsidian surfaces (`#0F1012`), Champagne Gold accent (`#C9A94D`), and Volt Lime (`#BBF41D` for gamification).
