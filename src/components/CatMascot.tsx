@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 const MEOWS = ['Meow!', 'Purrr...', 'Mrrrp!', 'Nyaa~', 'Meow meow!'];
@@ -29,8 +30,13 @@ function playMeow() {
 }
 
 export default function CatMascot() {
+  const pathname = usePathname();
   const [meow, setMeow] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (pathname === '/listening') {
+    return null;
+  }
 
   const handleClick = () => {
     const msg = MEOWS[Math.floor(Math.random() * MEOWS.length)];

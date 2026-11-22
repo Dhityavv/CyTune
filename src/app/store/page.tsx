@@ -481,17 +481,17 @@ export default function CosmeticStorePage() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-bold text-text-primary">
-                          {user?.display_name || 'Orbit Listener'}
+                          {user?.display_name || 'Cy Listener'}
                         </span>
                         {user?.isPremium && (
                           <Crown className="w-3.5 h-3.5 text-accent shrink-0" />
                         )}
                       </div>
                       <span className="text-xs text-text-muted font-mono block">
-                        @{user?.username || 'orbit_listener'}
+                        @{user?.username || 'cy_listener'}
                       </span>
                       <span className="text-[11px] text-text-secondary line-clamp-1">
-                        {user?.bio || 'Music lover streaming on OrbitTune.'}
+                        {user?.bio || 'Music lover streaming on CyTune.'}
                       </span>
                     </div>
                   </div>

@@ -7,6 +7,8 @@ import { db } from '@/lib/db';
 import { Track } from '@/types/music';
 import CoverImage from '@/components/CoverImage';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 export default function AddToPlaylistDialog() {
   const track = usePlaylistDialogStore((s) => s.track);
@@ -18,7 +20,15 @@ export default function AddToPlaylistDialog() {
 }
 
 function DialogBody({ track, close }: { track: Track; close: () => void }) {
-  const playlists = useLiveQuery(() => db.playlists.orderBy('name').toArray(), [], []);
+  const user = useAuthStore((s) => s.user);
+
+  const rawPlaylists = useLiveQuery(() => db.playlists.orderBy('name').toArray(), [], []);
+  const playlists = useMemo(() => {
+    if (!user) {
+      return (rawPlaylists ?? []).filter((p) => !p.userId || p.userId === 'guest');
+    }
+    return (rawPlaylists ?? []).filter((p) => !p.userId || p.userId === user.id || p.userId === 'guest');
+  }, [rawPlaylists, user?.id]);
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState('');
@@ -84,6 +94,7 @@ function DialogBody({ track, close }: { track: Track; close: () => void }) {
         tracks: [track],
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        userId: user?.id || 'guest',
       });
       setError('');
       setStatus(`Created “${name}” with this song.`);

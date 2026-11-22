@@ -21,13 +21,15 @@ import {
   Award,
   AlertCircle,
   RefreshCw,
-  SkipForward
+  SkipForward,
+  Headphones,
 } from 'lucide-react';
 import CoverImage from '@/components/CoverImage';
 import { GUESS_TRACKS_CATALOG, GuessTrack } from '@/lib/guessTracks';
 import { audioSession, GamePreviewState } from '@/lib/audioSession';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 interface RoundReview {
   round: number;
@@ -50,7 +52,7 @@ export default function GuessTheSongPage() {
   const [bestStreak, setBestStreak] = useState(0);
   const [reviews, setReviews] = useState<RoundReview[]>([]);
   const [gameFinished, setGameFinished] = useState(false);
-  const { addCoins } = useAuthStore();
+  const { user, addCoins } = useAuthStore();
 
   // Audio preview state
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -132,10 +134,10 @@ export default function GuessTheSongPage() {
   const startNewGame = () => {
     stopAudio();
 
-    // Read recently seen IDs from localStorage
+    // Read recently seen IDs from localStorage per user
     let seenIds: string[] = [];
     try {
-      const stored = localStorage.getItem('orbittune-guess-seen');
+      const stored = localStorage.getItem(`cytune-guess-seen-${user?.id || 'guest'}`);
       if (stored) seenIds = JSON.parse(stored);
     } catch {
       seenIds = [];
@@ -156,7 +158,7 @@ export default function GuessTheSongPage() {
     // Save newly picked IDs to seen history
     try {
       const newSeen = [...seenIds, ...picked10.map((t) => t.id)].slice(-100);
-      localStorage.setItem('orbittune-guess-seen', JSON.stringify(newSeen));
+      localStorage.setItem(`cytune-guess-seen-${user?.id || 'guest'}`, JSON.stringify(newSeen));
     } catch {
       // ignore
     }
@@ -233,9 +235,15 @@ export default function GuessTheSongPage() {
         addCoins(score, 'Guess the Song Reward');
       }
       try {
-        const currentBest = parseInt(localStorage.getItem('orbittune-guess-song-best') || '0', 10);
+        const userKey = user?.id || 'guest';
+        const currentBest = parseInt(
+          localStorage.getItem(`cytune-guess-song-best-${userKey}`) ||
+          localStorage.getItem(`orbittune-guess-song-best-${userKey}`) ||
+          '0',
+          10
+        );
         if (score > currentBest) {
-          localStorage.setItem('orbittune-guess-song-best', String(score));
+          localStorage.setItem(`cytune-guess-song-best-${userKey}`, String(score));
         }
       } catch {
         // ignore
@@ -265,6 +273,32 @@ export default function GuessTheSongPage() {
     if (finalScore >= 500) return { title: 'Music Buff', badge: 'bg-teal-500/20 text-teal-300' };
     return { title: 'Curious Listener', badge: 'bg-surface border border-border-subtle text-text-primary' };
   };
+
+  if (!user) {
+    return (
+      <div className="py-20 max-w-md mx-auto text-center space-y-6 select-none">
+        <div className="w-16 h-16 rounded-3xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center mx-auto shadow-xl shadow-[#C9A94D]/20">
+          <Headphones className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono">
+            Akses Terbatas: Mode Tamu
+          </span>
+          <h1 className="text-2xl font-bold text-text-primary">Guess the Song</h1>
+          <p className="text-xs text-text-secondary leading-relaxed max-w-sm mx-auto">
+            Mode Tamu hanya untuk mendengarkan lagu. Silakan masuk untuk menebak cuplikan lagu, meraih skor tertinggi, dan mendapatkan Orbit Coins.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => useAuthModalStore.getState().open('Masuk untuk bermain Guess the Song dan kumpulkan Orbit Coins!')}
+          className="px-6 py-3 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-lg shadow-[#C9A94D]/25 transition-all cursor-pointer"
+        >
+          Masuk Akun Sekarang
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-28 max-w-4xl mx-auto select-none">

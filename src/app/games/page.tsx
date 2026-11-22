@@ -1,23 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { Gamepad2, Headphones, HelpCircle, Trophy, Sparkles, ArrowRight, Music, Flame, Award } from 'lucide-react';
+import { Gamepad2, Headphones, HelpCircle, Trophy, Sparkles, ArrowRight, Music, Flame, Award, Lock, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 export default function MiniGamesHubPage() {
   const [guessBestScore, setGuessBestScore] = useState<number>(0);
   const [triviaBestScore, setTriviaBestScore] = useState<number>(0);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     try {
-      const savedGuess = localStorage.getItem('orbittune-guess-song-best');
+      if (!user) {
+        setGuessBestScore(0);
+        setTriviaBestScore(0);
+        return;
+      }
+      const savedGuess = localStorage.getItem(`cytune-guess-song-best-${user.id}`) || localStorage.getItem(`orbittune-guess-song-best-${user.id}`);
       if (savedGuess) setGuessBestScore(parseInt(savedGuess, 10));
-      const savedTrivia = localStorage.getItem('orbittune-trivia-best');
+      const savedTrivia = localStorage.getItem(`cytune-trivia-best-${user.id}`) || localStorage.getItem(`orbittune-trivia-best-${user.id}`);
       if (savedTrivia) setTriviaBestScore(parseInt(savedTrivia, 10));
     } catch {
       // ignore
     }
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-10 pb-24 max-w-5xl mx-auto select-none">
@@ -52,6 +60,30 @@ export default function MiniGamesHubPage() {
           </p>
         </div>
       </div>
+
+      {/* Guest Mode Restriction Banner */}
+      {!user && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-accent/10 border border-accent/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 text-accent flex items-center justify-center shrink-0">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">Mode Tamu: Mini Games Terkunci</h3>
+              <p className="text-xs text-text-secondary mt-0.5 max-w-lg">
+                Mode tamu dikhususkan untuk memutar musik. Masuk dengan akun Google, GitHub, Discord, atau Email Anda untuk bermain, meraih skor, dan menukarkan koin dengan item kosmetik!
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => useAuthModalStore.getState().open('Masuk untuk membuka mini games dan menyimpan rekor skor Anda!')}
+            className="px-6 py-2.5 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-md shadow-[#C9A94D]/25 transition-all shrink-0 cursor-pointer"
+          >
+            Masuk Akun Sekarang
+          </button>
+        </div>
+      )}
 
       {/* 2 Interactive Game Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -96,20 +128,31 @@ export default function MiniGamesHubPage() {
               <div className="p-3 rounded-2xl bg-sidebar/80 border border-border-subtle">
                 <span className="text-[10px] text-text-muted block font-medium">Personal Best</span>
                 <span className="text-xs font-bold text-accent font-mono mt-0.5 block">
-                  {guessBestScore > 0 ? `${guessBestScore} pts` : 'No score yet'}
+                  {user && guessBestScore > 0 ? `${guessBestScore} pts` : user ? 'No score yet' : 'Login to view'}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="pt-6 relative z-10">
-            <Link
-              href="/games/guess-the-song"
-              className="w-full py-3.5 px-5 rounded-2xl bg-accent hover:bg-accent-hover text-[#101114] font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#C9A94D]/25 active:scale-95 transition-all group/btn"
-            >
-              <span>Play Guess the Song</span>
-              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-            </Link>
+            {user ? (
+              <Link
+                href="/games/guess-the-song"
+                className="w-full py-3.5 px-5 rounded-2xl bg-accent hover:bg-accent-hover text-[#101114] font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#C9A94D]/25 active:scale-95 transition-all group/btn"
+              >
+                <span>Play Guess the Song</span>
+                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => useAuthModalStore.getState().open('Masuk untuk bermain Guess the Song!')}
+                className="w-full py-3.5 px-5 rounded-2xl bg-accent/30 hover:bg-accent text-[#101114] font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Masuk untuk Bermain</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -154,20 +197,31 @@ export default function MiniGamesHubPage() {
               <div className="p-3 rounded-2xl bg-sidebar/80 border border-border-subtle">
                 <span className="text-[10px] text-text-muted block font-medium">Personal Best</span>
                 <span className="text-xs font-bold text-[#BBF41D] font-mono mt-0.5 block">
-                  {triviaBestScore > 0 ? `${triviaBestScore} pts` : 'No score yet'}
+                  {user && triviaBestScore > 0 ? `${triviaBestScore} pts` : user ? 'No score yet' : 'Login to view'}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="pt-6 relative z-10">
-            <Link
-              href="/games/trivia"
-              className="w-full py-3.5 px-5 rounded-2xl bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle hover:border-[#BBF41D]/50 font-bold text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all group/btn"
-            >
-              <span>Play Music Trivia</span>
-              <ArrowRight className="w-4 h-4 text-[#BBF41D] group-hover/btn:translate-x-1 transition-transform" />
-            </Link>
+            {user ? (
+              <Link
+                href="/games/trivia"
+                className="w-full py-3.5 px-5 rounded-2xl bg-surface hover:bg-surface-hover text-text-primary border border-border-subtle hover:border-[#BBF41D]/50 font-bold text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all group/btn"
+              >
+                <span>Play Music Trivia</span>
+                <ArrowRight className="w-4 h-4 text-[#BBF41D] group-hover/btn:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => useAuthModalStore.getState().open('Masuk untuk bermain Music Trivia!')}
+                className="w-full py-3.5 px-5 rounded-2xl bg-[#BBF41D]/25 hover:bg-[#BBF41D] text-[#101114] font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Masuk untuk Bermain</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Moon, Sun, Sparkles, User, LogOut, Palette, Settings, Gamepad2, ExternalLink, Info, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import AuthModal from '@/components/AuthModal';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 export default function TopNav() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -23,7 +22,7 @@ export default function TopNav() {
   }, [initAuth]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('orbittune-theme');
+    const saved = localStorage.getItem('cytune-theme') || localStorage.getItem('orbittune-theme');
     if (saved === 'light' || saved === 'dark') {
       setTheme(saved);
       document.documentElement.classList.toggle('dark', saved === 'dark');
@@ -47,7 +46,7 @@ export default function TopNav() {
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    localStorage.setItem('orbittune-theme', next);
+    localStorage.setItem('cytune-theme', next);
     document.documentElement.classList.toggle('dark', next === 'dark');
     document.documentElement.classList.toggle('light', next === 'light');
   };
@@ -64,9 +63,9 @@ export default function TopNav() {
       <div className="flex items-center gap-3 shrink-0">
         <Link href="/" className="flex items-center gap-2 group md:hidden">
           <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-[#101114] font-bold text-xs shadow-md shadow-[#C9A94D]/25">
-            O
+            C
           </div>
-          <span className="font-bold text-sm tracking-tight text-text-primary">OrbitTune</span>
+          <span className="font-bold text-sm tracking-tight text-text-primary">CyTune</span>
         </Link>
       </div>
 
@@ -222,16 +221,14 @@ export default function TopNav() {
         ) : (
           <button
             type="button"
-            onClick={() => setIsAuthOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95"
+            onClick={() => useAuthModalStore.getState().open()}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent hover:bg-accent-hover text-[#101114] text-xs font-bold shadow-md shadow-[#C9A94D]/20 transition-all active:scale-95 cursor-pointer"
           >
             <User className="w-3.5 h-3.5" />
             <span>Sign In</span>
           </button>
         )}
       </div>
-
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
   );
 }

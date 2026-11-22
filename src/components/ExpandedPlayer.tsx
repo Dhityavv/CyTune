@@ -32,6 +32,8 @@ import { useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import { clickable } from '@/lib/a11y';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -132,24 +134,33 @@ export default function ExpandedPlayer() {
   }, [isExpanded, toggleExpanded]);
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
+  const user = useAuthStore((s) => s.user);
+
   const isLiked = useLiveQuery(
     async () => {
       if (!currentTrack) return false;
       const found = await db.likedTracks.get(currentTrack.id);
-      return !!found;
+      if (!found) return false;
+      if (!user) {
+        return !found.userId || found.userId === 'guest';
+      }
+      return !found.userId || found.userId === user.id || found.userId === 'guest';
     },
-    [currentTrack?.id],
+    [currentTrack?.id, user?.id],
     false
   );
 
   const toggleFavorite = async () => {
     if (!currentTrack) return;
+    const currentUser = useAuthStore.getState().user;
+    const activeUserId = currentUser?.id || 'guest';
     if (isLiked) {
       await db.likedTracks.delete(currentTrack.id);
     } else {
       await db.likedTracks.put({
         ...currentTrack,
         likedAt: Date.now(),
+        userId: activeUserId,
       });
       recordFeedback('liked', currentTrack);
     }

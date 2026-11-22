@@ -179,7 +179,7 @@ export default function Sidebar() {
               {isExpanded && (
                 <div className="min-w-0 transition-opacity duration-150">
                   <span className="text-sm font-bold tracking-tight text-text-primary block leading-none">
-                    OrbitTune
+                    CyTune
                   </span>
                   <span className="text-[9px] text-accent tracking-[0.16em] font-bold uppercase mt-1 block">
                     Hi-Fi Stream

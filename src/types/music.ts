@@ -12,9 +12,17 @@ export interface Track {
   queueEntryId?: string;
 }
 
+export interface LyricsWord {
+  text: string;
+  time: number; // in seconds
+  endTime?: number; // in seconds
+}
+
 export interface LyricsLine {
   time: number; // in seconds
+  endTime?: number; // in seconds
   text: string;
+  words?: LyricsWord[];
 }
 
 export interface SyncedLyrics {
@@ -26,6 +34,7 @@ export interface SyncedLyrics {
   instrumental?: boolean;
   plainLyrics?: string;
   syncedLyrics?: string;
+  hasWordSync?: boolean;
   lines: LyricsLine[];
 }
 

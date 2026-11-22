@@ -47,10 +47,10 @@ export default function ProfilePage() {
         const lists = await db.playlists.toArray();
         setPlaylists(lists);
 
-        const savedGuess = localStorage.getItem('orbittune-guess-song-best');
+        const savedGuess = localStorage.getItem('cytune-guess-song-best') || localStorage.getItem('orbittune-guess-song-best');
         if (savedGuess) setGuessBest(parseInt(savedGuess, 10));
 
-        const savedTrivia = localStorage.getItem('orbittune-trivia-best');
+        const savedTrivia = localStorage.getItem('cytune-trivia-best') || localStorage.getItem('orbittune-trivia-best');
         if (savedTrivia) setTriviaBest(parseInt(savedTrivia, 10));
       } catch {
         // ignore

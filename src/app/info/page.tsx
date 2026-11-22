@@ -47,7 +47,7 @@ export default function InfoPage() {
         </div>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
-            OrbitTune — Hi-Fi Stream
+            CyTune — Hi-Fi Stream
           </h1>
           <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
             An editorial, high-resolution music listening and discovery web experience.
@@ -55,19 +55,19 @@ export default function InfoPage() {
         </div>
       </div>
 
-      {/* About OrbitTune */}
+      {/* About CyTune */}
       <section className="rounded-3xl bg-surface/70 border border-border-subtle p-6 space-y-4 backdrop-blur-md shadow-lg">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
-            <span>About OrbitTune</span>
+            <span>About CyTune</span>
           </h2>
           <span className="px-2.5 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-mono font-bold">
             v3.0.0 Stable
           </span>
         </div>
         <p className="text-xs sm:text-[13px] text-text-secondary leading-relaxed">
-          OrbitTune is an ad-free, high-fidelity music streaming application designed around deep
+          CyTune is an ad-free, high-fidelity music streaming application designed around deep
           immersion and fluid typography. It features real-time synchronized karaoke lyrics, 60fps
           hardware-accelerated audio progress timelines, seamless multi-room listening, local offline
           caching with Dexie.js (IndexedDB), and interactive music minigames.
@@ -111,10 +111,10 @@ export default function InfoPage() {
       <section className="rounded-3xl bg-surface/70 border border-border-subtle p-6 space-y-4 backdrop-blur-md shadow-lg">
         <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
           <Coffee className="w-4 h-4 text-accent" />
-          <span>Support OrbitTune</span>
+          <span>Support CyTune</span>
         </h2>
         <p className="text-xs sm:text-[13px] text-text-secondary leading-relaxed">
-          OrbitTune is maintained as an open, free music streaming project. If you enjoy the sound
+          CyTune is maintained as an open, free music streaming project. If you enjoy the sound
           quality and experience, consider supporting ongoing server hosting and domain costs:
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
@@ -177,7 +177,7 @@ export default function InfoPage() {
           <Code2 className="w-3.5 h-3.5 text-accent" />
           <span>Built with Next.js 16 (Turbopack), Tailwind CSS v4, GSAP & Zustand</span>
         </p>
-        <p>© 2026 OrbitTune. All music rights belong to their respective artists and copyright owners.</p>
+        <p>© 2026 CyTune. All music rights belong to their respective artists and copyright owners.</p>
       </div>
     </div>
   );

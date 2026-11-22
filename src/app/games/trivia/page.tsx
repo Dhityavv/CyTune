@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { TRIVIA_QUESTION_BANK, TriviaQuestion } from '@/lib/triviaBank';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -84,7 +85,7 @@ export default function MusicTriviaPage() {
   const [gameState, setGameState] = useState<'prep' | 'playing' | 'completed'>('prep');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('Medium');
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>('Medium');
-  const { addCoins } = useAuthStore();
+  const { user, addCoins } = useAuthStore();
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -99,15 +100,18 @@ export default function MusicTriviaPage() {
   // Leave confirmation modal state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Load personal best
+  // Load personal best per user
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('orbittune-trivia-best');
+      const userKey = user?.id || 'guest';
+      const saved =
+        localStorage.getItem(`cytune-trivia-best-${userKey}`) ||
+        localStorage.getItem(`orbittune-trivia-best-${userKey}`);
       if (saved) setPersonalBest(parseInt(saved, 10));
     } catch {
       // ignore
     }
-  }, []);
+  }, [user]);
 
   // Shuffle options for a question while mapping the correct index
   const prepareQuestion = (raw: TriviaQuestion): ShuffledQuestion => {
@@ -127,10 +131,11 @@ export default function MusicTriviaPage() {
   const handleStartSession = () => {
     setLockedDifficulty(selectedDifficulty);
 
-    // Retrieve seen questions for this difficulty
+    // Retrieve seen questions for this difficulty scoped by user
     let seenIds: string[] = [];
+    const userKey = user?.id || 'guest';
     try {
-      const stored = localStorage.getItem(`orbittune-trivia-seen-${selectedDifficulty}`);
+      const stored = localStorage.getItem(`cytune-trivia-seen-${userKey}-${selectedDifficulty}`);
       if (stored) seenIds = JSON.parse(stored);
     } catch {
       seenIds = [];
@@ -156,7 +161,7 @@ export default function MusicTriviaPage() {
     try {
       const updatedSeen = [...seenIds, ...picked10.map((q) => q.id)].slice(-80);
       localStorage.setItem(
-        `orbittune-trivia-seen-${selectedDifficulty}`,
+        `cytune-trivia-seen-${userKey}-${selectedDifficulty}`,
         JSON.stringify(updatedSeen)
       );
     } catch {
@@ -222,7 +227,8 @@ export default function MusicTriviaPage() {
       if (score > personalBest) {
         setPersonalBest(score);
         try {
-          localStorage.setItem('orbittune-trivia-best', String(score));
+          const userKey = user?.id || 'guest';
+          localStorage.setItem(`cytune-trivia-best-${userKey}`, String(score));
         } catch {
           // ignore
         }
@@ -253,6 +259,32 @@ export default function MusicTriviaPage() {
     if (finalScore >= 300) return { title: 'Hit-Maker Prodigy', color: 'text-amber-400' };
     return { title: 'Novice Listener', color: 'text-text-secondary' };
   };
+
+  if (!user) {
+    return (
+      <div className="py-20 max-w-md mx-auto text-center space-y-6 select-none">
+        <div className="w-16 h-16 rounded-3xl bg-[#BBF41D]/15 border border-[#BBF41D]/30 text-[#BBF41D] flex items-center justify-center mx-auto shadow-xl shadow-[#BBF41D]/20">
+          <Trophy className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#BBF41D] font-mono">
+            Akses Terbatas: Mode Tamu
+          </span>
+          <h1 className="text-2xl font-bold text-text-primary">Music Trivia</h1>
+          <p className="text-xs text-text-secondary leading-relaxed max-w-sm mx-auto">
+            Mode Tamu hanya untuk mendengarkan lagu. Silakan masuk untuk menguji wawasan musik Anda, meraih rekor skor tertinggi, dan menghasilkan Orbit Coins.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => useAuthModalStore.getState().open('Masuk untuk bermain Music Trivia dan kumpulkan Orbit Coins!')}
+          className="px-6 py-3 rounded-full bg-[#BBF41D] text-[#101114] hover:bg-[#a6db18] font-bold text-xs shadow-lg shadow-[#BBF41D]/25 transition-all cursor-pointer"
+        >
+          Masuk Akun Sekarang
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-28 max-w-4xl mx-auto select-none">

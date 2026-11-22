@@ -211,6 +211,7 @@ export default function AudioController() {
         loadedTrackIdRef.current = currentTrack.id;
         setPlaybackError(null);
         setIsBuffering(true);
+        updateTime(0, currentTrack.duration || 0);
 
         if (isPlayerReadyRef.current && playerRef.current) {
           try {
@@ -303,13 +304,21 @@ export default function AudioController() {
     window.__orbitPlayerGetTime = () => {
       if (!isPlayerReadyRef.current || !playerRef.current) return null;
       try {
+        const state = typeof playerRef.current.getPlayerState === 'function' ? playerRef.current.getPlayerState() : -1;
+        if (state !== 1) {
+          const store = usePlayerStore.getState();
+          return {
+            currentTime: store.currentTime,
+            duration: store.duration || 0,
+            isPlaying: false,
+          };
+        }
         const cur = playerRef.current.getCurrentTime() || 0;
         const dur = playerRef.current.getDuration() || 0;
-        const state = typeof playerRef.current.getPlayerState === 'function' ? playerRef.current.getPlayerState() : -1;
         return {
           currentTime: cur,
           duration: dur,
-          isPlaying: state === 1,
+          isPlaying: true,
         };
       } catch {
         return null;
@@ -331,6 +340,8 @@ export default function AudioController() {
     const interval = setInterval(() => {
       if (!isPlayerReadyRef.current || !playerRef.current) return;
       try {
+        const state = typeof playerRef.current.getPlayerState === 'function' ? playerRef.current.getPlayerState() : -1;
+        if (state !== 1) return;
         const cur = playerRef.current.getCurrentTime() || 0;
         const dur = playerRef.current.getDuration() || 0;
         if (dur > 0) {
@@ -347,10 +358,35 @@ export default function AudioController() {
           }
         }
       } catch {}
-    }, 250);
+    }, 50);
 
     return () => clearInterval(interval);
   }, [isPlaying, updateTime]);
+
+  // 6. Global Spacebar Play/Pause Shortcut Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing inside any form field, input, or contenteditable
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox')
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        usePlayerStore.getState().togglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // 6. Hook into MediaSession API for OS controls
   useEffect(() => {
@@ -359,7 +395,7 @@ export default function AudioController() {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.title,
       artist: currentTrack.artist,
-      album: currentTrack.album || 'OrbitTune',
+      album: currentTrack.album || 'CyTune',
       artwork: currentTrack.thumbnail
         ? [
             {

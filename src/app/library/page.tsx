@@ -11,6 +11,8 @@ import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
 import CoverImage from '@/components/CoverImage';
 import { Track } from '@/types/music';
 import { clickable } from '@/lib/a11y';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 function formatRelativeTime(timestamp: number): string {
   const diffMs = Date.now() - timestamp;
@@ -47,25 +49,36 @@ function LibraryContent() {
     if (playlistParam) router.replace(`/playlist?id=${playlistParam}`);
   }, [playlistParam, router]);
 
+  const user = useAuthStore((s) => s.user);
   const playTrack = usePlayerStore((s) => s.playTrack);
 
   const favorites = useLiveQuery(async () => {
-    return await db.likedTracks.orderBy('likedAt').reverse().toArray();
-  }, []);
+    const all = await db.likedTracks.orderBy('likedAt').reverse().toArray();
+    if (!user) {
+      return all.filter((t) => !t.userId || t.userId === 'guest');
+    }
+    return all.filter((t) => !t.userId || t.userId === user.id || t.userId === 'guest');
+  }, [user?.id]);
 
   const history = useLiveQuery(async () => {
     const raw = await db.history.orderBy('playedAt').reverse().toArray();
+    const activeUserId = user?.id || 'guest';
+    const filtered = raw.filter((h) => !h.userId || h.userId === activeUserId);
     const seen = new Set<string>();
-    return raw.filter((h) => {
+    return filtered.filter((h) => {
       if (seen.has(h.trackId)) return false;
       seen.add(h.trackId);
       return true;
     }).slice(0, 50);
-  }, []);
+  }, [user?.id]);
 
   const playlists = useLiveQuery(async () => {
-    return await db.playlists.orderBy('updatedAt').reverse().toArray();
-  }, []);
+    const all = await db.playlists.orderBy('updatedAt').reverse().toArray();
+    if (!user) {
+      return all.filter((p) => !p.userId || p.userId === 'guest');
+    }
+    return all.filter((p) => !p.userId || p.userId === user.id || p.userId === 'guest');
+  }, [user?.id]);
 
   const handlePlayAll = (tracks: Track[], shuffle: boolean = false) => {
     if (!tracks || tracks.length === 0) return;
@@ -99,6 +112,7 @@ function LibraryContent() {
       tracks: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      userId: user?.id || 'guest',
     });
 
     setNewPlaylistName('');
@@ -143,7 +157,7 @@ function LibraryContent() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `orbittune-playlists-${Date.now()}.csv`;
+    a.download = `cytune-playlists-${Date.now()}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

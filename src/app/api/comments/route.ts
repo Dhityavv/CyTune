@@ -128,3 +128,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message || 'Failed to post comment' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const commentId = searchParams.get('id');
+    const songId = searchParams.get('songId');
+
+    if (!commentId || !songId) {
+      return NextResponse.json({ error: 'Missing commentId or songId' }, { status: 400 });
+    }
+
+    const supabase = await createSupabaseServerClient();
+    if (supabase) {
+      const { error } = await supabase.from('comments').delete().eq('id', commentId);
+      if (!error) return NextResponse.json({ success: true });
+    }
+
+    // Local fallback deletion
+    if (localCommentsStore[songId]) {
+      localCommentsStore[songId] = localCommentsStore[songId].filter((c) => c.id !== commentId);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Failed to delete comment' }, { status: 500 });
+  }
+}

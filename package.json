@@ -1,5 +1,5 @@
 {
-  "name": "orbittune",
+  "name": "cytune",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.10.7",
+    "@clerk/themes": "^2.4.57",
     "@distube/ytdl-core": "^5.2.1",
     "@gsap/react": "^2.1.2",
     "@supabase/ssr": "^0.12.7",
@@ -21,6 +23,7 @@
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "yaml": "^2.9.1",
     "youtubei.js": "^18.3.0",
     "zustand": "^5.1.0"
   },

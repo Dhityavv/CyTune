@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       try {
         const lrcRes = await fetch(
           `https://lrclib.net/api/search?q=${encodeURIComponent(query.trim())}`,
-          { headers: { 'User-Agent': 'OrbitTune/2.0 (web@orbittune.stream)' } }
+          { headers: { 'User-Agent': 'CyTune/2.0 (web@cytune.stream)' } }
         );
 
         if (lrcRes.ok) {

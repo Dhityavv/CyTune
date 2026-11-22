@@ -11,6 +11,10 @@ export default function MobileNav() {
   const tab = searchParams.get('tab');
   const currentTrack = usePlayerStore((s) => s.currentTrack);
 
+  if (pathname === '/listening') {
+    return null;
+  }
+
   const navItems = [
     { label: 'Explore', href: '/', icon: Compass },
     { label: 'Search', href: '/search', icon: Search },

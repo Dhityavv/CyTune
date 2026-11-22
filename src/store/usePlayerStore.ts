@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Track, SyncedLyrics, RepeatMode, RecommendedTrack } from '@/types/music';
 import { db } from '@/lib/db';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface PlayerStore {
   // State
@@ -148,11 +149,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     try {
       // Hindari duplikat: hapus entri lama untuk track yang sama, lalu tambah baru (pindah ke depan)
-      await db.history.where('trackId').equals(targetTrack.id).delete();
+      const activeUserId = useAuthStore.getState().user?.id || 'guest';
+      await db.history.where('trackId').equals(targetTrack.id).and(h => !h.userId || h.userId === activeUserId).delete();
       await db.history.add({
         trackId: targetTrack.id,
         track: targetTrack,
         playedAt: Date.now(),
+        userId: activeUserId,
       });
     } catch {
       // Ignored
@@ -197,11 +200,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     });
 
     try {
-      await db.history.where('trackId').equals(track.id).delete();
+      const activeUserId = useAuthStore.getState().user?.id || 'guest';
+      await db.history.where('trackId').equals(track.id).and(h => !h.userId || h.userId === activeUserId).delete();
       await db.history.add({
         trackId: track.id,
         track,
         playedAt: Date.now(),
+        userId: activeUserId,
       });
     } catch {
       // Ignored
@@ -536,11 +541,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     });
 
     try {
-      await db.history.where('trackId').equals(recTrack.id).delete();
+      const activeUserId = useAuthStore.getState().user?.id || 'guest';
+      await db.history.where('trackId').equals(recTrack.id).and(h => !h.userId || h.userId === activeUserId).delete();
       await db.history.add({
         trackId: recTrack.id,
         track: recTrack,
         playedAt: Date.now(),
+        userId: activeUserId,
       });
     } catch {
       // Ignored

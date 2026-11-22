@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BarChart2, Disc, Play, Clock, Flame, Music, Heart, Headphones, Sparkles } from 'lucide-react';
+import { BarChart2, Disc, Play, Clock, Flame, Music, Heart, Headphones, Sparkles, Lock } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 import CoverImage from '@/components/CoverImage';
 
 function formatDuration(seconds: number): string {
@@ -16,17 +18,24 @@ function formatDuration(seconds: number): string {
 }
 
 export default function ListeningInsightsPage() {
+  const user = useAuthStore((s) => s.user);
+
   const history = useLiveQuery(async () => {
-    return await db.history.orderBy('playedAt').reverse().toArray();
-  }, []);
+    if (!user) return [];
+    return await db.history.where('userId').equals(user.id).reverse().sortBy('playedAt');
+  }, [user?.id]);
 
   const likedTracks = useLiveQuery(async () => {
-    return await db.likedTracks.toArray();
-  }, []);
+    if (!user) return [];
+    const all = await db.likedTracks.toArray();
+    return all.filter((t) => !t.userId || t.userId === user.id);
+  }, [user?.id]);
 
   const playlists = useLiveQuery(async () => {
-    return await db.playlists.toArray();
-  }, []);
+    if (!user) return [];
+    const all = await db.playlists.toArray();
+    return all.filter((p) => !p.userId || p.userId === user.id);
+  }, [user?.id]);
 
   const playTrack = usePlayerStore((s) => s.playTrack);
 
@@ -96,6 +105,29 @@ export default function ListeningInsightsPage() {
           </p>
         </div>
       </div>
+
+      {!user && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-accent/10 border border-accent/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 text-accent flex items-center justify-center shrink-0">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">Mode Tamu: Analitik Akun Belum Tersimpan</h3>
+              <p className="text-xs text-text-secondary mt-0.5 max-w-lg">
+                Masuk dengan akun Google, GitHub, Discord, atau Email Anda untuk mencatat total waktu mendengarkan musik, artis teratas, dan kebiasaan mendengar Anda.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => useAuthModalStore.getState().open('Masuk untuk mulai mencatat riwayat dan analitik musik Anda!')}
+            className="px-6 py-2.5 rounded-full bg-accent text-[#101114] hover:bg-accent-hover font-bold text-xs shadow-md shadow-[#C9A94D]/25 transition-all shrink-0 cursor-pointer"
+          >
+            Masuk Akun Sekarang
+          </button>
+        </div>
+      )}
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">

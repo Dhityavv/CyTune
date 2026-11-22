@@ -7,7 +7,7 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
-    const saved = localStorage.getItem('orbittune-theme');
+    const saved = localStorage.getItem('cytune-theme') || localStorage.getItem('orbittune-theme');
     if (saved === 'light' || saved === 'dark') {
       setTheme(saved);
       document.documentElement.classList.toggle('dark', saved === 'dark');
@@ -18,7 +18,7 @@ export default function ThemeToggle() {
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    localStorage.setItem('orbittune-theme', next);
+    localStorage.setItem('cytune-theme', next);
     document.documentElement.classList.toggle('dark', next === 'dark');
     document.documentElement.classList.toggle('light', next === 'light');
   };

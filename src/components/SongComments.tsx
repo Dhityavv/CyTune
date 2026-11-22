@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Heart, CornerDownRight, Trash2, Flag, Send, User, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import AuthModal from '@/components/AuthModal';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 interface CommentItem {
   id: string;
@@ -41,8 +41,6 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
   const [submitting, setSubmitting] = useState(false);
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authActionPrompt, setAuthActionPrompt] = useState('sign in to comment');
 
   const { user } = useAuthStore();
 
@@ -72,8 +70,7 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
     if (!text) return;
 
     if (!user) {
-      setAuthActionPrompt('sign in to share your thoughts');
-      setIsAuthOpen(true);
+      useAuthModalStore.getState().open('Silakan masuk untuk menulis komentar pada lagu ini.');
       return;
     }
 
@@ -106,8 +103,7 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
 
   const handleToggleLike = (commentId: string) => {
     if (!user) {
-      setAuthActionPrompt('sign in to like comments');
-      setIsAuthOpen(true);
+      useAuthModalStore.getState().open('Silakan masuk untuk menyukai komentar ini.');
       return;
     }
     setComments((prev) =>
@@ -288,8 +284,6 @@ export default function SongComments({ songId, songTitle }: SongCommentsProps) {
           </div>
         )}
       </div>
-
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} defaultMode="login" />
     </div>
   );
 }

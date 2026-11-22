@@ -53,7 +53,7 @@ function trendingWindow() {
 }
 
 // Refresh-proof cache: a reload paints the last feed instantly, then revalidates.
-const HOME_CACHE_KEY = 'orbittune:home:v2';
+const HOME_CACHE_KEY = 'cytune:home:v2';
 const HOME_CACHE_TTL = 15 * 60 * 1000;
 
 interface SpotlightSnapshot {
@@ -367,12 +367,12 @@ export default function Home() {
             <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
               Recently Played
             </h3>
-            <a
+            <Link
               href="/library?tab=history"
               className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
             >
               View all →
-            </a>
+            </Link>
           </div>
 
           <div className="relative">

@@ -123,7 +123,7 @@ function PublicProfileContent() {
                   <p className="text-xs sm:text-sm text-text-secondary max-w-lg leading-relaxed">
                     {isSelf && user?.bio
                       ? user.bio
-                      : 'Hi-Fi music audiophile and playlist curator on OrbitTune.'}
+                      : 'Hi-Fi music audiophile and playlist curator on CyTune.'}
                   </p>
 
                   <div className="flex items-center justify-center sm:justify-start gap-4 text-[11px] text-text-muted pt-1">

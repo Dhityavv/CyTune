@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
 import { initMagneticEffect } from '@/lib/motion';
 import {
@@ -31,6 +32,8 @@ import { db } from '@/lib/db';
 import { usePlaylistDialogStore } from '@/store/usePlaylistDialog';
 import { audioSession } from '@/lib/audioSession';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthModalStore } from '@/store/useAuthModalStore';
 
 export default function BottomPlayer() {
   const {
@@ -109,24 +112,38 @@ export default function BottomPlayer() {
 
   const volumeSliderRef = useVolumeWheel<HTMLDivElement>();
 
+  const user = useAuthStore((s) => s.user);
+
   const isLiked = useLiveQuery(
     async () => {
       if (!currentTrack) return false;
       const found = await db.likedTracks.get(currentTrack.id);
-      return !!found;
+      if (!found) return false;
+      if (!user) {
+        return !found.userId || found.userId === 'guest';
+      }
+      return !found.userId || found.userId === user.id || found.userId === 'guest';
     },
-    [currentTrack?.id],
+    [currentTrack?.id, user?.id],
     false
   );
 
+  const pathname = usePathname();
+  if (pathname === '/listening') {
+    return null;
+  }
+
   const toggleFavorite = async () => {
     if (!currentTrack) return;
+    const currentUser = useAuthStore.getState().user;
+    const activeUserId = currentUser?.id || 'guest';
     if (isLiked) {
       await db.likedTracks.delete(currentTrack.id);
     } else {
       await db.likedTracks.put({
         ...currentTrack,
         likedAt: Date.now(),
+        userId: activeUserId,
       });
       recordFeedback('liked', currentTrack);
     }
