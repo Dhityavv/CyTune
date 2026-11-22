@@ -60,9 +60,6 @@ export default function ExpandedPlayer() {
     showLyrics,
     lyrics,
     loadingLyrics,
-    lyricOffset,
-    setLyricOffset,
-    adjustLyricOffset,
     smartAutoplayEnabled,
     recommendationQueue,
     loadingRecommendations,
@@ -100,9 +97,6 @@ export default function ExpandedPlayer() {
       showLyrics: s.showLyrics,
       lyrics: s.lyrics,
       loadingLyrics: s.loadingLyrics,
-      lyricOffset: s.lyricOffset,
-      setLyricOffset: s.setLyricOffset,
-      adjustLyricOffset: s.adjustLyricOffset,
       smartAutoplayEnabled: s.smartAutoplayEnabled,
       recommendationQueue: s.recommendationQueue,
       loadingRecommendations: s.loadingRecommendations,
@@ -173,8 +167,8 @@ export default function ExpandedPlayer() {
     }
   };
 
-  // Synchronized vocal time with calibrated lead compensation and manual/auto offset alignment
-  const syncedTime = currentTime + 0.35 + (lyricOffset || 0);
+  // Synchronized vocal time with calibrated lead compensation (+0.45s)
+  const syncedTime = currentTime + 0.45;
 
   // Find active lyric index
   let activeLyricIdx = -1;
@@ -440,50 +434,6 @@ export default function ExpandedPlayer() {
                         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                         LIVE SYNC
                       </span>
-                      <div className="flex items-center gap-0.5 sm:gap-1 bg-surface border border-border-subtle rounded-full px-2 py-0.5">
-                        <button
-                          type="button"
-                          onClick={() => adjustLyricOffset(-0.5)}
-                          aria-label="Shift lyrics 0.5s earlier"
-                          className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
-                        >
-                          -0.5s
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustLyricOffset(-0.25)}
-                          aria-label="Shift lyrics 0.25 seconds earlier"
-                          className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white font-medium active:scale-95 transition-all"
-                        >
-                          -0.25s
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLyricOffset(0)}
-                          aria-label="Reset sync offset"
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
-                            Math.abs(lyricOffset) < 0.01 ? 'text-white/40' : 'text-[#101114] bg-accent'
-                          }`}
-                        >
-                          {Math.abs(lyricOffset) < 0.01 ? '0.00s' : `${lyricOffset > 0 ? '+' : ''}${lyricOffset.toFixed(2)}s`}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustLyricOffset(+0.25)}
-                          aria-label="Shift lyrics 0.25 seconds later"
-                          className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white font-medium active:scale-95 transition-all"
-                        >
-                          +0.25s
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => adjustLyricOffset(+0.5)}
-                          aria-label="Shift lyrics 0.5s later"
-                          className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
-                        >
-                          +0.5s
-                        </button>
-                      </div>
                     </div>
                     {lyrics.lines.map((line: { time: number; text: string; words?: any[]; endTime?: number }, idx: number) => {
                       const isActive = idx === activeLyricIdx;

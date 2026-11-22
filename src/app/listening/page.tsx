@@ -24,7 +24,6 @@ import {
   Trash2,
   Sparkles,
   Lock,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -66,8 +65,8 @@ function formatCommentTime(timestamp: number): string {
   return `${days}d ago`;
 }
 
-// Neutral calibrated vocal baseline (0.0s). True parity with timestamp; intro delay handled by autoOffset
-const VOCAL_ANTICIPATION_LEAD = 0.0;
+// Precision calibrated vocal lead (+0.45s). Compensates for browser audio buffering & YouTube Iframe clock lag so lyrics highlight right on vocal onset.
+const VOCAL_ANTICIPATION_LEAD = 0.45;
 
 export default function ListeningPage() {
   const router = useRouter();
@@ -83,9 +82,6 @@ export default function ListeningPage() {
     queue,
     queueIndex,
     recommendationQueue,
-    lyricOffset,
-    setLyricOffset,
-    adjustLyricOffset,
     togglePlay,
     nextTrack,
     prevTrack,
@@ -105,9 +101,6 @@ export default function ListeningPage() {
       repeatMode: s.repeatMode,
       isShuffle: s.isShuffle,
       lyrics: s.lyrics,
-      lyricOffset: s.lyricOffset,
-      setLyricOffset: s.setLyricOffset,
-      adjustLyricOffset: s.adjustLyricOffset,
       queue: s.queue,
       queueIndex: s.queueIndex,
       recommendationQueue: s.recommendationQueue,
@@ -339,8 +332,8 @@ export default function ListeningPage() {
     targetPosRef.current.y = e.clientY - rect.top;
   }, []);
 
-  // Synchronized vocal time with calibrated lead compensation and manual/auto offset alignment
-  const syncedTime = currentTime + VOCAL_ANTICIPATION_LEAD + (lyricOffset || 0);
+  // Synchronized vocal time with calibrated lead compensation (+0.45s)
+  const syncedTime = currentTime + VOCAL_ANTICIPATION_LEAD;
 
   // Compute Active Lyric Line Index with millisecond-tight anticipation
   const activeLyricIdx = useMemo(() => {
@@ -1002,60 +995,6 @@ export default function ListeningPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                 LIVE
               </span>
-
-              {/* Sync Calibration Pill: Instant 1-click micro-adjustment, permanently remembered per track */}
-              {lyrics && lyrics.lines && lyrics.lines.length > 0 && (
-                <div className="flex items-center gap-0.5 sm:gap-1 bg-surface/80 border border-border-subtle rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-mono shadow-xs backdrop-blur-md">
-                  <span className="text-text-muted text-[9px] sm:text-[10px] uppercase font-sans font-medium flex items-center gap-1 pr-1 border-r border-border-subtle">
-                    <SlidersHorizontal className="w-3 h-3 text-accent" />
-                    Sync
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => adjustLyricOffset(-0.5)}
-                    aria-label="Shift lyrics 0.5s earlier"
-                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
-                  >
-                    -0.5s
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => adjustLyricOffset(-0.25)}
-                    aria-label="Shift lyrics 0.25s earlier"
-                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors font-medium active:scale-95"
-                  >
-                    -0.25s
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLyricOffset(0)}
-                    aria-label="Reset lyrics synchronization offset"
-                    className={`px-1.5 py-0.5 rounded transition-colors text-[10px] font-bold ${
-                      Math.abs(lyricOffset) < 0.01
-                        ? 'text-white/40 hover:text-white/60'
-                        : 'text-[#101114] bg-accent px-2'
-                    }`}
-                  >
-                    {Math.abs(lyricOffset) < 0.01 ? '0.00s' : `${lyricOffset > 0 ? '+' : ''}${lyricOffset.toFixed(2)}s`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => adjustLyricOffset(+0.25)}
-                    aria-label="Shift lyrics 0.25s later"
-                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors font-medium active:scale-95"
-                  >
-                    +0.25s
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => adjustLyricOffset(+0.5)}
-                    aria-label="Shift lyrics 0.5s later"
-                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
-                  >
-                    +0.5s
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Vertical Jump Controls (⌃ Up, ⌄ Down buttons with smooth navigation) */}
