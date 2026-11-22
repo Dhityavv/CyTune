@@ -63,6 +63,10 @@ export default function RootLayout({
       <body className="h-full flex flex-col antialiased">
         <ClerkProvider
           dynamic
+          publishableKey={
+            process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+            'pk_test_dHJ1c3R5LXdoaXBwZXQtNDg3Mi5jbGVyay5hY2NvdW50cy5kZXYk'
+          }
           appearance={{
             theme: dark,
             baseTheme: dark,
