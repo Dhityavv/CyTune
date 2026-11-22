@@ -11,6 +11,7 @@ import { db } from '@/lib/db';
 import TrackCard from '@/components/TrackCard';
 import TrackRow, { TrackTableHeader } from '@/components/TrackRow';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Section {
   title: string;
