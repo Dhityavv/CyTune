@@ -264,15 +264,15 @@ export async function fetchLyrics(
     }
 
     // 3. Intelligent auto-offset calculation:
-    // When YouTube stream has an intro/outro delta compared to studio track duration
+    // When YouTube stream has an intro delta compared to studio track duration,
+    // the YouTube music video starts LATER, so lyrics timestamp must wait (negative offset)!
     let autoOffset = 0;
     if (duration && duration > 0 && data.duration && data.duration > 0) {
       const delta = duration - data.duration;
-      // If YouTube track is 2-10s longer, typically 60% of that delta is intro silence before music kicks in
-      if (delta >= 1.5 && delta <= 12) {
-        autoOffset = Math.round((delta * 0.55) * 10) / 10;
-      } else if (delta <= -1.5 && delta >= -10) {
-        autoOffset = Math.round((delta * 0.45) * 10) / 10;
+      if (delta >= 1.5 && delta <= 15) {
+        autoOffset = -Math.round((delta * 0.6) * 10) / 10;
+      } else if (delta <= -1.5 && delta >= -12) {
+        autoOffset = Math.round((Math.abs(delta) * 0.5) * 10) / 10;
       }
     }
 

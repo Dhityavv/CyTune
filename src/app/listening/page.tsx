@@ -38,11 +38,7 @@ import AuthModal from '@/components/AuthModal';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import { extractDominantColor, ColorRGB, getFallbackColor } from '@/lib/colorExtractor';
-import {
-  detectSongPace,
-} from '@/lib/lyricKeywords';
 import { LyricLineRenderer } from '@/components/lyrics/LyricLineRenderer';
-import { renderLyricAsset } from '@/components/LyricAssets';
 
 function formatElapsed(seconds: number): string {
   if (isNaN(seconds) || seconds < 0 || !Number.isFinite(seconds)) return '0:00';
@@ -70,9 +66,8 @@ function formatCommentTime(timestamp: number): string {
   return `${days}d ago`;
 }
 
-// Strictly calibrated vocal lead-time offset (350ms)
-// Compensates for browser audio pipeline buffering & YouTube iframe postMessage latency
-const VOCAL_ANTICIPATION_LEAD = 0.35;
+// Neutral calibrated vocal baseline (0.0s). True parity with timestamp; intro delay handled by autoOffset
+const VOCAL_ANTICIPATION_LEAD = 0.0;
 
 export default function ListeningPage() {
   const router = useRouter();
@@ -174,12 +169,6 @@ export default function ListeningPage() {
       if (navigateTimeoutRef.current) clearTimeout(navigateTimeoutRef.current);
     };
   }, []);
-
-  // Detect song pace / mood (chill ballad vs hype rap/trap)
-  const songPace = useMemo(
-    () => detectSongPace(currentTrack?.title, currentTrack?.artist),
-    [currentTrack?.title, currentTrack?.artist]
-  );
 
   // Favorite status from Dexie (accessible to guests and logged-in users)
   const isLiked = useLiveQuery(
@@ -1016,16 +1005,24 @@ export default function ListeningPage() {
 
               {/* Sync Calibration Pill: Instant 1-click micro-adjustment, permanently remembered per track */}
               {lyrics && lyrics.lines && lyrics.lines.length > 0 && (
-                <div className="hidden sm:flex items-center gap-1 bg-surface/80 border border-border-subtle rounded-full px-2 py-0.5 text-[11px] font-mono shadow-xs backdrop-blur-md">
-                  <span className="text-text-muted text-[10px] uppercase font-sans font-medium flex items-center gap-1 pr-1 border-r border-border-subtle">
+                <div className="flex items-center gap-0.5 sm:gap-1 bg-surface/80 border border-border-subtle rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-mono shadow-xs backdrop-blur-md">
+                  <span className="text-text-muted text-[9px] sm:text-[10px] uppercase font-sans font-medium flex items-center gap-1 pr-1 border-r border-border-subtle">
                     <SlidersHorizontal className="w-3 h-3 text-accent" />
                     Sync
                   </span>
                   <button
                     type="button"
+                    onClick={() => adjustLyricOffset(-0.5)}
+                    aria-label="Shift lyrics 0.5s earlier"
+                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
+                  >
+                    -0.5s
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => adjustLyricOffset(-0.25)}
-                    aria-label="Shift lyrics 0.25 seconds earlier"
-                    className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors font-medium active:scale-95"
+                    aria-label="Shift lyrics 0.25s earlier"
+                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors font-medium active:scale-95"
                   >
                     -0.25s
                   </button>
@@ -1044,10 +1041,18 @@ export default function ListeningPage() {
                   <button
                     type="button"
                     onClick={() => adjustLyricOffset(+0.25)}
-                    aria-label="Shift lyrics 0.25 seconds later"
-                    className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors font-medium active:scale-95"
+                    aria-label="Shift lyrics 0.25s later"
+                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors font-medium active:scale-95"
                   >
                     +0.25s
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustLyricOffset(+0.5)}
+                    aria-label="Shift lyrics 0.5s later"
+                    className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
+                  >
+                    +0.5s
                   </button>
                 </div>
               )}
@@ -1110,8 +1115,6 @@ export default function ListeningPage() {
                       isActive={isActive}
                       isPast={isPast}
                       currentTime={syncedTime}
-                      nextStartTime={nextLine?.time}
-                      songPace={songPace}
                       size="lg"
                     />
                   </div>

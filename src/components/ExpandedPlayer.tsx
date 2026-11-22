@@ -34,7 +34,6 @@ import { clickable } from '@/lib/a11y';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuthModalStore } from '@/store/useAuthModalStore';
-import { detectSongPace } from '@/lib/lyricKeywords';
 import { LyricLineRenderer } from '@/components/lyrics/LyricLineRenderer';
 
 function formatTime(seconds: number): string {
@@ -143,7 +142,6 @@ export default function ExpandedPlayer() {
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   const user = useAuthStore((s) => s.user);
-  const songPace = detectSongPace(currentTrack?.title, currentTrack?.artist);
 
   const isLiked = useLiveQuery(
     async () => {
@@ -442,7 +440,15 @@ export default function ExpandedPlayer() {
                         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                         LIVE SYNC
                       </span>
-                      <div className="flex items-center gap-1 bg-surface border border-border-subtle rounded-full px-2 py-0.5">
+                      <div className="flex items-center gap-0.5 sm:gap-1 bg-surface border border-border-subtle rounded-full px-2 py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => adjustLyricOffset(-0.5)}
+                          aria-label="Shift lyrics 0.5s earlier"
+                          className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
+                        >
+                          -0.5s
+                        </button>
                         <button
                           type="button"
                           onClick={() => adjustLyricOffset(-0.25)}
@@ -469,6 +475,14 @@ export default function ExpandedPlayer() {
                         >
                           +0.25s
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => adjustLyricOffset(+0.5)}
+                          aria-label="Shift lyrics 0.5s later"
+                          className="px-1 py-0.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-95 text-[10px]"
+                        >
+                          +0.5s
+                        </button>
                       </div>
                     </div>
                     {lyrics.lines.map((line: { time: number; text: string; words?: any[]; endTime?: number }, idx: number) => {
@@ -493,8 +507,6 @@ export default function ExpandedPlayer() {
                             isActive={isActive}
                             isPast={isPast}
                             currentTime={syncedTime}
-                            nextStartTime={nextLine?.time}
-                            songPace={songPace}
                             size="md"
                           />
                         </div>
