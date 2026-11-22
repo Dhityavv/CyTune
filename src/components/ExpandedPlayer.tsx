@@ -34,6 +34,8 @@ import { clickable } from '@/lib/a11y';
 import UniversalProgressBar from '@/components/UniversalProgressBar';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuthModalStore } from '@/store/useAuthModalStore';
+import { detectSongPace } from '@/lib/lyricKeywords';
+import { LyricLineRenderer } from '@/components/lyrics/LyricLineRenderer';
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -135,6 +137,7 @@ export default function ExpandedPlayer() {
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   const user = useAuthStore((s) => s.user);
+  const songPace = detectSongPace(currentTrack?.title, currentTrack?.artist);
 
   const isLiked = useLiveQuery(
     async () => {
@@ -424,21 +427,32 @@ export default function ExpandedPlayer() {
                     <p className="text-xs">Loading lyrics from LRCLIB...</p>
                   </div>
                 ) : lyrics?.lines && lyrics.lines.length > 0 ? (
-                  lyrics.lines.map((line: { time: number; text: string }, idx: number) => {
+                  lyrics.lines.map((line: { time: number; text: string; words?: any[]; endTime?: number }, idx: number) => {
                     const isActive = idx === activeLyricIdx;
+                    const isPast = idx < activeLyricIdx;
+                    const nextLine = lyrics.lines[idx + 1];
                     return (
                       <div
                         key={idx}
                         ref={isActive ? activeLyricRef : null}
                         onClick={() => seekTo(line.time)}
                         {...clickable(() => seekTo(line.time))}
-                        className={`cursor-pointer transition-all duration-300 ${
+                        className={`cursor-pointer transition-all duration-300 rounded-xl p-2 sm:p-2.5 ${
                           isActive
-                            ? 'text-text-primary text-xl sm:text-2xl font-bold drop-shadow-[0_0_12px_rgba(201,169,77,0.45)]'
-                            : 'text-text-muted hover:text-text-secondary text-base sm:text-lg font-medium'
+                            ? 'bg-white/[0.04] drop-shadow-[0_0_16px_rgba(201,169,77,0.35)]'
+                            : 'hover:bg-white/[0.02]'
                         }`}
                       >
-                        {line.text}
+                        <LyricLineRenderer
+                          line={line}
+                          index={idx}
+                          isActive={isActive}
+                          isPast={isPast}
+                          currentTime={currentTime}
+                          nextStartTime={nextLine?.time}
+                          songPace={songPace}
+                          size="md"
+                        />
                       </div>
                     );
                   })

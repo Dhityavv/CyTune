@@ -38,10 +38,9 @@ import UniversalProgressBar from '@/components/UniversalProgressBar';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import { extractDominantColor, ColorRGB, getFallbackColor } from '@/lib/colorExtractor';
 import {
-  parseLyricWords,
   detectSongPace,
-  StyledWord,
 } from '@/lib/lyricKeywords';
+import { LyricLineRenderer } from '@/components/lyrics/LyricLineRenderer';
 import { renderLyricAsset } from '@/components/LyricAssets';
 
 function formatElapsed(seconds: number): string {
@@ -1043,38 +1042,7 @@ export default function ListeningPage() {
               lyrics.lines.map((line, idx) => {
                 const isActive = idx === activeLyricIdx;
                 const isPast = idx < activeLyricIdx;
-
-                // Parse words directly from full line text with millisecond-exact word sync
-                const words = parseLyricWords(
-                  line.text,
-                  songPace,
-                  line.words,
-                  line.time,
-                  line.endTime
-                );
-                const totalActualWords = words.filter((w) => w.clean.length > 0).length;
-                let actualWordCounter = 0;
-
-                // Natural human singing cadence calculation:
-                // Fast rap delivers ~0.20s per word; chill songs ~0.32s per word; standard ~0.24s per word.
-                // Instrumental tails / pauses after the words do NOT delay the line.
-                const cadencePerWord = songPace === 'hype' ? 0.20 : songPace === 'chill' ? 0.32 : 0.24;
-                const maxNaturalDuration = Math.max(1.2, totalActualWords * cadencePerWord);
-                const vocalActiveDuration = Math.min(gapToNext * 0.85, maxNaturalDuration);
-
-                // A line is completed if past or if current synced time exceeds its natural vocal delivery
-                const isLineCompleted =
-                  isPast ||
-                  (line.endTime
-                    ? syncedTime >= line.endTime
-                    : syncedTime >= lineStartTime + vocalActiveDuration);
-
-                const lineProgress =
-                  isActive && !isLineCompleted
-                    ? Math.min(1, Math.max(0, (syncedTime - lineStartTime) / vocalActiveDuration))
-                    : isPast || isLineCompleted
-                    ? 1
-                    : 0;
+                const nextLine = lyrics.lines[idx + 1];
 
                 return (
                   <div
@@ -1084,96 +1052,23 @@ export default function ListeningPage() {
                     }}
                     onClick={() => navigateToLyricLine(idx)}
                     className={`transition-opacity duration-500 ease-out cursor-pointer select-none rounded-3xl p-3 sm:p-5 ${
-                      isActive && !isLineCompleted
+                      isActive
                         ? 'opacity-100'
-                        : isPast || isLineCompleted
+                        : isPast
                         ? 'opacity-40 hover:opacity-70'
                         : 'opacity-55 hover:opacity-85'
                     }`}
                   >
-                    {/* Consistent typography: EXACT SAME font size and line height across all states */}
-                    {/* Long lines wrap naturally into 2 lines consistently before, during, and after playback */}
-                    <p
-                      className={`text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight flex flex-wrap items-baseline gap-x-3 gap-y-2.5 transition-colors duration-500 ease-out ${
-                        isActive && !isLineCompleted
-                          ? 'text-white'
-                          : isPast || isLineCompleted
-                          ? 'text-white/40'
-                          : 'text-white/55'
-                      }`}
-                    >
-                      {words.map((w: StyledWord, wIdx: number) => {
-                        if (!w.clean) {
-                          return <span key={wIdx}>{w.raw}</span>;
-                        }
-
-                        const wordThreshold =
-                          totalActualWords > 0 ? actualWordCounter / totalActualWords : 0;
-
-                        // Strict real-time vocal articulation check:
-                        // Uses calibrated syncedTime (+350ms lead) so words illuminate synchronously with vocal output
-                        const isWordSung =
-                          w.time !== undefined
-                            ? syncedTime >= w.time
-                            : isPast || isLineCompleted
-                            ? true
-                            : isActive
-                            ? lineProgress >= wordThreshold
-                            : false;
-                        actualWordCounter++;
-
-                        // Parentheses ad-lib styling
-                        const isParenthetical = w.raw.includes('(') || w.raw.includes(')');
-                        const hasBadge = Boolean(w.assetType || w.emoji);
-
-                        return (
-                          <span
-                            key={wIdx}
-                            className={`relative inline-block transition-colors duration-500 ease-out ${
-                              isParenthetical ? 'italic' : ''
-                            } ${hasBadge ? 'mr-3 sm:mr-4' : ''} ${
-                              isActive && isWordSung
-                                ? w.isKeyword
-                                  ? `${w.colorClass} ${w.extraClass || ''} ${w.effectClass || ''}`
-                                  : 'lyric-sung-active'
-                                : isActive && !isWordSung
-                                ? 'text-white/70 font-black'
-                                : isPast || isLineCompleted
-                                ? 'text-white/40'
-                                : 'text-white/55'
-                            }`}
-                          >
-                            <span>{w.display || w.raw}</span>
-
-                            {/* Floating Micro-Badge SVG Asset (zero layout reflow, smooth fade & scale) */}
-                            {w.assetType && (
-                              <span
-                                className={`absolute -top-3.5 -right-5 z-20 pointer-events-none transform transition-all duration-500 ease-out ${
-                                  isActive && isWordSung
-                                    ? 'opacity-100 scale-100'
-                                    : 'opacity-0 scale-50'
-                                }`}
-                              >
-                                {renderLyricAsset(w.assetType, 'w-5 h-5 sm:w-6 sm:h-6')}
-                              </span>
-                            )}
-
-                            {/* Floating Emoji Micro-Badge */}
-                            {!w.assetType && w.emoji && (
-                              <span
-                                className={`absolute -top-3 -right-5 z-20 pointer-events-none text-base sm:text-lg transform transition-all duration-500 ease-out ${
-                                  isActive && isWordSung
-                                    ? 'opacity-100 scale-100'
-                                    : 'opacity-0 scale-50'
-                                }`}
-                              >
-                                {w.emoji}
-                              </span>
-                            )}
-                          </span>
-                        );
-                      })}
-                    </p>
+                    <LyricLineRenderer
+                      line={line}
+                      index={idx}
+                      isActive={isActive}
+                      isPast={isPast}
+                      currentTime={syncedTime}
+                      nextStartTime={nextLine?.time}
+                      songPace={songPace}
+                      size="lg"
+                    />
                   </div>
                 );
               })

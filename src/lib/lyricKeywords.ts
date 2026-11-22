@@ -1,6 +1,7 @@
 // Lyric Keywords, Kinetic Themed System & Mood Classifier for CyTune Dynamic Karaoke
 
 import { LyricsWord } from '@/types/music';
+import { resolveContextualCategory } from './lyric-effects/context-rules';
 
 export type SongPace = 'chill' | 'hype' | 'dynamic';
 
@@ -27,7 +28,9 @@ export interface StyledWord {
     | 'heart'
     | 'electric'
     | 'crown'
-    | 'clock';
+    | 'clock'
+    | 'ring'
+    | 'jewelry';
   effectClass?: string;
 }
 
@@ -51,7 +54,9 @@ export interface LyricPunchline {
     | 'heart'
     | 'electric'
     | 'crown'
-    | 'clock';
+    | 'clock'
+    | 'ring'
+    | 'jewelry';
   notification?: {
     appName: string;
     headline: string;
@@ -165,7 +170,9 @@ interface KeywordRule {
     | 'heart'
     | 'electric'
     | 'crown'
-    | 'clock';
+    | 'clock'
+    | 'ring'
+    | 'jewelry';
   effectClass?: string;
   chillEffectClass?: string;
   category: string;
@@ -176,9 +183,116 @@ interface KeywordRule {
 }
 
 const KEYWORD_RULES: KeywordRule[] = [
-  // 1. BIG, GIANT, HUGE, BOSS, COLOSSAL (Golden scale expansion)
+  // 1. JEWELRY & DIAMONDS (Bling, chains, rings, wrist, diamond luster)
   {
-    words: ['big', 'huge', 'giant', 'massive', 'heavy', 'boss', 'great', 'grand', 'colossal', 'colossus'],
+    words: [
+      'chain',
+      'chains',
+      'wrist',
+      'ring',
+      'rings',
+      'necklace',
+      'necklaces',
+      'diamond',
+      'diamonds',
+      'baguette',
+      'pendant',
+      'locket',
+      'bling',
+      'jewel',
+      'jewels',
+      'jewelry',
+      'bezel',
+      'pinky',
+      'rocks',
+      'stones',
+      'karat',
+      'carat',
+      'vvs',
+      'solitaire',
+    ],
+    colorClass: 'text-cyan-200 font-black drop-shadow-[0_0_20px_rgba(103,232,249,0.95)]',
+    emoji: '💎',
+    assetType: 'ring',
+    effectClass: 'animate-lyric-crystal',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Jewelry',
+    icon: '💎',
+    tag: 'Bling',
+    accentColor: '#67E8F9',
+  },
+
+  // 2. LUXURY & FASHION (Designer houses, haute couture, tailored status)
+  {
+    words: [
+      'gucci',
+      'prada',
+      'versace',
+      'dior',
+      'chanel',
+      'fendi',
+      'balenciaga',
+      'louis',
+      'vuitton',
+      'designer',
+      'couture',
+      'birkin',
+      'hermes',
+      'goyard',
+      'cartier',
+      'rolex',
+      'tailored',
+      'silk',
+      'velvet',
+    ],
+    colorClass: 'text-amber-200 font-black drop-shadow-[0_0_20px_rgba(253,230,138,0.95)]',
+    emoji: '✨',
+    assetType: 'crown',
+    effectClass: 'animate-lyric-luxury',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Luxury',
+    icon: '✨',
+    tag: 'Designer',
+    accentColor: '#FDE68A',
+  },
+
+  // 3. CELEBRATION & VIBES (Party, toast, bottles, champagne energy)
+  {
+    words: [
+      'party',
+      'celebrate',
+      'celebration',
+      'toast',
+      'champagne',
+      'bottles',
+      'bottle',
+      'cheers',
+      'confetti',
+      'drink',
+      'drinks',
+      'turnup',
+      'vibe',
+      'vibes',
+      'bless',
+      'blessed',
+      'poppin',
+      'popping',
+      'shining',
+    ],
+    colorClass: 'text-yellow-300 font-black drop-shadow-[0_0_20px_rgba(253,224,71,0.9)]',
+    emoji: '🎉',
+    assetType: 'spark',
+    effectClass: 'animate-lyric-party',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Celebration',
+    icon: '🥂',
+    tag: 'Turn Up',
+    accentColor: '#FACC15',
+  },
+
+  // 4. BIG, GIANT, HUGE, BOSS, COLOSSAL (Golden scale expansion)
+  {
+    words: ['big', 'huge', 'giant', 'massive', 'boss', 'grand', 'colossal', 'colossus', 'mammoth', 'titan', 'monstrous'],
     colorClass: 'text-amber-300 font-black drop-shadow-[0_0_22px_rgba(251,191,36,0.95)]',
     extraClass: 'tracking-tight',
     emoji: '💥',
@@ -192,7 +306,7 @@ const KEYWORD_RULES: KeywordRule[] = [
     transformUpper: true,
   },
 
-  // 2. PULL, ACTION, SPEED, DRIFT (Kinetic neon lime dash)
+  // 5. PULL, ACTION, SPEED, DRIFT (Kinetic neon lime dash)
   {
     words: [
       'pull',
@@ -202,15 +316,12 @@ const KEYWORD_RULES: KeywordRule[] = [
       'rush',
       'drift',
       'glide',
-      'whip',
       'drive',
-      'push',
-      'move',
-      'skrrt',
-      'hop',
       'jump',
       'zoom',
       'cruise',
+      'accelerate',
+      'sprint',
     ],
     colorClass: 'text-lime-300 font-black italic drop-shadow-[0_0_18px_rgba(190,242,100,0.95)]',
     extraClass: 'tracking-wide',
@@ -224,7 +335,7 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#A3E635',
   },
 
-  // 3. LOOT, MONEY, WEALTH, RACKS (Emerald mint cash bounce)
+  // 6. LOOT, MONEY, WEALTH, RACKS (Emerald mint cash bounce)
   {
     words: [
       'loot',
@@ -237,16 +348,15 @@ const KEYWORD_RULES: KeywordRule[] = [
       'rich',
       'wealth',
       'bills',
-      'bank',
       'million',
       'billion',
       'bag',
       'revenue',
-      'gucci',
-      'prada',
-      'profit',
-      'check',
       'coins',
+      'hundreder',
+      'currency',
+      'payroll',
+      'stacks',
     ],
     colorClass: 'text-emerald-400 font-black drop-shadow-[0_0_18px_rgba(52,211,153,0.9)]',
     emoji: '💰',
@@ -259,7 +369,7 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#10B981',
   },
 
-  // 4. FIRE, FLAME, HEAT, BURN (Fiery orange/red blaze flicker)
+  // 7. FIRE, FLAME, HEAT, BURN (Fiery orange/red blaze flicker)
   {
     words: [
       'fire',
@@ -272,11 +382,9 @@ const KEYWORD_RULES: KeywordRule[] = [
       'blazing',
       'heat',
       'lit',
-      'wild',
-      'smoke',
       'ignite',
-      'torch',
-      'furious',
+      'inferno',
+      'flare',
     ],
     colorClass: 'text-orange-500 font-black drop-shadow-[0_0_22px_rgba(249,115,22,0.95)]',
     emoji: '🔥',
@@ -289,7 +397,7 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#F97316',
   },
 
-  // 5. ICE, COLD, FREEZE, DIAMOND (Frostbite cyan crystalline shine)
+  // 8. ICE, COLD, FREEZE (Frostbite cyan crystalline shine)
   {
     words: [
       'ice',
@@ -297,10 +405,6 @@ const KEYWORD_RULES: KeywordRule[] = [
       'cold',
       'freeze',
       'freezing',
-      'diamond',
-      'diamonds',
-      'chain',
-      'wrist',
       'frost',
       'chilly',
       'glacier',
@@ -308,6 +412,10 @@ const KEYWORD_RULES: KeywordRule[] = [
       'frozen',
       'winter',
       'zero',
+      'blizzard',
+      'arctic',
+      'polar',
+      'subzero',
     ],
     colorClass: 'text-cyan-300 font-black drop-shadow-[0_0_20px_rgba(103,232,249,0.95)]',
     emoji: '🧊',
@@ -315,12 +423,12 @@ const KEYWORD_RULES: KeywordRule[] = [
     effectClass: 'animate-lyric-ice',
     chillEffectClass: 'animate-lyric-chill',
     category: 'Frost',
-    icon: '💎',
+    icon: '❄️',
     tag: 'Ice',
     accentColor: '#06B6D4',
   },
 
-  // 6. LOVE, HEART, EMOTIONS, BALLAD (Rose quartz pulse or gentle chill glow)
+  // 9. LOVE, HEART, EMOTIONS (Amethyst purple pulse - Nocturne compliant)
   {
     words: [
       'love',
@@ -336,48 +444,47 @@ const KEYWORD_RULES: KeywordRule[] = [
       'smile',
       'feel',
       'touch',
-      'safe',
-      'warm',
       'forever',
       'sweet',
       'honey',
       'beautiful',
       'angel',
       'protect',
-      'hold',
+      'romance',
+      'embrace',
     ],
-    colorClass: 'text-pink-400 font-black drop-shadow-[0_0_18px_rgba(244,114,182,0.9)]',
-    emoji: '❤️',
+    colorClass: 'text-purple-400 font-black drop-shadow-[0_0_18px_rgba(192,132,252,0.85)]',
+    emoji: '💜',
     assetType: 'heart',
     effectClass: 'animate-lyric-beat',
     chillEffectClass: 'animate-lyric-chill',
     category: 'Emotion',
-    icon: '💖',
+    icon: '💜',
     tag: 'Feelings',
-    accentColor: '#EC4899',
+    accentColor: '#C084FC',
   },
 
-  // 7. NIGHT, STARS, DREAMS, MOON, COSMOS (Starlight purple twinkle)
+  // 10. STARS, DREAMS, MOON, COSMOS (Starlight purple twinkle)
   {
     words: [
-      'night',
       'stars',
       'star',
       'moon',
       'sky',
       'dream',
       'dreams',
-      'dark',
       'orbit',
       'universe',
       'shine',
       'glow',
-      'light',
       'sun',
       'sunrise',
       'sunset',
       'dawn',
       'glimmer',
+      'galaxy',
+      'astral',
+      'constellation',
     ],
     colorClass: 'text-violet-300 font-black drop-shadow-[0_0_18px_rgba(196,181,253,0.85)]',
     emoji: '✨',
@@ -390,13 +497,28 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#A855F7',
   },
 
-  // 8. CROWN, KING, QUEEN, ROYAL, CHAMPION
+  // 11. CROWN, KING, QUEEN, ROYAL, CHAMPION
   {
-    words: ['king', 'queen', 'royal', 'crown', 'champion', 'throne', 'glory', 'legend', 'goat'],
+    words: [
+      'king',
+      'queen',
+      'royal',
+      'crown',
+      'champion',
+      'throne',
+      'glory',
+      'legend',
+      'goat',
+      'monarch',
+      'majesty',
+      'dynasty',
+      'emperor',
+      'empress',
+    ],
     colorClass: 'text-yellow-400 font-black drop-shadow-[0_0_20px_rgba(250,204,21,0.9)]',
     emoji: '👑',
     assetType: 'crown',
-    effectClass: 'animate-lyric-big',
+    effectClass: 'animate-lyric-crown',
     chillEffectClass: 'animate-lyric-chill',
     category: 'Royalty',
     icon: '👑',
@@ -405,7 +527,7 @@ const KEYWORD_RULES: KeywordRule[] = [
     transformUpper: true,
   },
 
-  // 9. LOCKDOWN, 24 HOURS, TIME, 4:00 AM
+  // 12. LOCKDOWN, 24/7, SECURITY
   {
     words: [
       'lockdown',
@@ -414,28 +536,27 @@ const KEYWORD_RULES: KeywordRule[] = [
       'prison',
       'jail',
       'cell',
-      '24',
-      'hour',
-      'hours',
+      '24/7',
       'clock',
-      'time',
       'midnight',
       '4:00',
-      'morning',
       'alarm',
+      'curfew',
+      'vault',
+      'siren',
     ],
-    colorClass: 'text-rose-400 font-mono font-black drop-shadow-[0_0_16px_rgba(251,113,133,0.85)]',
+    colorClass: 'text-slate-300 font-mono font-black drop-shadow-[0_0_16px_rgba(148,163,184,0.85)]',
     emoji: '🔒',
     assetType: 'lock',
     effectClass: 'animate-lyric-shake',
     chillEffectClass: 'animate-lyric-chill',
     category: 'Security',
     icon: '🔒',
-    tag: '24 Hours',
-    accentColor: '#F43F5E',
+    tag: 'Lockdown',
+    accentColor: '#94A3B8',
   },
 
-  // 10. SNEAKER, DRIP, COUPES, WHIP, CARS
+  // 13. SNEAKER, DRIP, HOODIE, STREETWEAR
   {
     words: [
       'nike',
@@ -443,16 +564,18 @@ const KEYWORD_RULES: KeywordRule[] = [
       'jordans',
       'shoes',
       'kicks',
-      'coupe',
-      'coupes',
-      'whip',
-      'ride',
-      'lambo',
-      'ferrari',
-      'porsche',
-      'benz',
-      'truck',
       'drip',
+      'sneakers',
+      'hoodie',
+      'fit',
+      'outfit',
+      'denim',
+      'tracksuit',
+      'apparel',
+      'supreme',
+      'bape',
+      'stussy',
+      'streetwear',
     ],
     colorClass: 'text-blue-400 font-black drop-shadow-[0_0_16px_rgba(96,165,250,0.85)]',
     emoji: '👟',
@@ -465,9 +588,22 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#3B82F6',
   },
 
-  // 11. ELECTRIC, SHOCK, THUNDER, VOLTAGE
+  // 14. ELECTRIC, SHOCK, THUNDER, VOLTAGE
   {
-    words: ['electric', 'shock', 'thunder', 'lightning', 'voltage', 'power', 'spark', 'flash', 'volt'],
+    words: [
+      'electric',
+      'shock',
+      'thunder',
+      'lightning',
+      'voltage',
+      'power',
+      'spark',
+      'flash',
+      'volt',
+      'high-voltage',
+      'watt',
+      'surge',
+    ],
     colorClass: 'text-amber-300 font-black drop-shadow-[0_0_20px_rgba(251,191,36,0.95)]',
     emoji: '⚡',
     assetType: 'electric',
@@ -479,11 +615,24 @@ const KEYWORD_RULES: KeywordRule[] = [
     accentColor: '#F59E0B',
   },
 
-  // 12. TOWN, CITY, NEWS, HOOD
+  // 15. TOWN, CITY, METRO, HOOD
   {
-    words: ['town', 'city', 'news', 'block', 'street', 'streets', 'hood', 'crib', 'home', 'avenue'],
+    words: [
+      'town',
+      'city',
+      'block',
+      'street',
+      'streets',
+      'hood',
+      'crib',
+      'avenue',
+      'boulevard',
+      'downtown',
+      'alley',
+      'subway',
+    ],
     colorClass: 'text-sky-400 font-black drop-shadow-[0_0_14px_rgba(56,189,248,0.75)]',
-    emoji: '📰',
+    emoji: '🏙️',
     assetType: 'news',
     effectClass: 'animate-lyric-beat',
     chillEffectClass: 'animate-lyric-chill',
@@ -492,7 +641,313 @@ const KEYWORD_RULES: KeywordRule[] = [
     tag: 'Block',
     accentColor: '#0EA5E9',
   },
+
+  // 16. AUTOMOTIVE & CARS (Supercars, horsepower, engines, luxury rides)
+  {
+    words: [
+      'lambo',
+      'lamborghini',
+      'ferrari',
+      'porsche',
+      'mclaren',
+      'bentley',
+      'maybach',
+      'bugatti',
+      'rolls-royce',
+      'corvette',
+      'escalade',
+      'hellcat',
+      'supercar',
+      'horsepower',
+      'coupe',
+      'coupes',
+      'whip',
+      'benz',
+      'truck',
+      'ride',
+      'engine',
+      'transmission',
+      'v8',
+      'v12',
+      'turbo',
+      'supercharged',
+      'speedometer',
+    ],
+    colorClass: 'text-red-400 font-black drop-shadow-[0_0_18px_rgba(248,113,113,0.9)]',
+    emoji: '🏎️',
+    assetType: 'shoe',
+    effectClass: 'animate-lyric-pull',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Automotive',
+    icon: '🏎️',
+    tag: 'Horsepower',
+    accentColor: '#EF4444',
+  },
+
+  // 17. HEARTBREAK & LOSS (Shattered feelings, separation, sorrow)
+  {
+    words: [
+      'heartbroken',
+      'heartbreak',
+      'betrayed',
+      'shattered',
+      'alone',
+      'empty',
+      'stranger',
+      'goodbye',
+      'scars',
+      'hurts',
+      'hurting',
+      'bleeding',
+      'teardrops',
+      'unloved',
+      'abandoned',
+      'sorrow',
+      'grief',
+    ],
+    colorClass: 'text-indigo-400 font-black drop-shadow-[0_0_18px_rgba(129,140,248,0.85)]',
+    emoji: '💔',
+    assetType: 'heart',
+    effectClass: 'animate-lyric-chill',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Heartbreak',
+    icon: '💔',
+    tag: 'Pain',
+    accentColor: '#818CF8',
+  },
+
+  // 18. ANGER, RAGE & CONFLICT (Savage wrath, hostility, vengeance)
+  {
+    words: [
+      'rage',
+      'fury',
+      'wrath',
+      'revenge',
+      'vengeance',
+      'savage',
+      'destroy',
+      'destructive',
+      'hostile',
+      'enemy',
+      'enemies',
+      'slaughter',
+      'rampage',
+    ],
+    colorClass: 'text-red-500 font-black drop-shadow-[0_0_22px_rgba(239,68,68,0.95)]',
+    emoji: '⚔️',
+    assetType: 'fire',
+    effectClass: 'animate-lyric-flame',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Rage',
+    icon: '⚔️',
+    tag: 'Hostile',
+    accentColor: '#DC2626',
+    transformUpper: true,
+  },
+
+  // 19. WATER & OCEAN (Waves, deep sea, aquatic depths, tides)
+  {
+    words: [
+      'ocean',
+      'wave',
+      'waves',
+      'tsunami',
+      'tides',
+      'tide',
+      'drown',
+      'drowning',
+      'waterfall',
+      'currents',
+      'submerged',
+      'depths',
+      'aquatic',
+      'sea',
+    ],
+    colorClass: 'text-teal-300 font-black drop-shadow-[0_0_18px_rgba(94,234,212,0.9)]',
+    emoji: '🌊',
+    assetType: 'ice',
+    effectClass: 'animate-lyric-beat',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Ocean',
+    icon: '🌊',
+    tag: 'Deep Blue',
+    accentColor: '#14B8A6',
+  },
+
+  // 20. DARKNESS & SHADOWS (Abyss, nightfall, twilight, gloomy depth)
+  {
+    words: [
+      'shadows',
+      'shadow',
+      'darkness',
+      'abyss',
+      'eclipse',
+      'nightfall',
+      'blackout',
+      'underworld',
+      'gloomy',
+      'twilight',
+      'nocturnal',
+    ],
+    colorClass: 'text-slate-400 font-black drop-shadow-[0_0_16px_rgba(148,163,184,0.7)]',
+    emoji: '🌑',
+    assetType: 'lock',
+    effectClass: 'animate-lyric-shake',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Darkness',
+    icon: '🌑',
+    tag: 'Abyss',
+    accentColor: '#64748B',
+  },
+
+  // 21. CONFIDENCE & EGO (Invincible, unmatched, elite greatness)
+  {
+    words: [
+      'untouchable',
+      'unmatched',
+      'flawless',
+      'alpha',
+      'undefeated',
+      'invincible',
+      'superior',
+      'elite',
+      'legendary',
+      'peerless',
+      'masterpiece',
+    ],
+    colorClass: 'text-amber-400 font-black drop-shadow-[0_0_20px_rgba(251,191,36,0.95)]',
+    emoji: '🦁',
+    assetType: 'crown',
+    effectClass: 'animate-lyric-crown',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Confidence',
+    icon: '🦁',
+    tag: 'Untouchable',
+    accentColor: '#F59E0B',
+    transformUpper: true,
+  },
+
+  // 22. SUCCESS & FAME (Spotlight, platinum, billboard, trophies)
+  {
+    words: [
+      'famous',
+      'spotlight',
+      'grammy',
+      'billboard',
+      'platinum',
+      'headlines',
+      'celebrity',
+      'superstar',
+      'iconic',
+      'triumph',
+      'trophy',
+      'hall-of-fame',
+    ],
+    colorClass: 'text-yellow-400 font-black drop-shadow-[0_0_20px_rgba(250,204,21,0.9)]',
+    emoji: '🏆',
+    assetType: 'big',
+    effectClass: 'animate-lyric-big',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Fame',
+    icon: '🏆',
+    tag: 'Spotlight',
+    accentColor: '#EAB308',
+  },
+
+  // 23. PEACE & SERENITY (Zen, healing, tranquility, calm solace)
+  {
+    words: [
+      'serenity',
+      'peaceful',
+      'calm',
+      'healing',
+      'tranquil',
+      'breathe',
+      'harmony',
+      'silence',
+      'zen',
+      'stillness',
+      'meditate',
+      'solace',
+    ],
+    colorClass: 'text-emerald-300 font-black drop-shadow-[0_0_18px_rgba(110,231,183,0.85)]',
+    emoji: '🕊️',
+    assetType: 'star',
+    effectClass: 'animate-lyric-chill',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Serenity',
+    icon: '🕊️',
+    tag: 'Zen',
+    accentColor: '#6EE7B7',
+  },
+
+  // 24. MUSIC, FREQUENCY & AUDIO (Subwoofers, synthesizers, 808 rhythms)
+  {
+    words: [
+      'subwoofer',
+      'treble',
+      'melody',
+      'rhythm',
+      'synthesizer',
+      'amplifier',
+      'frequencies',
+      'frequency',
+      '808',
+      'tempo',
+      'acoustic',
+      'stereo',
+      'hi-fi',
+      'soundwave',
+    ],
+    colorClass: 'text-cyan-400 font-black drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]',
+    emoji: '🔊',
+    assetType: 'electric',
+    effectClass: 'animate-lyric-beat',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Audio',
+    icon: '🎧',
+    tag: 'Frequency',
+    accentColor: '#22D3EE',
+  },
+
+  // 25. ADLIBS & VOCAL FX (Signature rap adlibs and vocal kinetic pulses)
+  {
+    words: [
+      'skrrt',
+      'brr',
+      'brrr',
+      'ayy',
+      'ayyy',
+      'woah',
+      'sheesh',
+      'slatt',
+      'holdup',
+      'yuh',
+      'brrat',
+      'pew-pew',
+    ],
+    colorClass: 'text-lime-400 font-black italic drop-shadow-[0_0_18px_rgba(163,230,53,0.95)]',
+    emoji: '⚡',
+    assetType: 'spark',
+    effectClass: 'animate-lyric-pull',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'VocalFX',
+    icon: '🗣️',
+    tag: 'Adlib',
+    accentColor: '#A3E635',
+  },
 ];
+
+// Pre-computed Map for O(1) keyword lookup
+const KEYWORD_MAP = new Map<string, KeywordRule>();
+for (const rule of KEYWORD_RULES) {
+  for (const word of rule.words) {
+    const key = word.toLowerCase();
+    if (!KEYWORD_MAP.has(key)) {
+      KEYWORD_MAP.set(key, rule);
+    }
+  }
+}
 
 // Stylistic word classes (exact typography as seen in reference screenshots)
 const STYLISTIC_WORDS: Record<string, { extraClass: string; display?: string; effectClass?: string }> = {
@@ -530,7 +985,8 @@ export function parseLyricWords(
 
   const result: StyledWord[] = [];
 
-  for (const token of rawWords) {
+  for (let tokenIdx = 0; tokenIdx < rawWords.length; tokenIdx++) {
+    const token = rawWords[tokenIdx];
     const clean = token.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
     const styleOverride = clean ? STYLISTIC_WORDS[clean] : undefined;
 
@@ -558,11 +1014,23 @@ export function parseLyricWords(
 
     let matchedRule: KeywordRule | null = null;
     if (clean.length > 0) {
-      for (const rule of KEYWORD_RULES) {
-        if (rule.words.includes(clean)) {
-          matchedRule = rule;
-          break;
+      // Build sliding context window of +/- 3 surrounding tokens to disambiguate homonyms
+      const surrounding: string[] = [];
+      for (let j = Math.max(0, tokenIdx - 3); j <= Math.min(rawWords.length - 1, tokenIdx + 3); j++) {
+        if (j !== tokenIdx) {
+          const sClean = rawWords[j].toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
+          if (sClean) surrounding.push(sClean);
         }
+      }
+
+      const overrideCategory = resolveContextualCategory(clean, surrounding);
+      if (overrideCategory) {
+        matchedRule =
+          KEYWORD_RULES.find((r) => r.category.toLowerCase() === overrideCategory.toLowerCase()) ||
+          KEYWORD_MAP.get(clean) ||
+          null;
+      } else {
+        matchedRule = KEYWORD_MAP.get(clean) || null;
       }
     }
 
@@ -630,22 +1098,36 @@ export function extractLinePunchline(
   }
 
   const cleanLower = lineText.toLowerCase();
+  const tokens = cleanLower.split(/[\s,.;:!?\-'"()\[\]]+/).filter(Boolean);
+  const tokenSet = new Set(tokens);
 
   for (const rule of KEYWORD_RULES) {
     for (const w of rule.words) {
-      if (cleanLower.includes(w)) {
+      const wLower = w.toLowerCase();
+      const matched =
+        wLower.includes(' ') || wLower.includes('/')
+          ? new RegExp(`(^|\\b)${wLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\b|$)`, 'i').test(cleanLower)
+          : tokenSet.has(wLower);
+
+      if (matched) {
+        const otherTokens = tokens.filter((t) => t !== wLower);
+        const overrideCat = resolveContextualCategory(wLower, otherTokens);
+        const activeRule = overrideCat
+          ? KEYWORD_RULES.find((r) => r.category.toLowerCase() === overrideCat.toLowerCase()) || rule
+          : rule;
+
         const parts = lineText.split(/[,.;!?]/).map((p) => p.trim()).filter(Boolean);
         const headline = parts[0] || lineText;
-        const subline = parts[1] || `Feat. ${rule.category}`;
+        const subline = parts[1] || `Feat. ${activeRule.category}`;
 
         return {
-          category: rule.category,
-          icon: rule.icon,
-          tag: rule.tag,
+          category: activeRule.category,
+          icon: activeRule.icon,
+          tag: activeRule.tag,
           headline: headline.slice(0, 36),
           subline: subline.slice(0, 48),
-          accentColor: rule.accentColor,
-          assetType: rule.assetType,
+          accentColor: activeRule.accentColor,
+          assetType: activeRule.assetType,
         };
       }
     }
