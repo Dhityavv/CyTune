@@ -407,6 +407,28 @@ export function DiamondRingAsset({ className = 'w-6 h-6' }: { className?: string
   );
 }
 
+export function PhoneAsset({ className = 'w-6 h-6' }: { className?: string }) {
+  const id = React.useId();
+  const gradId = `phoneGrad-${id}`;
+
+  return (
+    <span className={`inline-flex items-center justify-center shrink-0 animate-lyric-beat ${className}`}>
+      <svg viewBox="0 0 48 48" fill="none" className="w-full h-full drop-shadow-[0_4px_12px_rgba(56,189,248,0.6)]">
+        <rect x="14" y="6" width="20" height="36" rx="5" fill={`url(#${gradId})`} stroke="#0F172A" strokeWidth="2.5" />
+        <rect x="17" y="11" width="14" height="23" rx="2" fill="#0F172A" />
+        <circle cx="24" cy="38" r="2" fill="#38BDF8" />
+        <line x1="21" y1="8.5" x2="27" y2="8.5" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
+        <defs>
+          <linearGradient id={gradId} x1="14" y1="6" x2="34" y2="42" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#38BDF8" />
+            <stop offset="1" stopColor="#0284C7" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+  );
+}
+
 // Asset Mapper Helper
 export function renderLyricAsset(assetType?: string, className?: string): React.ReactNode {
   switch (assetType) {
@@ -417,6 +439,9 @@ export function renderLyricAsset(assetType?: string, className?: string): React.
     case 'ring':
     case 'jewelry':
       return <DiamondRingAsset className={className} />;
+    case 'phone':
+    case 'call':
+      return <PhoneAsset className={className} />;
     case 'fire':
       return <FireFlameAsset className={className} />;
     case 'big':

@@ -89,6 +89,44 @@ export const CONTEXT_RULES: ContextOverrideRule[] = [
     ifNearbyAny: ['heartbroken', 'goodbye', 'alone', 'broken', 'left', 'stranger', 'shattered', 'scars'],
     overrideCategoryId: 'Heartbreak',
   },
+
+  // 10. "drown" / "drowning" with emotional distress -> Heartbreak
+  {
+    targetWord: 'drown',
+    ifNearbyAny: ['tears', 'pain', 'sorrow', 'feelings', 'thoughts', 'broken', 'alone'],
+    overrideCategoryId: 'Heartbreak',
+  },
+  {
+    targetWord: 'drowning',
+    ifNearbyAny: ['tears', 'pain', 'sorrow', 'feelings', 'thoughts', 'broken', 'alone'],
+    overrideCategoryId: 'Heartbreak',
+  },
+
+  // 11. "call" with police / law enforcement -> Security
+  {
+    targetWord: 'call',
+    ifNearbyAny: ['police', 'cops', 'feds', 'siren', 'arrest', 'lock'],
+    overrideCategoryId: 'Security',
+  },
+  {
+    targetWord: 'calling',
+    ifNearbyAny: ['police', 'cops', 'feds', 'siren', 'arrest', 'lock'],
+    overrideCategoryId: 'Security',
+  },
+
+  // 12. "lights" with cosmic starlight -> Cosmic
+  {
+    targetWord: 'lights',
+    ifNearbyAny: ['stars', 'sky', 'aurora', 'constellation', 'moon', 'universe'],
+    overrideCategoryId: 'Cosmic',
+  },
+
+  // 13. "sleep" with mortality / grief -> Heartbreak
+  {
+    targetWord: 'sleep',
+    ifNearbyAny: ['forever', 'grave', 'death', 'crying', 'tears', 'alone'],
+    overrideCategoryId: 'Heartbreak',
+  },
 ];
 
 export function resolveContextualCategory(

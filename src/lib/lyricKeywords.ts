@@ -10,6 +10,7 @@ export interface StyledWord {
   display: string;
   clean: string;
   isKeyword: boolean;
+  category?: string;
   time?: number; // millisecond-accurate vocal start time in seconds
   endTime?: number;
   colorClass?: string;
@@ -30,7 +31,8 @@ export interface StyledWord {
     | 'crown'
     | 'clock'
     | 'ring'
-    | 'jewelry';
+    | 'jewelry'
+    | 'phone';
   effectClass?: string;
 }
 
@@ -56,7 +58,8 @@ export interface LyricPunchline {
     | 'crown'
     | 'clock'
     | 'ring'
-    | 'jewelry';
+    | 'jewelry'
+    | 'phone';
   notification?: {
     appName: string;
     headline: string;
@@ -172,7 +175,8 @@ interface KeywordRule {
     | 'crown'
     | 'clock'
     | 'ring'
-    | 'jewelry';
+    | 'jewelry'
+    | 'phone';
   effectClass?: string;
   chillEffectClass?: string;
   category: string;
@@ -270,6 +274,12 @@ const KEYWORD_RULES: KeywordRule[] = [
       'confetti',
       'drink',
       'drinks',
+      'sipping',
+      'liquor',
+      'tequila',
+      'henny',
+      'shots',
+      'cocktail',
       'turnup',
       'vibe',
       'vibes',
@@ -471,6 +481,14 @@ const KEYWORD_RULES: KeywordRule[] = [
       'star',
       'moon',
       'sky',
+      'clouds',
+      'cloud',
+      'fly',
+      'flying',
+      'wings',
+      'soar',
+      'heaven',
+      'horizon',
       'dream',
       'dreams',
       'orbit',
@@ -630,6 +648,14 @@ const KEYWORD_RULES: KeywordRule[] = [
       'downtown',
       'alley',
       'subway',
+      'lights',
+      'headlights',
+      'streetlights',
+      'neon-lights',
+      'spotlight',
+      'strobe',
+      'flashing-lights',
+      'beams',
     ],
     colorClass: 'text-sky-400 font-black drop-shadow-[0_0_14px_rgba(56,189,248,0.75)]',
     emoji: '🏙️',
@@ -756,12 +782,16 @@ const KEYWORD_RULES: KeywordRule[] = [
       'tide',
       'drown',
       'drowning',
+      'sink',
+      'sinking',
+      'underwater',
       'waterfall',
       'currents',
       'submerged',
       'depths',
       'aquatic',
       'sea',
+      'swim',
     ],
     colorClass: 'text-teal-300 font-black drop-shadow-[0_0_18px_rgba(94,234,212,0.9)]',
     emoji: '🌊',
@@ -869,6 +899,15 @@ const KEYWORD_RULES: KeywordRule[] = [
       'stillness',
       'meditate',
       'solace',
+      'sleep',
+      'sleeping',
+      'asleep',
+      'slumber',
+      'pillow',
+      'bed',
+      'insomnia',
+      'rest',
+      'nap',
     ],
     colorClass: 'text-emerald-300 font-black drop-shadow-[0_0_18px_rgba(110,231,183,0.85)]',
     emoji: '🕊️',
@@ -935,6 +974,36 @@ const KEYWORD_RULES: KeywordRule[] = [
     icon: '🗣️',
     tag: 'Adlib',
     accentColor: '#A3E635',
+  },
+
+  // 26. CALLS, PHONE & CONNECTION (Late night hotline, ringing, cellular signals)
+  {
+    words: [
+      'call',
+      'calling',
+      'calls',
+      'phone',
+      'hotline',
+      'cellular',
+      'dial',
+      'dialing',
+      'ring',
+      'ringing',
+      'ringtone',
+      'facetime',
+      'voicemail',
+      'message',
+      'texting',
+    ],
+    colorClass: 'text-sky-300 font-black drop-shadow-[0_0_18px_rgba(125,211,252,0.85)]',
+    emoji: '📞',
+    assetType: 'phone',
+    effectClass: 'animate-lyric-beat',
+    chillEffectClass: 'animate-lyric-chill',
+    category: 'Connection',
+    icon: '📞',
+    tag: 'Hotline',
+    accentColor: '#38BDF8',
   },
 ];
 
@@ -1046,6 +1115,7 @@ export function parseLyricWords(
         display,
         clean,
         isKeyword: true,
+        category: matchedRule.category,
         time: wordTime,
         endTime: wordEndTime,
         colorClass: matchedRule.colorClass,
@@ -1060,6 +1130,7 @@ export function parseLyricWords(
         display: styleOverride.display || token,
         clean,
         isKeyword: true,
+        category: 'Stylistic',
         time: wordTime,
         endTime: wordEndTime,
         colorClass: 'text-white font-bold',
